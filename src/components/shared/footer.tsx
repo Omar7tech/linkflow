@@ -14,6 +14,7 @@ export function Footer() {
             device.
           </p>
         </div>
+
         <div>
           <h3 className="mb-3 text-sm font-semibold">Generators</h3>
           <ul className="space-y-2 text-sm">
@@ -26,6 +27,7 @@ export function Footer() {
             ))}
           </ul>
         </div>
+
         <div>
           <h3 className="mb-3 text-sm font-semibold">More tools</h3>
           <ul className="space-y-2 text-sm">
@@ -38,6 +40,7 @@ export function Footer() {
             ))}
           </ul>
         </div>
+
         <div>
           <h3 className="mb-3 text-sm font-semibold">Company</h3>
           <ul className="space-y-2 text-sm">
@@ -59,11 +62,26 @@ export function Footer() {
           </ul>
         </div>
       </div>
+
       <div className="border-border/60 border-t py-5">
-        <p className="text-muted-foreground mx-auto max-w-6xl px-4 text-xs">
-          © {new Date().getFullYear()} {SITE.name}. Free forever. No tracking, no accounts, no
-          servers.
-        </p>
+        <div className="mx-auto max-w-6xl px-4">
+          <p className="text-muted-foreground text-xs">
+            © {new Date().getFullYear()} {SITE.name}. Free forever. No tracking, no accounts, no
+            servers.
+          </p>
+
+          <p className="text-muted-foreground mt-2 text-xs">
+            Developed by{" "}
+            <a
+              href="https://github.com/Omar7tech"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground font-medium transition-colors"
+            >
+              Omar Abi Farraj
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   );
