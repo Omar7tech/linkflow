@@ -11,6 +11,7 @@ import {
   QrCodeIcon,
   Share2Icon,
   SparklesIcon,
+  TypeIcon,
   type LucideIcon,
 } from "lucide-react";
 
@@ -26,6 +27,7 @@ const ICONS: Record<string, LucideIcon> = {
   QrCode: QrCodeIcon,
   Share2: Share2Icon,
   Sparkles: SparklesIcon,
+  Type: TypeIcon,
 };
 
 export function ToolIcon({ name, className }: { name: string; className?: string }) {

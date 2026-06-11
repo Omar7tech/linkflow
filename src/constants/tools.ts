@@ -135,6 +135,23 @@ export const TOOLS: ToolMeta[] = [
     ],
     icon: "Hash",
   },
+  {
+    id: "lorem",
+    slug: "/lorem",
+    name: "Lorem Ipsum Generator",
+    shortName: "Lorem Ipsum",
+    tagline: "Placeholder text, your way",
+    description:
+      "Generate lorem ipsum paragraphs, sentences or words with live word counts — as plain text, HTML or Markdown, with optional bold, italic and link markup for testing rich layouts.",
+    keywords: [
+      "lorem ipsum generator",
+      "placeholder text",
+      "dummy text generator",
+      "filler text",
+      "lorem ipsum html",
+    ],
+    icon: "Type",
+  },
 ];
 
 export const TOOL_BY_ID = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<

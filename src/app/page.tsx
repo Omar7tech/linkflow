@@ -18,7 +18,7 @@ const HOME_FAQ = FAQ_ITEMS.slice(0, 5);
 const STEPS = [
   {
     title: "Pick a tool",
-    text: "WhatsApp links, QR codes, share buttons, vCards, UTM URLs, passwords, hashes — eleven focused generators, one consistent workflow.",
+    text: "WhatsApp links, QR codes, share buttons, vCards, UTM URLs, passwords, hashes — twelve focused generators, one consistent workflow.",
   },
   {
     title: "Type, and it's done",
@@ -81,7 +81,7 @@ export default function HomePage() {
       {/* Tools */}
       <section className="mx-auto w-full max-w-6xl px-4 py-24" aria-labelledby="tools-heading">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-          <SectionHeader label="01 — The toolkit" title="Eleven tools, one workflow" id="tools-heading" />
+          <SectionHeader label="01 — The toolkit" title="Twelve tools, one workflow" id="tools-heading" />
           <Reveal>
             <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">
               Every generator shares the same instant-preview experience: type on the left, copy on

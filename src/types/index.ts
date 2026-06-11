@@ -9,7 +9,8 @@ export type ToolId =
   | "universal"
   | "utm"
   | "password"
-  | "hash";
+  | "hash"
+  | "lorem";
 
 export interface ToolMeta {
   id: ToolId;
