@@ -18,22 +18,27 @@ export function ToolGrid({ className, animated = false }: ToolGridProps) {
         <Link
           key={tool.id}
           href={tool.slug}
-          className="group border-border/70 bg-card/30 hover:border-foreground/15 hover:bg-card relative flex flex-col rounded-2xl border p-6 transition-colors duration-300 sm:p-7"
+          className="group border-border/70 bg-card/40 hover:border-foreground/15 hover:bg-card relative flex flex-col gap-3 rounded-xl border p-5 transition-colors duration-200"
         >
-          <div className="flex items-start justify-between">
-            <ToolIcon
-              name={tool.icon}
-              className="text-muted-foreground group-hover:text-foreground size-5 transition-colors duration-300"
-            />
-            <span className="text-muted-foreground/50 flex items-center gap-2 font-mono text-[11px]">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <ToolIcon
+                name={tool.icon}
+                className="text-muted-foreground group-hover:text-foreground size-4 shrink-0 transition-colors duration-200"
+              />
+              <h3 className="font-heading truncate text-[15px] font-semibold tracking-tight">
+                {tool.shortName}
+              </h3>
+            </div>
+            <span className="text-muted-foreground/60 flex shrink-0 items-center gap-1.5 font-mono text-[10px] tracking-widest">
               {String(i + 1).padStart(2, "0")}
-              <ArrowUpRightIcon className="size-3.5 -translate-x-0.5 translate-y-0.5 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100" />
+              <ArrowUpRightIcon className="size-3.5 -translate-x-0.5 translate-y-0.5 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100" />
             </span>
           </div>
-          <div className="mt-12">
-            <h3 className="font-heading text-lg font-semibold tracking-tight">{tool.shortName}</h3>
-            <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">{tool.tagline}</p>
-          </div>
+          <p className="text-muted-foreground text-[13px] leading-relaxed">{tool.description}</p>
+          <p className="text-muted-foreground/60 mt-auto font-mono text-[10px] tracking-[0.12em] uppercase">
+            {tool.tagline}
+          </p>
         </Link>
       ))}
     </>

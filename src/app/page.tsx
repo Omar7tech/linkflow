@@ -1,13 +1,5 @@
 import Link from "next/link";
 import {
-  LockIcon,
-  MousePointerClickIcon,
-  ShieldCheckIcon,
-  SparklesIcon,
-  WifiOffIcon,
-  ZapIcon,
-} from "lucide-react";
-import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -23,48 +15,58 @@ import { SITE } from "@/constants/site";
 
 const HOME_FAQ = FAQ_ITEMS.slice(0, 5);
 
-const STATS = [
-  { value: "9", label: "focused generators" },
-  { value: "0", label: "bytes sent to a server" },
-  { value: "100%", label: "client-side, forever" },
-  { value: "∞", label: "links — they never expire" },
-];
-
 const STEPS = [
   {
-    icon: MousePointerClickIcon,
     title: "Pick a tool",
     text: "WhatsApp links, QR codes, share buttons, vCards, UTM URLs — nine focused generators, one consistent workflow.",
   },
   {
-    icon: ZapIcon,
     title: "Type, and it's done",
     text: "No submit buttons. Your link and QR code render live with every keystroke, validated as you go.",
   },
   {
-    icon: SparklesIcon,
     title: "Copy, embed, share",
     text: "Grab the link, download the QR as PNG or SVG, or export ready-made HTML, React and Markdown snippets.",
   },
 ];
 
-const TRUST = [
+const PRINCIPLES = [
   {
-    icon: ShieldCheckIcon,
-    title: "100% private",
-    text: "Everything is generated on your device. Nothing you type ever leaves your browser — there is no backend at all.",
+    title: "Private by architecture",
+    text: "Everything is generated on your device. There is no backend, no database, no logs — nothing you type ever leaves your browser.",
   },
   {
-    icon: WifiOffIcon,
     title: "Works offline",
-    text: "Installable PWA — the generators keep working with no connection, on a plane or in a basement.",
+    text: "LinkFlow installs as a PWA and keeps working with no connection at all. On a plane, in a basement, behind a firewall.",
   },
   {
-    icon: LockIcon,
-    title: "No accounts, no limits",
-    text: "Free forever. No sign-ups, no watermarks, no 'your QR expires in 14 days' ransom emails.",
+    title: "Free, with no catch",
+    text: "No sign-ups, no watermarks, no expiring links. Static QR codes encode your data directly and keep working forever.",
   },
 ];
+
+function SectionHeader({
+  label,
+  title,
+  id,
+  className,
+}: {
+  label: string;
+  title: string;
+  id?: string;
+  className?: string;
+}) {
+  return (
+    <Reveal className={className}>
+      <p className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase">
+        {label}
+      </p>
+      <h2 id={id} className="font-heading mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+        {title}
+      </h2>
+    </Reveal>
+  );
+}
 
 export default function HomePage() {
   return (
@@ -76,111 +78,86 @@ export default function HomePage() {
 
       <Hero />
 
-      {/* Stats band */}
-      <section aria-label="LinkFlow in numbers" className="border-border/60 border-b">
-        <Reveal stagger className="mx-auto grid max-w-6xl grid-cols-2 gap-x-4 gap-y-8 px-4 py-12 md:grid-cols-4">
-          {STATS.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="font-heading text-4xl font-bold sm:text-5xl">{stat.value}</p>
-              <p className="text-muted-foreground mt-1.5 text-xs sm:text-sm">{stat.label}</p>
-            </div>
-          ))}
-        </Reveal>
-      </section>
-
-      {/* Tool grid */}
-      <section className="mx-auto w-full max-w-6xl px-4 py-20" aria-labelledby="tools-heading">
-        <Reveal className="mb-10 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-primary mb-2 font-mono text-xs tracking-widest uppercase">The toolkit</p>
-            <h2 id="tools-heading" className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
-              Nine tools, one workflow
-            </h2>
-          </div>
-          <p className="text-muted-foreground max-w-sm text-sm">
-            Every generator shares the same instant-preview experience: type on the left, copy on
-            the right.
-          </p>
-        </Reveal>
+      {/* Tools */}
+      <section className="mx-auto w-full max-w-6xl px-4 py-24" aria-labelledby="tools-heading">
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
+          <SectionHeader label="01 — The toolkit" title="Nine tools, one workflow" id="tools-heading" />
+          <Reveal>
+            <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">
+              Every generator shares the same instant-preview experience: type on the left, copy on
+              the right.
+            </p>
+          </Reveal>
+        </div>
         <ToolGrid animated />
       </section>
 
       {/* How it works */}
-      <section className="border-border/60 relative overflow-hidden border-y" aria-labelledby="how-heading">
-        <div
-          aria-hidden
-          className="bg-primary/10 absolute top-0 left-1/2 size-100 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px]"
-        />
-        <div className="relative mx-auto max-w-6xl px-4 py-20">
-          <Reveal className="mb-12 text-center">
-            <p className="text-primary mb-2 font-mono text-xs tracking-widest uppercase">How it works</p>
-            <h2 id="how-heading" className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
-              From idea to link in seconds
-            </h2>
-          </Reveal>
-          <Reveal stagger className="grid gap-5 sm:grid-cols-3">
+      <section className="border-border/70 border-t" aria-labelledby="how-heading">
+        <div className="mx-auto max-w-6xl px-4 py-24">
+          <SectionHeader
+            label="02 — How it works"
+            title="From idea to link in seconds"
+            id="how-heading"
+            className="mb-14"
+          />
+          <Reveal stagger className="grid gap-x-8 gap-y-12 sm:grid-cols-3">
             {STEPS.map((step, i) => (
-              <div
-                key={step.title}
-                className="border-border bg-card/60 relative rounded-2xl border p-6 backdrop-blur-sm"
-              >
-                <span className="font-heading text-primary/15 absolute top-3 right-5 text-6xl font-bold select-none">
-                  {i + 1}
+              <div key={step.title} className="border-border border-t pt-6">
+                <span className="text-muted-foreground font-mono text-[11px] tracking-[0.18em]">
+                  {String(i + 1).padStart(2, "0")}
                 </span>
-                <div className="border-border bg-muted/40 mb-4 flex size-11 items-center justify-center rounded-xl border">
-                  <step.icon className="text-primary size-5" aria-hidden />
-                </div>
-                <h3 className="font-heading text-lg font-semibold">{step.title}</h3>
-                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{step.text}</p>
+                <h3 className="font-heading mt-5 text-xl font-semibold tracking-tight">
+                  {step.title}
+                </h3>
+                <p className="text-muted-foreground mt-2.5 text-sm leading-relaxed">{step.text}</p>
               </div>
             ))}
           </Reveal>
         </div>
       </section>
 
-      {/* Trust */}
-      <section className="mx-auto w-full max-w-6xl px-4 py-20" aria-labelledby="trust-heading">
-        <Reveal className="mb-12 text-center">
-          <p className="text-primary mb-2 font-mono text-xs tracking-widest uppercase">Why LinkFlow</p>
-          <h2 id="trust-heading" className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
-            Private by architecture, not by promise
-          </h2>
-        </Reveal>
-        <Reveal stagger className="grid gap-5 sm:grid-cols-3">
-          {TRUST.map((item) => (
-            <div
-              key={item.title}
-              className="group border-border bg-card/60 hover:border-primary/30 rounded-2xl border p-6 transition-colors"
-            >
-              <item.icon className="text-primary mb-4 size-6" aria-hidden />
-              <h3 className="font-heading text-lg font-semibold">{item.title}</h3>
-              <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{item.text}</p>
-            </div>
-          ))}
-        </Reveal>
+      {/* Principles */}
+      <section className="border-border/70 border-t" aria-labelledby="principles-heading">
+        <div className="mx-auto max-w-6xl px-4 py-24">
+          <SectionHeader
+            label="03 — Why LinkFlow"
+            title="Private by design, not by promise"
+            id="principles-heading"
+            className="mb-14"
+          />
+          <Reveal stagger className="grid gap-x-8 gap-y-12 sm:grid-cols-3">
+            {PRINCIPLES.map((item) => (
+              <div key={item.title} className="border-border border-t pt-6">
+                <h3 className="font-heading text-xl font-semibold tracking-tight">{item.title}</h3>
+                <p className="text-muted-foreground mt-2.5 text-sm leading-relaxed">{item.text}</p>
+              </div>
+            ))}
+          </Reveal>
+        </div>
       </section>
 
       {/* FAQ */}
-      <section className="border-border/60 border-t" aria-labelledby="faq-heading">
-        <div className="mx-auto max-w-3xl px-4 py-20">
-          <Reveal className="mb-8 text-center">
-            <p className="text-primary mb-2 font-mono text-xs tracking-widest uppercase">FAQ</p>
-            <h2 id="faq-heading" className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
-              Good questions, honest answers
-            </h2>
-          </Reveal>
+      <section className="border-border/70 border-t" aria-labelledby="faq-heading">
+        <div className="mx-auto max-w-6xl gap-12 px-4 py-24 lg:grid lg:grid-cols-[1fr_1.6fr]">
+          <SectionHeader
+            label="04 — FAQ"
+            title="Good questions, honest answers"
+            id="faq-heading"
+            className="mb-10 lg:mb-0"
+          />
           <Reveal>
             <Accordion type="single" collapsible className="w-full">
               {HOME_FAQ.map((item, i) => (
                 <AccordionItem key={item.question} value={`item-${i}`}>
                   <AccordionTrigger className="text-left">{item.question}</AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground">
+                  <AccordionContent className="text-muted-foreground leading-relaxed">
                     {item.answer}
                   </AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>
-            <p className="text-muted-foreground mt-6 text-center text-sm">
+            <p className="text-muted-foreground mt-6 text-sm">
               More questions?{" "}
               <Link href="/faq" className="text-foreground underline underline-offset-4">
                 Read the full FAQ
@@ -191,21 +168,20 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="border-border/60 noise relative overflow-hidden border-t">
-        <div
-          aria-hidden
-          className="bg-primary/15 absolute bottom-0 left-1/2 size-130 -translate-x-1/2 translate-y-1/2 rounded-full blur-[140px]"
-        />
-        <Reveal className="relative mx-auto max-w-6xl px-4 py-24 text-center">
-          <h2 className="font-heading text-4xl font-bold tracking-tight text-balance sm:text-6xl">
-            Your next link is <span className="text-gradient">ten seconds</span> away
-          </h2>
-          <p className="text-muted-foreground mx-auto mt-4 max-w-xl text-balance">
-            No account. No tracking. No expiring links. Just paste, preview and ship.
+      <section className="border-border/70 border-t">
+        <Reveal className="mx-auto max-w-6xl px-4 py-28">
+          <p className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase">
+            Start now
           </p>
-          <Button asChild size="lg" className="glow mt-9 h-12 rounded-full px-8 text-base">
-            <Link href="/universal">Open the Universal Generator</Link>
-          </Button>
+          <h2 className="font-heading mt-4 max-w-3xl text-4xl font-bold tracking-tight text-balance sm:text-6xl">
+            Your next link is <span className="text-primary">ten seconds</span> away.
+          </h2>
+          <div className="mt-9 flex flex-wrap items-center gap-4">
+            <Button asChild size="lg" className="h-12 rounded-full px-7 text-base">
+              <Link href="/universal">Open the Universal Generator</Link>
+            </Button>
+            <p className="text-muted-foreground text-sm">No account. No tracking. No expiry.</p>
+          </div>
         </Reveal>
       </section>
     </>
