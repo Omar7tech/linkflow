@@ -33,6 +33,7 @@ import {
   whatsappMessageSchema,
 } from "@/lib/validators";
 import { DEFAULT_QR_OPTIONS } from "@/types";
+import { WhatsAppButtonGallery } from "./whatsapp-button-gallery";
 
 interface ChatValues {
   phone: string;
@@ -116,6 +117,15 @@ export function WhatsAppTool() {
     }
   };
 
+  const activeLink =
+    tab === "chat"
+      ? chat.output
+      : tab === "message"
+        ? messageOnly.output
+        : tab === "group"
+          ? group.output
+          : null;
+
   const outputs: Record<string, React.ReactNode> = {
     chat: (
       <OutputCard
@@ -198,7 +208,12 @@ export function WhatsAppTool() {
     <GeneratorLayout
       tool={TOOL_BY_ID.whatsapp}
       output={outputs[tab]}
-      footer={<HistoryPanel history={history} />}
+      footer={
+        <>
+          <WhatsAppButtonGallery link={activeLink} />
+          <HistoryPanel history={history} />
+        </>
+      }
     >
       <Card>
         <CardContent className="pt-2">
