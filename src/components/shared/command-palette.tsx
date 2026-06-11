@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { HelpCircleIcon, HomeIcon, InfoIcon, MoonIcon, SunIcon } from "lucide-react";
 import {
+  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -52,8 +53,9 @@ export function CommandPalette() {
         </kbd>
       </button>
       <CommandDialog open={open} onOpenChange={setOpen} title="Command palette">
-        <CommandInput placeholder="Jump to a tool or page…" />
-        <CommandList>
+        <Command>
+          <CommandInput placeholder="Jump to a tool or page…" />
+          <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Tools">
             {TOOLS.map((tool) => (
@@ -88,8 +90,9 @@ export function CommandPalette() {
             <CommandItem onSelect={() => run(() => setTheme("dark"))}>
               <MoonIcon className="size-4" /> Dark mode
             </CommandItem>
-          </CommandGroup>
-        </CommandList>
+            </CommandGroup>
+          </CommandList>
+        </Command>
       </CommandDialog>
     </>
   );

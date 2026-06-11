@@ -69,7 +69,8 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-screen flex-col">
+      {/* suppressHydrationWarning: browser extensions (e.g. ColorZilla) inject body attributes pre-hydration */}
+      <body className="flex min-h-screen flex-col" suppressHydrationWarning>
         <ThemeProvider>
           <TooltipProvider>
             <Header />

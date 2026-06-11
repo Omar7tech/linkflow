@@ -15,9 +15,10 @@ export function FadeIn({ children, delay = 0, className }: FadeInProps) {
   return (
     <motion.div
       className={className}
-      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay, ease: "easeOut" }}
+      // Reduced motion: same SSR markup, but the reveal is instant.
+      transition={reduceMotion ? { duration: 0 } : { duration: 0.45, delay, ease: "easeOut" }}
     >
       {children}
     </motion.div>
