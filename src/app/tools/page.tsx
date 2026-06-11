@@ -14,8 +14,8 @@ export default function ToolsPage() {
       <header className="mb-8 max-w-2xl">
         <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">All tools</h1>
         <p className="text-muted-foreground mt-2">
-          Sixteen focused generators with the same instant-preview workflow — pick one and start
-          creating.
+          A focused generator for every job, all sharing the same instant-preview workflow — pick
+          one and start creating.
         </p>
       </header>
       <ToolGrid />

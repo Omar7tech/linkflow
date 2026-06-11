@@ -6,12 +6,11 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { TOOLS } from "@/constants/tools";
 
 gsap.registerPlugin(useGSAP);
 
 const DATA_POINTS = [
-  { value: 16, pad: true, label: "Focused generators" },
+  { value: null, display: "Live", label: "Instant preview" },
   { value: 0, pad: true, label: "Sign-ups required" },
   { value: 100, suffix: "%", label: "Free, always" },
   { value: null, display: "∞", label: "Links — never expire" },
@@ -142,27 +141,6 @@ export function Hero() {
             </div>
           ))}
         </dl>
-      </div>
-
-      {/* Marquee */}
-      <div data-hero-fade className="border-border/70 border-t py-4">
-        <div className="overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)]">
-          <div className="animate-marquee motion-reduce:animate-none flex w-max items-center gap-12 whitespace-nowrap">
-            {[0, 1].map((copy) => (
-              <div key={copy} aria-hidden={copy === 1} className="flex items-center gap-12">
-                {TOOLS.map((tool) => (
-                  <span
-                    key={tool.id}
-                    className="text-muted-foreground flex items-center gap-12 font-mono text-xs tracking-[0.14em] uppercase"
-                  >
-                    {tool.name}
-                    <span className="text-primary">·</span>
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );
