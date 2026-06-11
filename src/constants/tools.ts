@@ -117,6 +117,24 @@ export const TOOLS: ToolMeta[] = [
     ],
     icon: "KeyRound",
   },
+  {
+    id: "hash",
+    slug: "/hash",
+    name: "Hash Generator",
+    shortName: "Hash",
+    tagline: "MD5, SHA & HMAC checksums",
+    description:
+      "Compute MD5, SHA-1, SHA-256, SHA-384, SHA-512 and CRC32 hashes of any text or file — with HMAC signing and checksum verification. Everything runs in your browser; your data never leaves the page.",
+    keywords: [
+      "hash generator",
+      "sha256 generator",
+      "md5 hash",
+      "checksum calculator",
+      "hmac generator",
+      "file hash",
+    ],
+    icon: "Hash",
+  },
 ];
 
 export const TOOL_BY_ID = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<

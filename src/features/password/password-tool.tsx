@@ -78,10 +78,18 @@ export function PasswordTool() {
     return generatePin(pinLength);
   }, [mode, randomOpts, phraseOpts, pinLength]);
 
-  // Generated in an effect so randomness only ever runs client-side.
+  // Deferred a microtask so randomness only runs client-side, after hydration,
+  // without a synchronous setState inside the effect body.
   React.useEffect(() => {
-    setPassword(generate());
-    setBatch([]);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setPassword(generate());
+      setBatch([]);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [generate]);
 
   const bits =

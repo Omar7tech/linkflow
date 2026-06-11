@@ -8,7 +8,8 @@ export type ToolId =
   | "vcard"
   | "universal"
   | "utm"
-  | "password";
+  | "password"
+  | "hash";
 
 export interface ToolMeta {
   id: ToolId;

@@ -4,7 +4,7 @@ import { SITE } from "@/constants/site";
 
 export const metadata: Metadata = {
   title: "All Tools",
-  description: `Browse every ${SITE.name} generator — WhatsApp links, QR codes, share links, SMS, click-to-call, email, vCards, UTM campaign URLs and secure passwords.`,
+  description: `Browse every ${SITE.name} generator — WhatsApp links, QR codes, share links, SMS, click-to-call, email, vCards, UTM campaign URLs, secure passwords and hash checksums.`,
   alternates: { canonical: `${SITE.url}/tools` },
 };
 
@@ -14,7 +14,7 @@ export default function ToolsPage() {
       <header className="mb-8 max-w-2xl">
         <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">All tools</h1>
         <p className="text-muted-foreground mt-2">
-          Ten focused generators with the same instant-preview workflow. Everything runs locally
+          Eleven focused generators with the same instant-preview workflow. Everything runs locally
           in your browser — pick one and start creating.
         </p>
       </header>

@@ -12,6 +12,7 @@ const SHELL = [
   "/universal",
   "/utm",
   "/password",
+  "/hash",
   "/tools",
   "/faq",
   "/about",

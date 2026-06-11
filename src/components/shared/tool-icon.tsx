@@ -1,6 +1,7 @@
 import {
   BarChart3Icon,
   ContactIcon,
+  HashIcon,
   KeyRoundIcon,
   LinkIcon,
   MailIcon,
@@ -16,6 +17,7 @@ import {
 const ICONS: Record<string, LucideIcon> = {
   BarChart3: BarChart3Icon,
   Contact: ContactIcon,
+  Hash: HashIcon,
   KeyRound: KeyRoundIcon,
   Mail: MailIcon,
   MessageCircle: MessageCircleIcon,
