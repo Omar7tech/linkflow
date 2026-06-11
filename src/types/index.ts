@@ -21,7 +21,6 @@ export interface ToolMeta {
   slug: string;
   name: string;
   shortName: string;
-  tagline: string;
   description: string;
   keywords: string[];
   /** Lucide icon name — resolved in the tool registry component map. */
