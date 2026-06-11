@@ -43,7 +43,7 @@ export function ToolGrid({ className, animated = false }: ToolGridProps) {
     </>
   );
 
-  const gridClass = cn("grid gap-4 sm:grid-cols-2 lg:grid-cols-4", className);
+  const gridClass = cn("grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4", className);
 
   if (animated) {
     return (
