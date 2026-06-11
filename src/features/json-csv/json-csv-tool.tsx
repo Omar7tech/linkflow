@@ -114,8 +114,10 @@ export function JsonCsvTool() {
   };
 
   const handleCopy = () => {
-    copy(generator.output);
-    generator.commit();
+    if (generator.output) {
+      copy(generator.output);
+      generator.commit();
+    }
   };
 
   return (
