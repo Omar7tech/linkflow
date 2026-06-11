@@ -137,6 +137,56 @@ export function hue(rgb: RGB): number {
   return rgbToHsl(rgb)[0];
 }
 
+const NAMED_COLORS: [string, RGB][] = [
+  ["Black", [0, 0, 0]],
+  ["White", [255, 255, 255]],
+  ["Gray", [128, 128, 128]],
+  ["Silver", [192, 192, 192]],
+  ["Charcoal", [54, 69, 79]],
+  ["Red", [255, 0, 0]],
+  ["Maroon", [128, 0, 0]],
+  ["Crimson", [220, 20, 60]],
+  ["Orange", [255, 140, 0]],
+  ["Amber", [255, 191, 0]],
+  ["Gold", [255, 215, 0]],
+  ["Yellow", [255, 225, 0]],
+  ["Olive", [128, 128, 0]],
+  ["Lime", [120, 220, 60]],
+  ["Green", [34, 160, 70]],
+  ["Forest", [22, 90, 50]],
+  ["Teal", [0, 128, 128]],
+  ["Cyan", [0, 200, 210]],
+  ["Sky", [120, 190, 235]],
+  ["Blue", [40, 90, 230]],
+  ["Navy", [20, 30, 90]],
+  ["Indigo", [75, 0, 130]],
+  ["Purple", [128, 0, 160]],
+  ["Violet", [150, 90, 230]],
+  ["Magenta", [220, 40, 200]],
+  ["Pink", [255, 150, 190]],
+  ["Rose", [225, 90, 120]],
+  ["Brown", [120, 72, 40]],
+  ["Tan", [210, 180, 140]],
+  ["Beige", [232, 222, 195]],
+  ["Coral", [255, 120, 95]],
+  ["Mint", [150, 230, 190]],
+  ["Lavender", [200, 190, 235]],
+];
+
+/** Nearest human-readable name for a color, by squared RGB distance. */
+export function colorName([r, g, b]: RGB): string {
+  let best = NAMED_COLORS[0][0];
+  let min = Infinity;
+  for (const [name, [nr, ng, nb]] of NAMED_COLORS) {
+    const d = (r - nr) ** 2 + (g - ng) ** 2 + (b - nb) ** 2;
+    if (d < min) {
+      min = d;
+      best = name;
+    }
+  }
+  return best;
+}
+
 export type ColorFormat = "hex" | "rgb" | "hsl";
 
 export function formatColor(rgb: RGB, format: ColorFormat): string {
