@@ -14,6 +14,7 @@ const SHELL = [
   "/password",
   "/hash",
   "/lorem",
+  "/reading-time",
   "/tools",
   "/faq",
   "/about",

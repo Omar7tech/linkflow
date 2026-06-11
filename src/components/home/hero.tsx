@@ -11,7 +11,7 @@ import { TOOLS } from "@/constants/tools";
 gsap.registerPlugin(useGSAP);
 
 const DATA_POINTS = [
-  { value: 12, pad: true, label: "Focused generators" },
+  { value: 13, pad: true, label: "Focused generators" },
   { value: 0, pad: true, label: "Sign-ups required" },
   { value: 100, suffix: "%", label: "Free, always" },
   { value: null, display: "∞", label: "Links — never expire" },

@@ -152,6 +152,23 @@ export const TOOLS: ToolMeta[] = [
     ],
     icon: "Type",
   },
+  {
+    id: "readtime",
+    slug: "/reading-time",
+    name: "Reading Time Calculator",
+    shortName: "Reading Time",
+    tagline: "“X min read” for any text",
+    description:
+      "Paste any text to get reading and speaking time at adjustable speeds, full word and sentence stats, and a Flesch readability score — with Medium-style image time included.",
+    keywords: [
+      "reading time calculator",
+      "read time estimator",
+      "words per minute",
+      "speaking time calculator",
+      "readability score",
+    ],
+    icon: "BookOpen",
+  },
 ];
 
 export const TOOL_BY_ID = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<
