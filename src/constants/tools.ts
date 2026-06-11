@@ -100,6 +100,23 @@ export const TOOLS: ToolMeta[] = [
     keywords: ["utm builder", "utm link generator", "campaign url builder"],
     icon: "BarChart3",
   },
+  {
+    id: "password",
+    slug: "/password",
+    name: "Password Generator",
+    shortName: "Password",
+    tagline: "Strong passwords, passphrases & PINs",
+    description:
+      "Generate cryptographically secure passwords, memorable passphrases and PINs with live entropy and crack-time estimates. Everything happens in your browser — nothing is stored or sent.",
+    keywords: [
+      "password generator",
+      "strong password",
+      "passphrase generator",
+      "random password",
+      "pin generator",
+    ],
+    icon: "KeyRound",
+  },
 ];
 
 export const TOOL_BY_ID = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<

@@ -1,5 +1,5 @@
 /* LinkFlow service worker — offline-first app shell. */
-const CACHE_NAME = "linkflow-v1";
+const CACHE_NAME = "linkflow-v2";
 const SHELL = [
   "/",
   "/whatsapp",
@@ -11,6 +11,7 @@ const SHELL = [
   "/vcard",
   "/universal",
   "/utm",
+  "/password",
   "/tools",
   "/faq",
   "/about",
