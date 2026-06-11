@@ -19,7 +19,6 @@ export interface ToolMeta {
   keywords: string[];
   /** Lucide icon name — resolved in the tool registry component map. */
   icon: string;
-  accent: string;
 }
 
 export interface HistoryEntry {

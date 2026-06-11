@@ -19,7 +19,7 @@ export function Hero() {
   React.useEffect(() => {
     qrToPngDataUrl(SITE.url, {
       size: 192,
-      fgColor: "#1c1530",
+      fgColor: "#10150f",
       bgColor: "#ffffff",
       errorLevel: "M",
     })
@@ -91,6 +91,7 @@ export function Hero() {
         x: gsap.quickTo(chip, "x", { duration: 0.8, ease: "power3.out" }),
         depth: Number(chip.dataset.depth ?? 1),
       }));
+      if (!contextSafe) return;
       const onPointerMove = contextSafe((e: PointerEvent) => {
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
         const relX = e.clientX / window.innerWidth - 0.5;
@@ -122,7 +123,7 @@ export function Hero() {
       <div
         aria-hidden
         data-orb="b"
-        className="absolute top-10 left-1/2 size-110 translate-x-[15%] rounded-full bg-[oklch(0.65_0.16_250_/_0.22)] blur-[130px]"
+        className="absolute top-10 left-1/2 size-110 translate-x-[15%] rounded-full bg-[oklch(0.75_0.13_180_/_0.18)] blur-[130px]"
       />
 
       <div className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-4 py-20 text-center">
@@ -165,7 +166,7 @@ export function Hero() {
           className="border-border/80 bg-card/80 absolute right-[7%] bottom-[18%] hidden rotate-[-4deg] rounded-2xl border px-4 py-3 text-left shadow-xl backdrop-blur-md lg:block"
         >
           <div className="flex items-center gap-2.5">
-            <span className="from-primary flex size-8 items-center justify-center rounded-full bg-gradient-to-br to-[oklch(0.65_0.16_250)] text-xs font-bold text-white">
+            <span className="bg-foreground text-background flex size-8 items-center justify-center rounded-full text-xs font-bold">
               MH
             </span>
             <div>

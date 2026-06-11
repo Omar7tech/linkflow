@@ -64,7 +64,7 @@ export function CommandPalette() {
                 value={`${tool.name} ${tool.keywords.join(" ")}`}
                 onSelect={() => run(() => router.push(tool.slug))}
               >
-                <ToolIcon name={tool.icon} className={`size-4 ${tool.accent}`} />
+                <ToolIcon name={tool.icon} className="text-muted-foreground size-4" />
                 <span>{tool.shortName}</span>
                 <CommandShortcut>{tool.tagline}</CommandShortcut>
               </CommandItem>

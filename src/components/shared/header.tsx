@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Link2Icon, MenuIcon } from "lucide-react";
+import { MenuIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -15,6 +15,7 @@ import {
 import { TOOLS } from "@/constants/tools";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "./command-palette";
+import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
 import { ToolIcon } from "./tool-icon";
 
@@ -31,11 +32,8 @@ export function Header() {
   return (
     <header className="border-border/60 bg-background/70 sticky top-0 z-50 border-b backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
-        <Link href="/" className="flex items-center gap-2" aria-label="LinkFlow home">
-          <span className="from-primary text-primary-foreground flex size-7 items-center justify-center rounded-lg bg-gradient-to-br to-[oklch(0.6_0.18_250)] text-white shadow-[0_0_16px_var(--glow)]">
-            <Link2Icon className="size-4" />
-          </span>
-          <span className="font-heading hidden font-bold sm:inline">LinkFlow</span>
+        <Link href="/" aria-label="LinkFlow home">
+          <Logo className="[&_span:last-child]:hidden sm:[&_span:last-child]:inline" />
         </Link>
 
         <nav className="ml-4 hidden items-center gap-1 md:flex" aria-label="Main">
@@ -87,7 +85,7 @@ export function Header() {
                     onClick={() => setMobileOpen(false)}
                     className="hover:bg-muted flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm"
                   >
-                    <ToolIcon name={tool.icon} className={cn("size-4", tool.accent)} />
+                    <ToolIcon name={tool.icon} className="text-muted-foreground size-4" />
                     {tool.shortName}
                   </Link>
                 ))}

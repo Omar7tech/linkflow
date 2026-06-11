@@ -20,23 +20,19 @@ export function renderOgImage(title: string, subtitle: string) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 16,
-              background: "#fafafa",
-              color: "#09090b",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 40,
-              fontWeight: 700,
-            }}
-          >
-            ⛓
-          </div>
-          <div style={{ fontSize: 40, fontWeight: 700 }}>LinkFlow</div>
+          <svg width="64" height="64" viewBox="0 0 32 32">
+            <rect width="32" height="32" rx="9.6" fill="#fafafa" />
+            <g
+              transform="rotate(-30 16 16)"
+              fill="none"
+              stroke="#10150f"
+              strokeWidth="2.4"
+            >
+              <rect x="5.4" y="13.1" width="12.2" height="5.8" rx="2.9" />
+              <rect x="14.4" y="13.1" width="12.2" height="5.8" rx="2.9" />
+            </g>
+          </svg>
+          <div style={{ fontSize: 40, fontWeight: 700 }}>linkflow</div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>

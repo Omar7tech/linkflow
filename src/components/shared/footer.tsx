@@ -1,19 +1,14 @@
 import Link from "next/link";
-import { Link2Icon } from "lucide-react";
 import { TOOLS } from "@/constants/tools";
 import { SITE } from "@/constants/site";
+import { Logo } from "./logo";
 
 export function Footer() {
   return (
     <footer className="border-border/60 mt-auto border-t">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-3">
-          <div className="font-heading flex items-center gap-2 font-bold">
-            <span className="from-primary flex size-7 items-center justify-center rounded-lg bg-gradient-to-br to-[oklch(0.6_0.18_250)] text-white">
-              <Link2Icon className="size-4" />
-            </span>
-            LinkFlow
-          </div>
+          <Logo />
           <p className="text-muted-foreground text-sm">
             {SITE.tagline} Every tool runs entirely in your browser — your data never leaves your
             device.

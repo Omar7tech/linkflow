@@ -18,15 +18,14 @@ export function ToolGrid({ className, animated = false }: ToolGridProps) {
         <Link
           key={tool.id}
           href={tool.slug}
-          className="group border-border bg-card/60 hover:border-primary/40 relative flex flex-col gap-4 overflow-hidden rounded-2xl border p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_-12px_var(--glow)]"
+          className="group border-border bg-card/60 hover:border-foreground/20 relative flex flex-col gap-4 overflow-hidden rounded-2xl border p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
         >
-          <div
-            aria-hidden
-            className="bg-primary/10 absolute -top-12 -right-12 size-32 rounded-full opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
-          />
           <div className="flex items-center justify-between">
-            <span className="border-border bg-muted/40 group-hover:border-primary/30 flex size-11 items-center justify-center rounded-xl border transition-colors">
-              <ToolIcon name={tool.icon} className={cn("size-5", tool.accent)} />
+            <span className="border-border bg-muted/40 flex size-10 items-center justify-center rounded-xl border transition-colors group-hover:border-foreground/20">
+              <ToolIcon
+                name={tool.icon}
+                className="text-muted-foreground group-hover:text-foreground size-[18px] transition-colors"
+              />
             </span>
             <ArrowUpRightIcon className="text-muted-foreground size-4 -translate-x-1 translate-y-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100" />
           </div>

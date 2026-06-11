@@ -81,9 +81,7 @@ export default function HomePage() {
         <Reveal stagger className="mx-auto grid max-w-6xl grid-cols-2 gap-x-4 gap-y-8 px-4 py-12 md:grid-cols-4">
           {STATS.map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="font-heading text-4xl font-bold sm:text-5xl">
-                <span className="text-gradient">{stat.value}</span>
-              </p>
+              <p className="font-heading text-4xl font-bold sm:text-5xl">{stat.value}</p>
               <p className="text-muted-foreground mt-1.5 text-xs sm:text-sm">{stat.label}</p>
             </div>
           ))}
