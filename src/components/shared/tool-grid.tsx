@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { ArrowUpRightIcon } from "lucide-react";
 import { Reveal } from "@/components/home/reveal";
 import { TOOLS } from "@/constants/tools";
 import { cn } from "@/lib/utils";
+import { ToolCardIndicator } from "./link-indicator";
 import { ToolIcon } from "./tool-icon";
 
 interface ToolGridProps {
@@ -32,7 +32,7 @@ export function ToolGrid({ className, animated = false }: ToolGridProps) {
             </div>
             <span className="text-muted-foreground/60 flex shrink-0 items-center gap-1.5 font-mono text-[10px] tracking-widest">
               {String(i + 1).padStart(2, "0")}
-              <ArrowUpRightIcon className="size-3.5 -translate-x-0.5 translate-y-0.5 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100" />
+              <ToolCardIndicator />
             </span>
           </div>
           <p className="text-muted-foreground text-[13px] leading-relaxed">{tool.description}</p>

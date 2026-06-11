@@ -15,6 +15,7 @@ import {
 import { TOOLS } from "@/constants/tools";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "./command-palette";
+import { LinkLoadingIndicator } from "./link-indicator";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
 import { ToolIcon } from "./tool-icon";
@@ -87,6 +88,7 @@ export function Header() {
                   >
                     <ToolIcon name={tool.icon} className="text-muted-foreground size-4" />
                     {tool.shortName}
+                    <LinkLoadingIndicator className="ml-auto" />
                   </Link>
                 ))}
               </nav>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { TOOLS } from "@/constants/tools";
 import { SITE } from "@/constants/site";
+import { LinkLoadingIndicator } from "./link-indicator";
 import { Logo } from "./logo";
 
 export function Footer() {
@@ -17,10 +18,14 @@ export function Footer() {
         <div>
           <h3 className="mb-3 text-sm font-semibold">Generators</h3>
           <ul className="space-y-2 text-sm">
-            {TOOLS.slice(0, 5).map((tool) => (
+            {TOOLS.slice(0, 6).map((tool) => (
               <li key={tool.id}>
-                <Link href={tool.slug} className="text-muted-foreground hover:text-foreground">
+                <Link
+                  href={tool.slug}
+                  className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                >
                   {tool.name}
+                  <LinkLoadingIndicator />
                 </Link>
               </li>
             ))}
@@ -30,10 +35,14 @@ export function Footer() {
         <div>
           <h3 className="mb-3 text-sm font-semibold">More tools</h3>
           <ul className="space-y-2 text-sm">
-            {TOOLS.slice(5).map((tool) => (
+            {TOOLS.slice(6).map((tool) => (
               <li key={tool.id}>
-                <Link href={tool.slug} className="text-muted-foreground hover:text-foreground">
+                <Link
+                  href={tool.slug}
+                  className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                >
                   {tool.name}
+                  <LinkLoadingIndicator />
                 </Link>
               </li>
             ))}
