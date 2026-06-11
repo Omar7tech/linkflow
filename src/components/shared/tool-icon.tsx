@@ -12,6 +12,7 @@ import {
   PhoneIcon,
   QrCodeIcon,
   Share2Icon,
+  SparkleIcon,
   SparklesIcon,
   TypeIcon,
   type LucideIcon,
@@ -30,6 +31,7 @@ const ICONS: Record<string, LucideIcon> = {
   Phone: PhoneIcon,
   QrCode: QrCodeIcon,
   Share2: Share2Icon,
+  Sparkle: SparkleIcon,
   Sparkles: SparklesIcon,
   Type: TypeIcon,
 };

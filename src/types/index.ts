@@ -12,7 +12,8 @@ export type ToolId =
   | "hash"
   | "lorem"
   | "readtime"
-  | "mockup";
+  | "mockup"
+  | "favicon";
 
 export interface ToolMeta {
   id: ToolId;

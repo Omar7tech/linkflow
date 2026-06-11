@@ -187,6 +187,23 @@ export const TOOLS: ToolMeta[] = [
     ],
     icon: "Frame",
   },
+  {
+    id: "favicon",
+    slug: "/favicon",
+    name: "Favicon Generator",
+    shortName: "Favicon",
+    tagline: "One image → a complete favicon package",
+    description:
+      "Turn any image into a full favicon set — favicon.ico, PNGs for every platform, Apple touch icon, web manifest and paste-ready HTML — then download it all as a ZIP. Includes setup steps for HTML, Next.js, Vite, Nuxt and WordPress.",
+    keywords: [
+      "favicon generator",
+      "favicon.ico generator",
+      "apple touch icon",
+      "web app manifest",
+      "favicon package",
+    ],
+    icon: "Sparkle",
+  },
 ];
 
 export const TOOL_BY_ID = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<
