@@ -13,7 +13,8 @@ export type ToolId =
   | "lorem"
   | "readtime"
   | "mockup"
-  | "favicon";
+  | "favicon"
+  | "colors";
 
 export interface ToolMeta {
   id: ToolId;

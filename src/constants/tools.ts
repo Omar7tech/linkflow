@@ -204,6 +204,23 @@ export const TOOLS: ToolMeta[] = [
     ],
     icon: "Sparkle",
   },
+  {
+    id: "colors",
+    slug: "/colors",
+    name: "Image Color Extractor",
+    shortName: "Color Extractor",
+    tagline: "Pull a palette from any image",
+    description:
+      "Upload an image to extract its dominant colors as a clean palette — copy any swatch as HEX, RGB or HSL, sort by frequency or hue, pick colors from your screen, and export to CSS, SCSS, JSON or Tailwind. All on-device.",
+    keywords: [
+      "color extractor",
+      "image color picker",
+      "palette generator",
+      "dominant colors",
+      "color palette from image",
+    ],
+    icon: "Palette",
+  },
 ];
 
 export const TOOL_BY_ID = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<
