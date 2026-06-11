@@ -169,6 +169,24 @@ export const TOOLS: ToolMeta[] = [
     ],
     icon: "BookOpen",
   },
+  {
+    id: "mockup",
+    slug: "/mockup",
+    name: "Mockup Generator",
+    shortName: "Mockup",
+    tagline: "Device frames for shots & screen recordings",
+    description:
+      "Wrap screenshots, videos and live screen captures in browser, window or phone frames — with gradient backdrops, tilt, shadows and captions. Export social-ready PNGs or WebM video, all composed on-device.",
+    keywords: [
+      "mockup generator",
+      "screenshot mockup",
+      "device frame",
+      "browser frame screenshot",
+      "video mockup",
+      "screen recording frame",
+    ],
+    icon: "Frame",
+  },
 ];
 
 export const TOOL_BY_ID = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<

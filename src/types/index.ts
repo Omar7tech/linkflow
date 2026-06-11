@@ -11,7 +11,8 @@ export type ToolId =
   | "password"
   | "hash"
   | "lorem"
-  | "readtime";
+  | "readtime"
+  | "mockup";
 
 export interface ToolMeta {
   id: ToolId;
