@@ -33,6 +33,7 @@ import {
   type RandomOptions,
 } from "@/lib/password";
 import { cn } from "@/lib/utils";
+import { BruteForceDemo } from "./bruteforce-demo";
 
 const LENGTH_PRESETS = [12, 16, 24, 32];
 
@@ -162,6 +163,9 @@ export function PasswordTool() {
                     Cracking this offline at 10 billion guesses/sec would take{" "}
                     <span className="text-foreground font-medium">{strength.crackTime}</span>.
                   </p>
+                  <div className="pt-1">
+                    <BruteForceDemo />
+                  </div>
                 </div>
               </>
             )}
