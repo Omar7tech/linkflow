@@ -29,13 +29,13 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
   return (
-    <header className="border-border/60 bg-background/80 sticky top-0 z-50 border-b backdrop-blur-md">
+    <header className="border-border/60 bg-background/70 sticky top-0 z-50 border-b backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold" aria-label="LinkFlow home">
-          <span className="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-lg">
+        <Link href="/" className="flex items-center gap-2" aria-label="LinkFlow home">
+          <span className="from-primary text-primary-foreground flex size-7 items-center justify-center rounded-lg bg-gradient-to-br to-[oklch(0.6_0.18_250)] text-white shadow-[0_0_16px_var(--glow)]">
             <Link2Icon className="size-4" />
           </span>
-          <span className="hidden sm:inline">LinkFlow</span>
+          <span className="font-heading hidden font-bold sm:inline">LinkFlow</span>
         </Link>
 
         <nav className="ml-4 hidden items-center gap-1 md:flex" aria-label="Main">

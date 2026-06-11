@@ -17,10 +17,10 @@ export function GeneratorLayout({ tool, children, output, footer }: GeneratorLay
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-12">
       <header className="mb-8 max-w-2xl">
         <div className="mb-3 flex items-center gap-3">
-          <span className="border-border bg-muted/40 flex size-11 items-center justify-center rounded-xl border">
+          <span className="border-border bg-card flex size-11 items-center justify-center rounded-xl border shadow-[0_0_20px_-6px_var(--glow)]">
             <ToolIcon name={tool.icon} className={cn("size-5", tool.accent)} />
           </span>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{tool.name}</h1>
+          <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">{tool.name}</h1>
         </div>
         <p className="text-muted-foreground">{tool.description}</p>
       </header>

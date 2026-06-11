@@ -33,7 +33,7 @@ export default function AboutPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-12">
       <header className="mb-10">
-        <h1 className="text-3xl font-bold tracking-tight">About LinkFlow</h1>
+        <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">About LinkFlow</h1>
         <p className="text-muted-foreground mt-3 text-lg">
           {SITE.tagline} A small, fast toolkit that turns the links you need every day into
           something you can copy, scan and share in seconds.

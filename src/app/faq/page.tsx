@@ -23,7 +23,7 @@ export default function FaqPage() {
     <div className="mx-auto w-full max-w-3xl px-4 py-12">
       <JsonLd data={faqJsonLd(FAQ_ITEMS)} />
       <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Frequently asked questions</h1>
+        <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">Frequently asked questions</h1>
         <p className="text-muted-foreground mt-2">
           Everything you might want to know about how LinkFlow works — and what it never does with
           your data.

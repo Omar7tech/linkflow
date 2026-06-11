@@ -12,7 +12,7 @@ export default function ToolsPage() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-12">
       <header className="mb-8 max-w-2xl">
-        <h1 className="text-3xl font-bold tracking-tight">All tools</h1>
+        <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">All tools</h1>
         <p className="text-muted-foreground mt-2">
           Nine focused generators with the same instant-preview workflow. Everything runs locally
           in your browser — pick one and start creating.
