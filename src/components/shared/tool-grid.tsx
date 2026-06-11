@@ -31,7 +31,7 @@ export function ToolGrid({ className, animated = false }: ToolGridProps) {
               </h3>
             </div>
             <span className="text-muted-foreground/60 flex shrink-0 items-center gap-1.5 font-mono text-[10px] tracking-widest">
-              {String(i + 1).padStart(2, "0")}
+              
               <ToolCardIndicator />
             </span>
           </div>
