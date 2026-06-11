@@ -22,7 +22,7 @@ export function HistoryPanel({ history }: HistoryPanelProps) {
           <HistoryIcon className="size-4" /> Recent
         </CardTitle>
         <CardDescription>
-          Stored only in this browser — the last {entries.length === 1 ? "item" : `${entries.length} items`} you generated.
+          Saved only on this device — the last {entries.length === 1 ? "item" : `${entries.length} items`} you generated.
         </CardDescription>
         <CardAction>
           <Button type="button" variant="ghost" size="sm" onClick={clear}>

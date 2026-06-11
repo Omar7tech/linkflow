@@ -181,8 +181,8 @@ export function HashTool() {
             <Separator />
             <p className="text-muted-foreground flex items-start gap-2 text-xs">
               <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-              Hashing happens entirely in your browser — text, files and keys never leave the page.
-              MD5, SHA-1 and CRC32 are fine as checksums but broken for security; prefer SHA-256+.
+              Your text, files and keys are never stored or logged. MD5, SHA-1 and CRC32 are fine
+              as checksums but broken for security — prefer SHA-256 or stronger.
             </p>
           </CardContent>
         </Card>
@@ -225,9 +225,7 @@ export function HashTool() {
                   {file.name} · {formatFileSize(file.size)}
                 </p>
               )}
-              <p className="text-muted-foreground text-xs">
-                Read locally, never uploaded. Large files may take a moment.
-              </p>
+              <p className="text-muted-foreground text-xs">Large files may take a moment to hash.</p>
             </div>
           )}
 

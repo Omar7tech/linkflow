@@ -1,7 +1,4 @@
-/**
- * Hashing utilities — SHA via Web Crypto, MD5/CRC32 implemented locally.
- * Everything runs in the browser; input never leaves the page.
- */
+/** Hashing utilities — SHA via Web Crypto, MD5/CRC32 implemented below. */
 
 export type HashAlgorithm = "MD5" | "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512" | "CRC32";
 

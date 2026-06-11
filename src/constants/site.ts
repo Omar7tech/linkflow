@@ -2,7 +2,7 @@ export const SITE = {
   name: "LinkFlow",
   tagline: "Create, Share, Connect.",
   description:
-    "Free client-side toolkit for WhatsApp links, QR codes, share links, vCards, UTM campaign URLs and more. No sign-up, no server — everything runs in your browser.",
+    "Free toolkit for WhatsApp links, QR codes, share links, vCards, UTM campaign URLs and more. No sign-up, no tracking — instant results.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://linkflow.app",
   author: "LinkFlow",
   twitter: "@linkflow",

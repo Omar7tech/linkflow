@@ -7,12 +7,12 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Is LinkFlow really free?",
     answer:
-      "Yes — every tool is free with no usage limits, no accounts and no watermarks. The entire app runs in your browser, so there are no server costs to pass on to you.",
+      "Yes — every tool is free with no usage limits, no accounts and no watermarks. LinkFlow is lean to operate, so there are no costs to pass on to you.",
   },
   {
     question: "Where does my data go?",
     answer:
-      "Nowhere. Links, QR codes, vCards and bulk CSV lists are generated entirely on your device. Nothing you type is ever uploaded, logged or analyzed. Your recent history and presets are stored only in your browser's local storage.",
+      "Your input is used for one thing only: generating your links, QR codes, vCards and bulk lists. Nothing you type is ever logged, analyzed or sold. Your recent history and presets are saved only on this device.",
   },
   {
     question: "Do the QR codes expire?",
@@ -37,7 +37,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Does LinkFlow work offline?",
     answer:
-      "Yes. LinkFlow is an installable PWA — after your first visit, the app shell is cached and the generators keep working without a connection. Add it to your home screen for an app-like experience.",
+      "Mostly, yes. LinkFlow is an installable PWA — after your first visit, the app shell is cached and most generators keep working without a connection. Add it to your home screen for an app-like experience.",
   },
   {
     question: "How do UTM parameters help me?",

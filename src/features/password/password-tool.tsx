@@ -169,8 +169,8 @@ export function PasswordTool() {
             <Separator />
             <p className="text-muted-foreground flex items-start gap-2 text-xs">
               <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-              Generated locally with your browser&apos;s cryptographic random source. Nothing is
-              stored, logged or sent anywhere — there is deliberately no history for this tool.
+              Generated with a cryptographically secure random source. Passwords are never stored
+              or logged — there is deliberately no history for this tool.
             </p>
           </CardContent>
         </Card>

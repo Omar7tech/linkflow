@@ -32,8 +32,8 @@ const STEPS = [
 
 const PRINCIPLES = [
   {
-    title: "Private by architecture",
-    text: "Everything is generated on your device. There is no backend, no database, no logs — nothing you type ever leaves your browser.",
+    title: "Private by design",
+    text: "Your input is used only to generate your output. No accounts, no ad pixels, no analytics watching what you type — nothing is logged or sold.",
   },
   {
     title: "Works offline",

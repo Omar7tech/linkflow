@@ -1,5 +1,5 @@
 /**
- * Password generation — all randomness from crypto.getRandomValues (browser only).
+ * Password generation — all randomness from crypto.getRandomValues.
  * Nothing here touches the network or storage.
  */
 

@@ -43,7 +43,7 @@ export function renderOgImage(title: string, subtitle: string) {
         </div>
 
         <div style={{ display: "flex", fontSize: 26, color: "#71717a" }}>
-          Create, Share, Connect. · Free · No sign-up · 100% client-side
+          Create, Share, Connect. · Free · No sign-up · No tracking
         </div>
       </div>
     ),

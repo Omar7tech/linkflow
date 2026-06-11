@@ -107,7 +107,7 @@ export const TOOLS: ToolMeta[] = [
     shortName: "Password",
     tagline: "Strong passwords, passphrases & PINs",
     description:
-      "Generate cryptographically secure passwords, memorable passphrases and PINs with live entropy and crack-time estimates. Everything happens in your browser — nothing is stored or sent.",
+      "Generate cryptographically secure passwords, memorable passphrases and PINs with live entropy and crack-time estimates. Passwords are never stored or logged.",
     keywords: [
       "password generator",
       "strong password",
@@ -124,7 +124,7 @@ export const TOOLS: ToolMeta[] = [
     shortName: "Hash",
     tagline: "MD5, SHA & HMAC checksums",
     description:
-      "Compute MD5, SHA-1, SHA-256, SHA-384, SHA-512 and CRC32 hashes of any text or file — with HMAC signing and checksum verification. Everything runs in your browser; your data never leaves the page.",
+      "Compute MD5, SHA-1, SHA-256, SHA-384, SHA-512 and CRC32 hashes of any text or file — with HMAC signing and checksum verification. Verify downloads and sign payloads in seconds.",
     keywords: [
       "hash generator",
       "sha256 generator",

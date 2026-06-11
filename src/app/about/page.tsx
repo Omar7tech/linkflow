@@ -7,7 +7,7 @@ import { SITE } from "@/constants/site";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "LinkFlow is a free, privacy-first link and QR toolkit. Learn why it runs entirely in your browser and what that means for you.",
+    "LinkFlow is a free, privacy-first link and QR toolkit. Learn how it keeps your data private and why it costs nothing to use.",
   alternates: { canonical: `${SITE.url}/about` },
 };
 
@@ -15,7 +15,7 @@ const VALUES = [
   {
     icon: ShieldCheckIcon,
     title: "Privacy isn't a feature — it's the architecture",
-    text: "LinkFlow has no backend. There is no database to breach, no logs to leak and no analytics pipeline watching what you generate. The phone numbers, messages and contact details you type are processed by JavaScript running on your own device, and they stay there.",
+    text: "The phone numbers, messages and contact details you type are used for one thing only: generating your output. Nothing is logged, analyzed or sold, and there is no analytics pipeline watching what you generate.",
   },
   {
     icon: CodeIcon,
@@ -25,7 +25,7 @@ const VALUES = [
   {
     icon: HeartIcon,
     title: "Free, with no catch",
-    text: "Because everything runs client-side, LinkFlow costs almost nothing to operate — so it costs you nothing to use. No freemium walls, no watermarks, no 'your QR code expires in 14 days' emails.",
+    text: "LinkFlow is lean to operate — so it costs you nothing to use. No freemium walls, no watermarks, no 'your QR code expires in 14 days' emails.",
   },
 ];
 
@@ -60,7 +60,7 @@ export default function AboutPage() {
           LinkFlow is built with Next.js, TypeScript and Tailwind CSS, and ships as an installable
           progressive web app. Link generation uses pure, tested functions per protocol — wa.me,
           sms:, tel:, mailto:, vCard 3.0, WiFi QR payloads and UTM parameters — and QR codes are
-          rendered locally with no redirect service in the middle.
+          static, with no redirect service in the middle.
         </p>
       </section>
 

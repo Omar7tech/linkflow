@@ -11,9 +11,9 @@ import { TOOLS } from "@/constants/tools";
 gsap.registerPlugin(useGSAP);
 
 const DATA_POINTS = [
-  { value: 9, pad: true, label: "Focused generators" },
-  { value: 0, pad: true, label: "Bytes sent to servers" },
-  { value: 100, suffix: "%", label: "Client-side, always" },
+  { value: 11, pad: true, label: "Focused generators" },
+  { value: 0, pad: true, label: "Sign-ups required" },
+  { value: 100, suffix: "%", label: "Free, always" },
   { value: null, display: "∞", label: "Links — never expire" },
 ];
 
@@ -77,7 +77,7 @@ export function Hero() {
           className="text-muted-foreground flex items-baseline justify-between font-mono text-[11px] tracking-[0.18em] uppercase"
         >
           <span>Link &amp; QR toolkit</span>
-          <span className="hidden sm:inline">Free — no sign-up — no servers</span>
+          <span className="hidden sm:inline">Free — no sign-up — no tracking</span>
         </div>
 
         {/* Headline */}
@@ -103,7 +103,7 @@ export function Hero() {
         <div className="mt-10 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <p data-hero-fade className="text-muted-foreground max-w-md text-base leading-relaxed sm:text-lg">
             WhatsApp links, QR codes, digital business cards and campaign URLs — generated
-            instantly, entirely in your browser. Nothing you type ever leaves your device.
+            instantly. No sign-up, no tracking, nothing logged.
           </p>
           <div data-hero-fade className="flex shrink-0 flex-wrap items-center gap-3">
             <Button asChild size="lg" className="h-11 rounded-full px-6">

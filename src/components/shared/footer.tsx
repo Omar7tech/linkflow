@@ -10,8 +10,7 @@ export function Footer() {
         <div className="space-y-3">
           <Logo />
           <p className="text-muted-foreground text-sm">
-            {SITE.tagline} Every tool runs entirely in your browser — your data never leaves your
-            device.
+            {SITE.tagline} Free, fast and private — no accounts, no tracking, nothing logged.
           </p>
         </div>
 
@@ -66,8 +65,7 @@ export function Footer() {
       <div className="border-border/60 border-t py-5">
         <div className="mx-auto max-w-6xl px-4">
           <p className="text-muted-foreground text-xs">
-            © {new Date().getFullYear()} {SITE.name}. Free forever. No tracking, no accounts, no
-            servers.
+            © {new Date().getFullYear()} {SITE.name}. Free forever. No tracking, no accounts.
           </p>
 
           <p className="text-muted-foreground mt-2 text-xs">

@@ -63,7 +63,7 @@ export function PresetsBar<T extends Record<string, unknown>>({
           </form>
           {presets.length === 0 ? (
             <p className="text-muted-foreground text-xs">
-              Save the current form so you can reuse it later. Presets live in your browser only.
+              Save the current form so you can reuse it later. Presets are saved on this device only.
             </p>
           ) : (
             <ul className="max-h-56 space-y-1 overflow-auto">
