@@ -14,6 +14,7 @@ export type ToolId =
   | "readtime"
   | "mockup"
   | "favicon"
+  | "jsoncsv"
   | "colors";
 
 export interface ToolMeta {

@@ -190,6 +190,16 @@ export const TOOLS: ToolMeta[] = [
     icon: "Sparkle",
   },
   {
+    id: "jsoncsv",
+    slug: "/json-csv",
+    name: "JSON to CSV Converter",
+    shortName: "JSON to CSV",
+    description:
+      "Transform nested JSON objects or arrays into flat, clean CSV files for Excel or Google Sheets. Features smart object flattening and instant preview.",
+    keywords: ["json to csv", "json flattener", "json converter", "data transform"],
+    icon: "FileSpreadsheet",
+  },
+  {
     id: "colors",
     slug: "/colors",
     name: "Image Color Extractor",

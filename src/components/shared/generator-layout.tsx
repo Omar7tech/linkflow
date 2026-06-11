@@ -24,11 +24,13 @@ export function GeneratorLayout({ tool, children, output, footer }: GeneratorLay
         <p className="text-muted-foreground">{tool.description}</p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_minmax(320px,420px)]">
+      <div className={output ? "grid gap-6 lg:grid-cols-[1fr_minmax(320px,420px)]" : "w-full"}>
         <div className="min-w-0">{children}</div>
-        <div className="min-w-0">
-          <div className="lg:sticky lg:top-20">{output}</div>
-        </div>
+        {output && (
+          <div className="min-w-0">
+            <div className="lg:sticky lg:top-20">{output}</div>
+          </div>
+        )}
       </div>
 
       {footer && <div className="mt-8 space-y-6">{footer}</div>}
