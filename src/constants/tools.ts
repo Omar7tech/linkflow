@@ -20,6 +20,7 @@ import {
   SwatchBookIcon,
   SparkleIcon,
   SparklesIcon,
+  SquircleIcon,
   TypeIcon,
 } from "lucide-react";
 import type { ToolMeta } from "@/types";
@@ -296,6 +297,22 @@ export const TOOLS = [
       "css color variables",
     ],
     icon: SwatchBookIcon,
+  },
+  {
+    id: "neumorphism",
+    slug: "/tools/neumorphism",
+    name: "Neumorphism Generator",
+    shortName: "Neumorphism",
+    description:
+      "Generate soft-UI elements with auto-derived light and dark shadows from any base color — flat, concave, convex or pressed, with a movable light source. Export CSS or Tailwind.",
+    keywords: [
+      "neumorphism generator",
+      "soft ui css",
+      "neumorphic shadow",
+      "box-shadow generator",
+      "soft ui generator",
+    ],
+    icon: SquircleIcon,
   },
   {
     id: "colors",

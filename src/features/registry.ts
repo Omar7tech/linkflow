@@ -31,5 +31,8 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   glass: dynamic(() => import("./glass/glass-tool").then((m) => m.GlassTool)),
   gradient: dynamic(() => import("./gradient/gradient-tool").then((m) => m.GradientTool)),
   palette: dynamic(() => import("./palette/palette-tool").then((m) => m.PaletteTool)),
+  neumorphism: dynamic(() =>
+    import("./neumorphism/neumorphism-tool").then((m) => m.NeumorphismTool)
+  ),
   colors: dynamic(() => import("./colors/colors-tool").then((m) => m.ColorsTool)),
 };
