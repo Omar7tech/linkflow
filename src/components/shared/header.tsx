@@ -18,7 +18,6 @@ import { CommandPalette } from "./command-palette";
 import { LinkLoadingIndicator } from "./link-indicator";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
-import { ToolIcon } from "./tool-icon";
 
 const NAV_LINKS = [
   { href: "/tools", label: "Tools" },
@@ -86,7 +85,7 @@ export function Header() {
                     onClick={() => setMobileOpen(false)}
                     className="hover:bg-muted flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm"
                   >
-                    <ToolIcon name={tool.icon} className="text-muted-foreground size-4" />
+                    <tool.icon className="text-muted-foreground size-4" aria-hidden />
                     {tool.shortName}
                     <LinkLoadingIndicator className="ml-auto" />
                   </Link>

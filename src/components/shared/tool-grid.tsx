@@ -3,7 +3,6 @@ import { Reveal } from "@/components/home/reveal";
 import { TOOLS } from "@/constants/tools";
 import { cn } from "@/lib/utils";
 import { ToolCardIndicator } from "./link-indicator";
-import { ToolIcon } from "./tool-icon";
 
 interface ToolGridProps {
   className?: string;
@@ -21,9 +20,9 @@ export function ToolGrid({ className, animated = false }: ToolGridProps) {
           className="group border-border/60 hover:border-foreground/20 relative flex flex-col gap-4 rounded-xl border bg-card/20 p-5 transition-colors duration-300 hover:bg-card"
         >
           <div className="flex items-center justify-between">
-            <ToolIcon
-              name={tool.icon}
+            <tool.icon
               className="text-muted-foreground/40 size-4 transition-colors group-hover:text-foreground"
+              aria-hidden
             />
             <div className="text-muted-foreground/10 transition-colors group-hover:text-foreground">
               <ToolCardIndicator />

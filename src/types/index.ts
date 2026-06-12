@@ -1,32 +1,18 @@
-export type ToolId =
-  | "whatsapp"
-  | "qr"
-  | "share"
-  | "sms"
-  | "tel"
-  | "email"
-  | "vcard"
-  | "universal"
-  | "utm"
-  | "password"
-  | "hash"
-  | "lorem"
-  | "readtime"
-  | "mockup"
-  | "favicon"
-  | "jsoncsv"
-  | "imagesplitter"
-  | "colors";
+import type { LucideIcon } from "lucide-react";
+// Type-only circular import — erased at runtime, resolved lazily by TypeScript.
+import type { ToolId } from "@/constants/tools";
+
+/** Derived from the TOOLS registry in constants/tools.ts — adding a tool there updates it. */
+export type { ToolId };
 
 export interface ToolMeta {
-  id: ToolId;
-  slug: string;
-  name: string;
-  shortName: string;
-  description: string;
-  keywords: string[];
-  /** Lucide icon name — resolved in the tool registry component map. */
-  icon: string;
+  readonly id: string;
+  readonly slug: string;
+  readonly name: string;
+  readonly shortName: string;
+  readonly description: string;
+  readonly keywords: readonly string[];
+  readonly icon: LucideIcon;
 }
 
 export interface HistoryEntry {

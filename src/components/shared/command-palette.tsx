@@ -15,7 +15,6 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { TOOLS } from "@/constants/tools";
-import { ToolIcon } from "./tool-icon";
 
 export function CommandPalette() {
   const [open, setOpen] = React.useState(false);
@@ -63,7 +62,7 @@ export function CommandPalette() {
                 value={`${tool.name} ${tool.keywords.join(" ")}`}
                 onSelect={() => run(() => router.push(tool.slug))}
               >
-                <ToolIcon name={tool.icon} className="text-muted-foreground size-4" />
+                <tool.icon className="text-muted-foreground size-4" aria-hidden />
                 <span>{tool.shortName}</span>
               </CommandItem>
             ))}

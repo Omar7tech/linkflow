@@ -12,7 +12,7 @@ export function toolMetadata(toolId: ToolId): Metadata {
   return {
     title,
     description,
-    keywords: tool.keywords,
+    keywords: [...tool.keywords],
     alternates: { canonical: url },
     openGraph: {
       title: `${title} · ${SITE.name}`,

@@ -1,6 +1,26 @@
+import {
+  BarChart3Icon,
+  BookOpenIcon,
+  ContactIcon,
+  FileSpreadsheetIcon,
+  FrameIcon,
+  Grid3X3Icon,
+  HashIcon,
+  KeyRoundIcon,
+  MailIcon,
+  MessageCircleIcon,
+  MessageSquareIcon,
+  PaletteIcon,
+  PhoneIcon,
+  QrCodeIcon,
+  Share2Icon,
+  SparkleIcon,
+  SparklesIcon,
+  TypeIcon,
+} from "lucide-react";
 import type { ToolMeta } from "@/types";
 
-export const TOOLS: ToolMeta[] = [
+export const TOOLS = [
   {
     id: "universal",
     slug: "/tools/universal",
@@ -9,7 +29,7 @@ export const TOOLS: ToolMeta[] = [
     description:
       "Pick a link type — WhatsApp, SMS, call, email, WiFi or plain URL — and the form morphs instantly. One tool, every protocol.",
     keywords: ["universal link generator", "link builder", "qr generator"],
-    icon: "Sparkles",
+    icon: SparklesIcon,
   },
   {
     id: "whatsapp",
@@ -19,7 +39,7 @@ export const TOOLS: ToolMeta[] = [
     description:
       "Create click-to-chat WhatsApp links with a prefilled message, format group invites, and bulk-generate links from a CSV of numbers.",
     keywords: ["whatsapp link generator", "wa.me", "click to chat", "whatsapp qr"],
-    icon: "MessageCircle",
+    icon: MessageCircleIcon,
   },
   {
     id: "qr",
@@ -29,7 +49,7 @@ export const TOOLS: ToolMeta[] = [
     description:
       "Generate QR codes for URLs, text, phone numbers, email, WiFi networks and vCards. Customize colors, size, error correction and add your logo.",
     keywords: ["qr code generator", "wifi qr code", "custom qr code", "vcard qr"],
-    icon: "QrCode",
+    icon: QrCodeIcon,
   },
   {
     id: "share",
@@ -39,7 +59,7 @@ export const TOOLS: ToolMeta[] = [
     description:
       "Build share links for WhatsApp, Telegram, X, Facebook, LinkedIn, Reddit and email — plus a native share button for mobile.",
     keywords: ["share link generator", "social share links", "share button"],
-    icon: "Share2",
+    icon: Share2Icon,
   },
   {
     id: "sms",
@@ -49,7 +69,7 @@ export const TOOLS: ToolMeta[] = [
     description:
       "Create sms: links that open the messaging app with the number and message already filled in. Perfect for ads, posters and email signatures.",
     keywords: ["sms link generator", "sms link", "text message link"],
-    icon: "MessageSquare",
+    icon: MessageSquareIcon,
   },
   {
     id: "tel",
@@ -59,7 +79,7 @@ export const TOOLS: ToolMeta[] = [
     description:
       "Generate tel: links that start a phone call with one tap. Validate any international number with a built-in country picker.",
     keywords: ["tel link generator", "click to call", "phone link"],
-    icon: "Phone",
+    icon: PhoneIcon,
   },
   {
     id: "email",
@@ -69,7 +89,7 @@ export const TOOLS: ToolMeta[] = [
     description:
       "Compose mailto: links with subject, body, CC and BCC prefilled. Great for support buttons, signatures and landing pages.",
     keywords: ["mailto link generator", "email link", "mailto builder"],
-    icon: "Mail",
+    icon: MailIcon,
   },
   {
     id: "vcard",
@@ -79,7 +99,7 @@ export const TOOLS: ToolMeta[] = [
     description:
       "Build a complete vCard 3.0 contact card, preview it live, download the .vcf file and share it as a scannable QR code.",
     keywords: ["vcard generator", "vcf file", "digital business card", "contact qr"],
-    icon: "Contact",
+    icon: ContactIcon,
   },
   {
     id: "utm",
@@ -89,7 +109,7 @@ export const TOOLS: ToolMeta[] = [
     description:
       "Append UTM parameters to any URL with handy presets for common channels. Keep your analytics clean and consistent.",
     keywords: ["utm builder", "utm link generator", "campaign url builder"],
-    icon: "BarChart3",
+    icon: BarChart3Icon,
   },
   {
     id: "password",
@@ -105,7 +125,7 @@ export const TOOLS: ToolMeta[] = [
       "random password",
       "pin generator",
     ],
-    icon: "KeyRound",
+    icon: KeyRoundIcon,
   },
   {
     id: "hash",
@@ -122,7 +142,7 @@ export const TOOLS: ToolMeta[] = [
       "hmac generator",
       "file hash",
     ],
-    icon: "Hash",
+    icon: HashIcon,
   },
   {
     id: "lorem",
@@ -138,7 +158,7 @@ export const TOOLS: ToolMeta[] = [
       "filler text",
       "lorem ipsum html",
     ],
-    icon: "Type",
+    icon: TypeIcon,
   },
   {
     id: "readtime",
@@ -154,7 +174,7 @@ export const TOOLS: ToolMeta[] = [
       "speaking time calculator",
       "readability score",
     ],
-    icon: "BookOpen",
+    icon: BookOpenIcon,
   },
   {
     id: "mockup",
@@ -171,7 +191,7 @@ export const TOOLS: ToolMeta[] = [
       "video mockup",
       "screen recording frame",
     ],
-    icon: "Frame",
+    icon: FrameIcon,
   },
   {
     id: "favicon",
@@ -187,7 +207,7 @@ export const TOOLS: ToolMeta[] = [
       "web app manifest",
       "favicon package",
     ],
-    icon: "Sparkle",
+    icon: SparkleIcon,
   },
   {
     id: "jsoncsv",
@@ -197,7 +217,7 @@ export const TOOLS: ToolMeta[] = [
     description:
       "Transform nested JSON objects or arrays into flat, clean CSV files for Excel or Google Sheets. Features smart object flattening and instant preview.",
     keywords: ["json to csv", "json flattener", "json converter", "data transform"],
-    icon: "FileSpreadsheet",
+    icon: FileSpreadsheetIcon,
   },
   {
     id: "imagesplitter",
@@ -207,7 +227,7 @@ export const TOOLS: ToolMeta[] = [
     description:
       "Split your images into perfect 3x1, 3x3, or custom grids for Instagram. Locally processed, high-quality slices ready for your profile.",
     keywords: ["image splitter", "instagram grid", "grid maker", "image slicer"],
-    icon: "Grid3X3",
+    icon: Grid3X3Icon,
   },
   {
     id: "colors",
@@ -223,11 +243,14 @@ export const TOOLS: ToolMeta[] = [
       "dominant colors",
       "color palette from image",
     ],
-    icon: "Palette",
+    icon: PaletteIcon,
   },
-];
+] as const satisfies readonly ToolMeta[];
 
-export const TOOL_BY_ID = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<
-  ToolMeta["id"],
-  ToolMeta
->;
+/** Every valid tool id — derived from the registry above, never edit by hand. */
+export type ToolId = (typeof TOOLS)[number]["id"];
+
+// Object.fromEntries widens keys to string — the registry guarantees every ToolId is present.
+export const TOOL_BY_ID = Object.fromEntries(
+  TOOLS.map((t) => [t.id, t])
+) as unknown as Record<ToolId, ToolMeta>;
