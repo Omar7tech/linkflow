@@ -1,6 +1,7 @@
 import {
   BarChart3Icon,
   BlendIcon,
+  EraserIcon,
   BookOpenIcon,
   ContactIcon,
   FileSpreadsheetIcon,
@@ -313,6 +314,22 @@ export const TOOLS = [
       "soft ui generator",
     ],
     icon: SquircleIcon,
+  },
+  {
+    id: "bgremover",
+    slug: "/tools/background-remover",
+    name: "Logo Background Remover",
+    shortName: "BG Remover",
+    description:
+      "Remove the background from any logo or image in your browser — AI segmentation for photos and complex art, instant color-matching for flat logos, with feathered edges and auto-trim. Nothing is ever uploaded.",
+    keywords: [
+      "logo background remover",
+      "remove background from logo",
+      "transparent png maker",
+      "white background remover",
+      "image background remover",
+    ],
+    icon: EraserIcon,
   },
   {
     id: "colors",

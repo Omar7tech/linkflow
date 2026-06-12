@@ -34,5 +34,6 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   neumorphism: dynamic(() =>
     import("./neumorphism/neumorphism-tool").then((m) => m.NeumorphismTool)
   ),
+  bgremover: dynamic(() => import("./bg-remover/bg-remover-tool").then((m) => m.BgRemoverTool)),
   colors: dynamic(() => import("./colors/colors-tool").then((m) => m.ColorsTool)),
 };
