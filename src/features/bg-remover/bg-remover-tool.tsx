@@ -20,9 +20,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GeneratorLayout } from "@/components/shared/generator-layout";
-import { HistoryPanel } from "@/components/shared/history-panel";
 import { TOOL_BY_ID } from "@/constants/tools";
-import { useHistory } from "@/hooks/useHistory";
 import {
   detectBgColor,
   removeBackground,
@@ -54,7 +52,6 @@ interface AiState {
 }
 
 export function BgRemoverTool() {
-  const history = useHistory("bgremover");
   const [original, setOriginal] = React.useState<ImageData | null>(null);
   const [originalUrl, setOriginalUrl] = React.useState<string | null>(null);
   const [method, setMethod] = React.useState<Method>("ai");
@@ -235,10 +232,6 @@ export function BgRemoverTool() {
       a.download = "background-removed.png";
       a.click();
       URL.revokeObjectURL(url);
-      history.add(
-        method === "ai" ? "AI background removal" : `Removed ${rgbToHexStr(bg)} background`,
-        `${final.width}×${final.height} transparent PNG`
-      );
       toast.success("Transparent PNG downloaded");
     }, "image/png");
   };
@@ -262,11 +255,7 @@ export function BgRemoverTool() {
   const showOriginal = picking || comparing || !result;
 
   return (
-    <GeneratorLayout
-      tool={TOOL_BY_ID.bgremover}
-      output={null}
-      footer={<HistoryPanel history={history} />}
-    >
+    <GeneratorLayout tool={TOOL_BY_ID.bgremover} output={null}>
       {!original ? (
         <Card>
           <CardContent>
