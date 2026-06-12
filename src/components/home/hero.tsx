@@ -45,23 +45,24 @@ export function Hero() {
         className="absolute inset-0 -z-10 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[size:22px_22px] mask-[radial-gradient(ellipse_65%_70%_at_30%_25%,black,transparent)]"
       />
 
-      {/* WebGL light rays from the top-right — dark mode only: additive light can't
-          brighten a white background, it only muddies it into a gray wash. */}
+      {/* WebGL light rays from the top-right. Light mode multiplies (emerald tint on
+          white — additive light alone would just gray out a white background);
+          dark mode blends normally as real light. */}
       <div
         aria-hidden
-        className="absolute top-0 right-0 -z-10 hidden h-[420px] w-full sm:h-[520px] sm:w-[70%] dark:block mask-[radial-gradient(ellipse_85%_90%_at_100%_0%,black_45%,transparent_78%)]"
+        className="absolute top-0 right-0 -z-10 h-[420px] w-full mix-blend-multiply sm:h-[520px] sm:w-[70%] dark:mix-blend-normal mask-[radial-gradient(ellipse_90%_95%_at_100%_0%,black_55%,transparent_92%)]"
       >
         <SideRays
           speed={2}
           rayColor1="#34d399"
           rayColor2="#5eead4"
-          intensity={1.4}
+          intensity={2.4}
           spread={3}
           origin="top-right"
-          saturation={1.2}
+          saturation={1.5}
           blend={0.6}
-          falloff={2.2}
-          opacity={0.7}
+          falloff={1.5}
+          opacity={0.9}
         />
       </div>
 
