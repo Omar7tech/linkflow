@@ -4,7 +4,6 @@ import * as React from "react";
 import { DownloadIcon, ImageIcon, Grid3X3Icon, Trash2Icon, Loader2Icon, UserIcon, GridIcon, BookmarkIcon, TagIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field } from "@/components/shared/field";
 import { GeneratorLayout } from "@/components/shared/generator-layout";
 import { HistoryPanel } from "@/components/shared/history-panel";
 import { TOOL_BY_ID } from "@/constants/tools";
@@ -12,6 +11,8 @@ import { useHistory } from "@/hooks/useHistory";
 import { splitImage, createGridZip } from "@/lib/image-splitter";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+const COLS = 3; // Instagram profile grids are always 3 columns wide
 
 const GRID_PRESETS = [
   { label: "3 x 1", rows: 1, cols: 3 },
@@ -28,8 +29,6 @@ export function ImageSplitterTool() {
   const [processing, setProcessing] = React.useState(false);
   const [downloading, setDownloading] = React.useState(false);
 
-  const cols = 3; // Fixed for Instagram
-
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -38,27 +37,32 @@ export function ImageSplitterTool() {
         return;
       }
       const reader = new FileReader();
-      reader.onload = (prev) => setImage(prev.target?.result as string);
+      reader.onload = (ev) => setImage(ev.target?.result as string);
       reader.readAsDataURL(file);
     }
   };
 
-  const updateSlices = React.useCallback(async () => {
-    if (!image) return;
-    setProcessing(true);
-    try {
-      const result = await splitImage(image, cols, rows);
-      setSlices(result);
-    } catch (err) {
-      toast.error("Failed to process image");
-    } finally {
-      setProcessing(false);
-    }
-  }, [image, rows]);
-
   React.useEffect(() => {
-    updateSlices();
-  }, [updateSlices]);
+    if (!image) return;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setProcessing(true);
+      splitImage(image, COLS, rows)
+        .then((result) => {
+          if (!cancelled) setSlices(result);
+        })
+        .catch(() => {
+          if (!cancelled) toast.error("Failed to process image");
+        })
+        .finally(() => {
+          if (!cancelled) setProcessing(false);
+        });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [image, rows]);
 
   const handleDownload = async () => {
     if (slices.length === 0) return;
@@ -72,8 +76,8 @@ export function ImageSplitterTool() {
       a.click();
       URL.revokeObjectURL(url);
       history.add(`Split into 3x${rows} Instagram grid`, `${slices.length} slices prepared`);
-      toast.success("Ready! Upload files from Step 01 to Step 09.");
-    } catch (err) {
+      toast.success(`Ready! Upload files from Step 01 to Step ${String(slices.length).padStart(2, "0")}.`);
+    } catch {
       toast.error("Failed to create ZIP");
     } finally {
       setDownloading(false);
@@ -132,17 +136,20 @@ export function ImageSplitterTool() {
               </div>
             ) : (
               <div className="space-y-6">
-                <Field label="Choose Grid Size" hint="Instagram profiles are always 3 columns wide. Pick how many rows you want to fill.">
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <fieldset className="space-y-1.5">
+                  <legend className="text-sm leading-none font-medium">Choose Grid Size</legend>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" role="radiogroup" aria-label="Grid size">
                     {GRID_PRESETS.map((p) => (
                       <button
                         key={p.label}
                         type="button"
+                        role="radio"
+                        aria-checked={rows === p.rows}
                         onClick={() => setRows(p.rows)}
                         className={cn(
                           "flex h-12 items-center justify-center rounded-xl border-2 font-bold transition-all text-sm",
-                          rows === p.rows 
-                            ? "border-primary bg-primary/5 text-primary" 
+                          rows === p.rows
+                            ? "border-primary bg-primary/5 text-primary"
                             : "border-border/40 hover:border-border"
                         )}
                       >
@@ -150,7 +157,10 @@ export function ImageSplitterTool() {
                       </button>
                     ))}
                   </div>
-                </Field>
+                  <p className="text-muted-foreground text-xs">
+                    Instagram profiles are always 3 columns wide. Pick how many rows you want to fill.
+                  </p>
+                </fieldset>
 
                 <div className="flex items-center gap-4 border-t border-border/40 pt-8">
                   <Button 
@@ -212,7 +222,8 @@ export function ImageSplitterTool() {
                 >
                   {slices.map((slice, i) => (
                     <div key={i} className="aspect-square relative group overflow-hidden bg-muted/20">
-                      <img 
+                      {/* eslint-disable-next-line @next/next/no-img-element -- slices are local data URLs; next/image cannot optimize them */}
+                      <img
                         src={slice} 
                         alt="" 
                         className="h-full w-full object-cover transition-opacity group-hover:opacity-80"

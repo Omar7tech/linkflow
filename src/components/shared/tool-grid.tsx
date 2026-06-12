@@ -14,7 +14,7 @@ interface ToolGridProps {
 export function ToolGrid({ className, animated = false }: ToolGridProps) {
   const grid = (
     <>
-      {TOOLS.map((tool, i) => (
+      {TOOLS.map((tool) => (
         <Link
           key={tool.id}
           href={tool.slug}

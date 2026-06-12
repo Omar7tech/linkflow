@@ -13,7 +13,6 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-  CommandShortcut,
 } from "@/components/ui/command";
 import { TOOLS } from "@/constants/tools";
 import { ToolIcon } from "./tool-icon";
@@ -66,7 +65,6 @@ export function CommandPalette() {
               >
                 <ToolIcon name={tool.icon} className="text-muted-foreground size-4" />
                 <span>{tool.shortName}</span>
-                <CommandShortcut>{tool.tagline}</CommandShortcut>
               </CommandItem>
             ))}
           </CommandGroup>

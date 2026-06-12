@@ -123,7 +123,7 @@ export function JsonCsvTool() {
   return (
     <GeneratorLayout
       tool={TOOL_BY_ID.jsoncsv}
-      output={null} // We are moving everything to the main column
+      output={null}
       footer={<HistoryPanel history={history} />}
     >
       <div className="space-y-8">
