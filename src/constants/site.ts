@@ -11,6 +11,7 @@ export const SITE = {
 export const STORAGE_KEYS = {
   history: (toolId: string) => `forma:history:${toolId}`,
   presets: (toolId: string) => `forma:presets:${toolId}`,
+  favorites: "forma:favorites",
 } as const;
 
 export const HISTORY_LIMIT = 10;

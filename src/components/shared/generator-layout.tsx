@@ -1,4 +1,5 @@
 import type { ToolMeta } from "@/types";
+import { FavoriteButton } from "./favorite-button";
 
 interface GeneratorLayoutProps {
   tool: ToolMeta;
@@ -19,6 +20,7 @@ export function GeneratorLayout({ tool, children, output, footer }: GeneratorLay
             <tool.icon className="text-foreground/80 size-5" aria-hidden />
           </span>
           <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">{tool.name}</h1>
+          <FavoriteButton toolId={tool.id} className="mt-1 [&>svg]:size-5" />
         </div>
         <p className="text-muted-foreground">{tool.description}</p>
       </header>
