@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { BlendIcon, RotateCcwIcon, SlidersHorizontalIcon } from "lucide-react";
+import { BlendIcon, ImageUpIcon, RotateCcwIcon, SlidersHorizontalIcon, SunMoonIcon, XIcon } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,29 @@ export function GlassTool() {
   const [config, setConfig] = React.useState<GlassConfig>(GLASS_PRESETS[0].config);
   const [presetId, setPresetId] = React.useState(GLASS_PRESETS[0].id);
   const [sceneId, setSceneId] = React.useState(GLASS_SCENES[0].id);
-  const scene = GLASS_SCENES.find((s) => s.id === sceneId) ?? GLASS_SCENES[0];
+  const [customBg, setCustomBg] = React.useState<string | null>(null);
+  const [customFg, setCustomFg] = React.useState<"light" | "dark">("light");
+
+  const scene =
+    sceneId === "custom" && customBg
+      ? { id: "custom", name: "Custom", background: `url(${customBg}) center / cover`, fg: customFg }
+      : (GLASS_SCENES.find((s) => s.id === sceneId) ?? GLASS_SCENES[0]);
+
+  const handleBgUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Image too large (max 8MB)");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setCustomBg(ev.target?.result as string);
+      setSceneId("custom");
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Card position on the stage, in % of the stage size.
   const [pos, setPos] = React.useState({ x: 50, y: 50 });
@@ -209,6 +232,53 @@ export function GlassTool() {
                   title={s.name}
                 />
               ))}
+              {customBg && (
+                <span className="relative inline-flex">
+                  <button
+                    type="button"
+                    onClick={() => setSceneId("custom")}
+                    className={cn(
+                      "h-9 w-14 overflow-hidden rounded-lg border-2 bg-cover bg-center transition-all",
+                      sceneId === "custom"
+                        ? "border-primary scale-105"
+                        : "border-border/40 hover:border-border"
+                    )}
+                    style={{ backgroundImage: `url(${customBg})` }}
+                    aria-label="Custom background"
+                    title="Your image"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomBg(null);
+                      if (sceneId === "custom") setSceneId(GLASS_SCENES[0].id);
+                    }}
+                    className="bg-foreground text-background absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full"
+                    aria-label="Remove custom background"
+                  >
+                    <XIcon className="size-2.5" />
+                  </button>
+                </span>
+              )}
+              <label
+                className="border-border/60 hover:border-border text-muted-foreground flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border-2 border-dashed px-2.5 text-xs font-bold"
+                title="Upload your own background"
+              >
+                <ImageUpIcon className="size-3.5" />
+                Your image
+                <input type="file" accept="image/*" className="hidden" onChange={handleBgUpload} />
+              </label>
+              {sceneId === "custom" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCustomFg((f) => (f === "light" ? "dark" : "light"))}
+                  className="text-muted-foreground h-8 text-xs"
+                  title="Flip card text between light and dark"
+                >
+                  <SunMoonIcon className="size-3.5" /> Text: {customFg}
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -282,6 +352,23 @@ export function GlassTool() {
                 onChange={(v) => set("borderOpacity", v)}
               />
               <GlassSlider
+                label="Brightness"
+                value={config.brightness}
+                unit="%"
+                min={50}
+                max={150}
+                step={5}
+                onChange={(v) => set("brightness", v)}
+              />
+              <GlassSlider
+                label="Border width"
+                value={config.borderWidth}
+                unit="px"
+                min={0}
+                max={6}
+                onChange={(v) => set("borderWidth", v)}
+              />
+              <GlassSlider
                 label="Radius"
                 value={config.radius}
                 unit="px"
@@ -328,24 +415,54 @@ export function GlassTool() {
                   />
                 </div>
               </div>
-              <label className="flex items-center gap-3 pb-1">
-                <Switch
-                  checked={config.highlight}
-                  onCheckedChange={(v) => set("highlight", v)}
-                  aria-label="Edge highlight"
-                />
-                <span className="text-sm">
-                  Edge highlight
-                  <span className="text-muted-foreground block text-xs">
-                    A bright inner top edge, like light catching the glass.
-                  </span>
-                </span>
-              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <GlassToggle
+                label="Edge highlight"
+                hint="A bright inner top edge, like light catching the glass."
+                checked={config.highlight}
+                onChange={(v) => set("highlight", v)}
+              />
+              <GlassToggle
+                label="Gradient surface"
+                hint="A diagonal fade across the tint for extra depth."
+                checked={config.gradient}
+                onChange={(v) => set("gradient", v)}
+              />
+              <GlassToggle
+                label="Frost grain"
+                hint="A whisper of SVG noise baked into the surface."
+                checked={config.noise}
+                onChange={(v) => set("noise", v)}
+              />
             </div>
           </CardContent>
         </Card>
       </div>
     </GeneratorLayout>
+  );
+}
+
+function GlassToggle({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label className="flex items-start gap-3">
+      <Switch checked={checked} onCheckedChange={onChange} aria-label={label} className="mt-0.5" />
+      <span className="text-sm">
+        {label}
+        <span className="text-muted-foreground block text-xs">{hint}</span>
+      </span>
+    </label>
   );
 }
 

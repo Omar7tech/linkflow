@@ -9,15 +9,26 @@ export interface GlassConfig {
   blur: number;
   /** Backdrop saturation, 100–200 (%). */
   saturation: number;
+  /** Backdrop brightness, 50–150 (%). */
+  brightness: number;
   /** Corner radius in px, 0–40. */
   radius: number;
   /** Border alpha, 0–80 (%). */
   borderOpacity: number;
+  /** Border width in px, 0–6. */
+  borderWidth: number;
   /** Drop shadow strength, 0–60 (%). */
   shadow: number;
   /** Inner top edge highlight — fakes light hitting the glass. */
   highlight: boolean;
+  /** Diagonal gradient surface instead of a flat tint. */
+  gradient: boolean;
+  /** Subtle SVG grain baked into the surface — classic frosted look. */
+  noise: boolean;
 }
+
+/** Tiling fractal-noise SVG, alpha baked in — the standard frost-grain trick. */
+const NOISE_LAYER = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.07'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`;
 
 export function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const value = hex.replace("#", "");
@@ -34,12 +45,21 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } {
 
 function rgba(hex: string, alphaPct: number): string {
   const { r, g, b } = hexToRgb(hex);
-  return `rgba(${r}, ${g}, ${b}, ${(alphaPct / 100).toFixed(2)})`;
+  return `rgba(${r}, ${g}, ${b}, ${(Math.max(alphaPct, 0) / 100).toFixed(2)})`;
 }
 
-function backdropFilter({ blur, saturation }: GlassConfig): string {
+/** The glass surface: flat tint or diagonal gradient, with optional grain on top. */
+function surface(config: GlassConfig): string {
+  const fill = config.gradient
+    ? `linear-gradient(135deg, ${rgba(config.tint, Math.min(config.opacity + 12, 95))}, ${rgba(config.tint, Math.max(config.opacity - 8, 2))})`
+    : rgba(config.tint, config.opacity);
+  return config.noise ? `${NOISE_LAYER} repeat, ${fill}` : fill;
+}
+
+function backdropFilter({ blur, saturation, brightness }: GlassConfig): string {
   const parts = [`blur(${blur}px)`];
   if (saturation !== 100) parts.push(`saturate(${saturation}%)`);
+  if (brightness !== 100) parts.push(`brightness(${brightness}%)`);
   return parts.join(" ");
 }
 
@@ -54,10 +74,12 @@ function boxShadow({ shadow, highlight }: GlassConfig): string | null {
 export function toStyle(config: GlassConfig): CSSProperties {
   const shadowValue = boxShadow(config);
   return {
-    background: rgba(config.tint, config.opacity),
+    background: surface(config),
     backdropFilter: backdropFilter(config),
     WebkitBackdropFilter: backdropFilter(config),
-    border: `1px solid ${rgba(config.tint, config.borderOpacity)}`,
+    ...(config.borderWidth > 0
+      ? { border: `${config.borderWidth}px solid ${rgba(config.tint, config.borderOpacity)}` }
+      : {}),
     borderRadius: `${config.radius}px`,
     ...(shadowValue ? { boxShadow: shadowValue } : {}),
   };
@@ -67,12 +89,14 @@ export function toCss(config: GlassConfig, className = "glass"): string {
   const shadowValue = boxShadow(config);
   const lines = [
     `.${className} {`,
-    `  background: ${rgba(config.tint, config.opacity)};`,
+    `  background: ${surface(config)};`,
     `  backdrop-filter: ${backdropFilter(config)};`,
     `  -webkit-backdrop-filter: ${backdropFilter(config)};`,
-    `  border: 1px solid ${rgba(config.tint, config.borderOpacity)};`,
-    `  border-radius: ${config.radius}px;`,
   ];
+  if (config.borderWidth > 0) {
+    lines.push(`  border: ${config.borderWidth}px solid ${rgba(config.tint, config.borderOpacity)};`);
+  }
+  lines.push(`  border-radius: ${config.radius}px;`);
   if (shadowValue) lines.push(`  box-shadow: ${shadowValue};`);
   lines.push(
     `}`,
@@ -89,18 +113,27 @@ export function toCss(config: GlassConfig, className = "glass"): string {
 
 export function toTailwind(config: GlassConfig): string {
   const classes = [
-    `bg-[${rgba(config.tint, config.opacity).replace(/\s/g, "")}]`,
+    `bg-[${(config.gradient
+      ? `linear-gradient(135deg,${rgba(config.tint, Math.min(config.opacity + 12, 95))},${rgba(config.tint, Math.max(config.opacity - 8, 2))})`
+      : rgba(config.tint, config.opacity)
+    ).replace(/\s/g, "")}]`,
     `backdrop-blur-[${config.blur}px]`,
   ];
   if (config.saturation !== 100) classes.push(`backdrop-saturate-[${config.saturation / 100}]`);
-  classes.push(
-    `border`,
-    `border-[${rgba(config.tint, config.borderOpacity).replace(/\s/g, "")}]`,
-    `rounded-[${config.radius}px]`
-  );
+  if (config.brightness !== 100) classes.push(`backdrop-brightness-[${config.brightness / 100}]`);
+  if (config.borderWidth > 0) {
+    classes.push(
+      config.borderWidth === 1 ? `border` : `border-[${config.borderWidth}px]`,
+      `border-[${rgba(config.tint, config.borderOpacity).replace(/\s/g, "")}]`
+    );
+  }
+  classes.push(`rounded-[${config.radius}px]`);
   const shadowValue = boxShadow(config);
   if (shadowValue) classes.push(`shadow-[${shadowValue.replace(/\s/g, "_")}]`);
-  return `<div class="${classes.join(" ")}">\n  <!-- content -->\n</div>`;
+  const noiseNote = config.noise
+    ? `\n<!-- Frost grain uses an SVG background layer — grab it from the CSS export. -->`
+    : "";
+  return `<div class="${classes.join(" ")}">\n  <!-- content -->\n</div>${noiseNote}`;
 }
 
 export interface GlassPreset {
@@ -109,76 +142,58 @@ export interface GlassPreset {
   config: GlassConfig;
 }
 
+const base = {
+  brightness: 100,
+  borderWidth: 1,
+  gradient: false,
+  noise: false,
+};
+
 export const GLASS_PRESETS: GlassPreset[] = [
   {
     id: "frosted",
     name: "Frosted",
-    config: {
-      tint: "#ffffff",
-      opacity: 15,
-      blur: 16,
-      saturation: 160,
-      radius: 16,
-      borderOpacity: 30,
-      shadow: 20,
-      highlight: true,
-    },
+    config: { ...base, tint: "#ffffff", opacity: 15, blur: 16, saturation: 160, radius: 16, borderOpacity: 30, shadow: 20, highlight: true, noise: true },
   },
   {
     id: "subtle",
     name: "Subtle",
-    config: {
-      tint: "#ffffff",
-      opacity: 8,
-      blur: 8,
-      saturation: 120,
-      radius: 12,
-      borderOpacity: 15,
-      shadow: 10,
-      highlight: false,
-    },
+    config: { ...base, tint: "#ffffff", opacity: 8, blur: 8, saturation: 120, radius: 12, borderOpacity: 15, shadow: 10, highlight: false },
   },
   {
     id: "vivid",
     name: "Vivid",
-    config: {
-      tint: "#ffffff",
-      opacity: 25,
-      blur: 24,
-      saturation: 200,
-      radius: 24,
-      borderOpacity: 45,
-      shadow: 30,
-      highlight: true,
-    },
+    config: { ...base, tint: "#ffffff", opacity: 25, blur: 24, saturation: 200, radius: 24, borderOpacity: 45, shadow: 30, highlight: true },
   },
   {
     id: "smoke",
     name: "Dark Smoke",
-    config: {
-      tint: "#0f172a",
-      opacity: 35,
-      blur: 14,
-      saturation: 110,
-      radius: 16,
-      borderOpacity: 25,
-      shadow: 40,
-      highlight: false,
-    },
+    config: { ...base, tint: "#0f172a", opacity: 35, blur: 14, saturation: 110, radius: 16, borderOpacity: 25, shadow: 40, highlight: false },
   },
   {
     id: "crystal",
     name: "Crystal",
-    config: {
-      tint: "#ffffff",
-      opacity: 10,
-      blur: 4,
-      saturation: 140,
-      radius: 20,
-      borderOpacity: 60,
-      shadow: 15,
-      highlight: true,
-    },
+    config: { ...base, tint: "#ffffff", opacity: 10, blur: 4, saturation: 140, radius: 20, borderOpacity: 60, shadow: 15, highlight: true },
+  },
+  {
+    id: "holo",
+    name: "Holographic",
+    config: { ...base, tint: "#a5f3fc", opacity: 18, blur: 20, saturation: 200, brightness: 115, radius: 24, borderOpacity: 50, shadow: 25, highlight: true, gradient: true },
+  },
+  {
+    id: "gold",
+    name: "Gold Leaf",
+    config: { ...base, tint: "#f59e0b", opacity: 20, blur: 12, saturation: 150, radius: 16, borderOpacity: 55, shadow: 25, highlight: true, gradient: true },
+  },
+  {
+    id: "obsidian",
+    name: "Obsidian",
+    config: { ...base, tint: "#000000", opacity: 45, blur: 28, saturation: 120, brightness: 90, radius: 20, borderOpacity: 20, shadow: 50, highlight: false, noise: true },
+  },
+  {
+    id: "bubblegum",
+    name: "Bubblegum",
+    config: { ...base, tint: "#f472b6", opacity: 22, blur: 18, saturation: 180, radius: 32, borderOpacity: 40, shadow: 20, highlight: true, gradient: true },
   },
 ];
 
@@ -212,6 +227,34 @@ export const GLASS_SCENES: GlassScene[] = [
     background:
       "radial-gradient(at 75% 20%, #22d3ee 0px, transparent 50%), radial-gradient(at 25% 75%, #3b82f6 0px, transparent 55%), linear-gradient(200deg, #0ea5e9, #1e3a8a)",
     fg: "light",
+  },
+  {
+    id: "neon",
+    name: "Neon",
+    background:
+      "radial-gradient(at 10% 90%, #22d3ee 0px, transparent 45%), radial-gradient(at 90% 10%, #e879f9 0px, transparent 45%), radial-gradient(at 50% 50%, #4f46e5 0px, transparent 60%), #030712",
+    fg: "light",
+  },
+  {
+    id: "forest",
+    name: "Forest",
+    background:
+      "radial-gradient(at 80% 80%, #4ade80 0px, transparent 50%), radial-gradient(at 20% 20%, #2dd4bf 0px, transparent 50%), linear-gradient(180deg, #14532d, #052e16)",
+    fg: "light",
+  },
+  {
+    id: "bokeh",
+    name: "Bokeh",
+    background:
+      "radial-gradient(circle at 20% 30%, #fbbf24 0 6%, transparent 7%), radial-gradient(circle at 70% 20%, #f472b6 0 9%, transparent 10%), radial-gradient(circle at 85% 70%, #38bdf8 0 7%, transparent 8%), radial-gradient(circle at 40% 80%, #a78bfa 0 10%, transparent 11%), radial-gradient(circle at 55% 45%, #34d399 0 5%, transparent 6%), #1e1b4b",
+    fg: "light",
+  },
+  {
+    id: "candy",
+    name: "Candy",
+    background:
+      "radial-gradient(at 30% 20%, #fda4af 0px, transparent 55%), radial-gradient(at 80% 80%, #c4b5fd 0px, transparent 55%), linear-gradient(135deg, #fce7f3, #ede9fe)",
+    fg: "dark",
   },
   {
     id: "stripes",
