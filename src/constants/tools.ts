@@ -318,16 +318,16 @@ export const TOOLS = [
   {
     id: "bgremover",
     slug: "/tools/background-remover",
-    name: "Logo Background Remover",
+    name: "Background Remover",
     shortName: "BG Remover",
     description:
-      "Remove the background from any logo or image in your browser — AI segmentation for photos and complex art, instant color-matching for flat logos, with feathered edges and auto-trim. Nothing is ever uploaded.",
+      "Remove the background from any image in your browser — AI segmentation for photos and complex art, instant color-matching for flat graphics, with feathered edges and auto-trim. Nothing is ever uploaded.",
     keywords: [
-      "logo background remover",
-      "remove background from logo",
+      "background remover",
+      "remove background from image",
       "transparent png maker",
       "white background remover",
-      "image background remover",
+      "ai background removal",
     ],
     icon: EraserIcon,
   },
