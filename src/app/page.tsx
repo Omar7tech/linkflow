@@ -178,7 +178,7 @@ export default function HomePage() {
           </h2>
           <div className="mt-9 flex flex-wrap items-center gap-4">
             <Button asChild size="lg" className="h-12 rounded-full px-7 text-base">
-              <Link href="/universal">Open the Universal Generator</Link>
+              <Link href="/tools/universal">Open the Universal Generator</Link>
             </Button>
             <p className="text-muted-foreground text-sm">No account. No tracking. No expiry.</p>
           </div>

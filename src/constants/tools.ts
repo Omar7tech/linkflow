@@ -3,7 +3,7 @@ import type { ToolMeta } from "@/types";
 export const TOOLS: ToolMeta[] = [
   {
     id: "universal",
-    slug: "/universal",
+    slug: "/tools/universal",
     name: "Universal Link Generator",
     shortName: "Universal",
     description:
@@ -13,7 +13,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "whatsapp",
-    slug: "/whatsapp",
+    slug: "/tools/whatsapp",
     name: "WhatsApp Link Generator",
     shortName: "WhatsApp",
     description:
@@ -23,7 +23,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "qr",
-    slug: "/qr",
+    slug: "/tools/qr",
     name: "QR Code Generator",
     shortName: "QR Code",
     description:
@@ -33,7 +33,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "share",
-    slug: "/share",
+    slug: "/tools/share",
     name: "Share Link Generator",
     shortName: "Share Links",
     description:
@@ -43,7 +43,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "sms",
-    slug: "/sms",
+    slug: "/tools/sms",
     name: "SMS Link Generator",
     shortName: "SMS",
     description:
@@ -53,7 +53,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "tel",
-    slug: "/tel",
+    slug: "/tools/tel",
     name: "Click-to-Call Link Generator",
     shortName: "Call",
     description:
@@ -63,7 +63,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "email",
-    slug: "/email",
+    slug: "/tools/email",
     name: "Email Link Generator",
     shortName: "Email",
     description:
@@ -73,7 +73,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "vcard",
-    slug: "/vcard",
+    slug: "/tools/vcard",
     name: "vCard Generator",
     shortName: "vCard",
     description:
@@ -83,7 +83,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "utm",
-    slug: "/utm",
+    slug: "/tools/utm",
     name: "UTM Link Builder",
     shortName: "UTM",
     description:
@@ -93,7 +93,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "password",
-    slug: "/password",
+    slug: "/tools/password",
     name: "Password Generator",
     shortName: "Password",
     description:
@@ -109,7 +109,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "hash",
-    slug: "/hash",
+    slug: "/tools/hash",
     name: "Hash Generator",
     shortName: "Hash",
     description:
@@ -126,7 +126,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "lorem",
-    slug: "/lorem",
+    slug: "/tools/lorem",
     name: "Lorem Ipsum Generator",
     shortName: "Lorem Ipsum",
     description:
@@ -142,7 +142,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "readtime",
-    slug: "/reading-time",
+    slug: "/tools/reading-time",
     name: "Reading Time Calculator",
     shortName: "Reading Time",
     description:
@@ -158,7 +158,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "mockup",
-    slug: "/mockup",
+    slug: "/tools/mockup",
     name: "Mockup Generator",
     shortName: "Mockup",
     description:
@@ -175,7 +175,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "favicon",
-    slug: "/favicon",
+    slug: "/tools/favicon",
     name: "Favicon Generator",
     shortName: "Favicon",
     description:
@@ -191,7 +191,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "jsoncsv",
-    slug: "/json-csv",
+    slug: "/tools/json-csv",
     name: "JSON to CSV Converter",
     shortName: "JSON to CSV",
     description:
@@ -201,7 +201,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "imagesplitter",
-    slug: "/image-splitter",
+    slug: "/tools/image-splitter",
     name: "Image Splitter",
     shortName: "Grid Splitter",
     description:
@@ -211,7 +211,7 @@ export const TOOLS: ToolMeta[] = [
   },
   {
     id: "colors",
-    slug: "/colors",
+    slug: "/tools/colors",
     name: "Image Color Extractor",
     shortName: "Color Extractor",
     description:

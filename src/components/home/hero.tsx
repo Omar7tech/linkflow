@@ -50,7 +50,7 @@ export function Hero() {
           {/* CTAs */}
           <div className="flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="h-12 rounded-md px-8 text-base font-bold tracking-tight shadow-lg shadow-primary/10 transition-all hover:-translate-y-0.5 active:translate-y-0">
-              <Link href="/universal">
+              <Link href="/tools/universal">
                 Explore Tools
               </Link>
             </Button>
