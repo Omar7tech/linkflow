@@ -200,6 +200,16 @@ export const TOOLS: ToolMeta[] = [
     icon: "FileSpreadsheet",
   },
   {
+    id: "imagesplitter",
+    slug: "/image-splitter",
+    name: "Image Splitter",
+    shortName: "Grid Splitter",
+    description:
+      "Split your images into perfect 3x1, 3x3, or custom grids for Instagram. Locally processed, high-quality slices ready for your profile.",
+    keywords: ["image splitter", "instagram grid", "grid maker", "image slicer"],
+    icon: "Grid3X3",
+  },
+  {
     id: "colors",
     slug: "/colors",
     name: "Image Color Extractor",

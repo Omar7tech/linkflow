@@ -15,6 +15,7 @@ export type ToolId =
   | "mockup"
   | "favicon"
   | "jsoncsv"
+  | "imagesplitter"
   | "colors";
 
 export interface ToolMeta {
