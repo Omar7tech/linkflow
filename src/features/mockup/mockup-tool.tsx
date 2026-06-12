@@ -214,7 +214,7 @@ export function MockupTool() {
     renderMockup(ctx, opts, mediaSource);
     off.toBlob((blob) => {
       if (!blob) return toast.error("Export failed — try a smaller canvas");
-      downloadBlob(blob, `linkflow-mockup${multiplier > 1 ? `@${multiplier}x` : ""}.png`);
+      downloadBlob(blob, `forma-mockup${multiplier > 1 ? `@${multiplier}x` : ""}.png`);
       toast.success(`PNG exported at ${opts.width * multiplier}×${opts.height * multiplier}`);
     }, "image/png");
   };
@@ -257,7 +257,7 @@ export function MockupTool() {
     recorder.onstop = () => {
       stream.getTracks().forEach((t) => t.stop());
       const blob = new Blob(chunks, { type: mime ?? "video/webm" });
-      downloadBlob(blob, "linkflow-mockup.webm");
+      downloadBlob(blob, "forma-mockup.webm");
       toast.success("WebM video exported");
     };
 

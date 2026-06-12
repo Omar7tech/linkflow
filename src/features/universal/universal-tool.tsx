@@ -95,7 +95,7 @@ export function UniversalTool() {
           output={output}
           snippetLabel={selected.snippet}
           onAction={commit}
-          filename={`linkflow-${type}`}
+          filename={`forma-${type}`}
           openable={type !== "wifi"}
           showSnippets={type !== "wifi"}
           emptyHint="Pick a type, fill the short form, get your link."

@@ -3,8 +3,8 @@ import { OG_SIZE, renderOgImage } from "@/lib/og";
 
 export const size = OG_SIZE;
 export const contentType = "image/png";
-export const alt = `${SITE.name} — Free Link & QR Code Toolkit`;
+export const alt = `${SITE.name} — The Everyday Tool Studio`;
 
 export default function Image() {
-  return renderOgImage("Free Link & QR Code Toolkit", SITE.description);
+  return renderOgImage("The everyday tool studio", SITE.description);
 }

@@ -27,28 +27,30 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: `${SITE.name} — Free Link & QR Code Toolkit`,
+    default: `${SITE.name} — The Everyday Tool Studio`,
     template: `%s · ${SITE.name}`,
   },
   description: SITE.description,
   applicationName: SITE.name,
   keywords: [
+    "free online tools",
     "link generator",
     "qr code generator",
     "whatsapp link",
     "utm builder",
     "vcard generator",
+    "color palette generator",
   ],
   openGraph: {
     type: "website",
     siteName: SITE.name,
-    title: `${SITE.name} — Free Link & QR Code Toolkit`,
+    title: `${SITE.name} — The Everyday Tool Studio`,
     description: SITE.description,
     url: SITE.url,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE.name} — Free Link & QR Code Toolkit`,
+    title: `${SITE.name} — The Everyday Tool Studio`,
     description: SITE.description,
   },
   robots: { index: true, follow: true },

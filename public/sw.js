@@ -1,5 +1,5 @@
-/* LinkFlow service worker — offline-first app shell. */
-const CACHE_NAME = "linkflow-v2";
+/* Forma service worker — offline-first app shell. */
+const CACHE_NAME = "forma-v3";
 const SHELL = [
   "/",
   "/whatsapp",

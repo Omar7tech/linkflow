@@ -1,8 +1,8 @@
 import Link from "next/link";
+import { ArrowUpRightIcon } from "lucide-react";
 import { Reveal } from "@/components/home/reveal";
 import { TOOLS } from "@/constants/tools";
 import { cn } from "@/lib/utils";
-import { ToolCardIndicator } from "./link-indicator";
 
 interface ToolGridProps {
   className?: string;
@@ -13,32 +13,51 @@ interface ToolGridProps {
 export function ToolGrid({ className, animated = false }: ToolGridProps) {
   const grid = (
     <>
-      {TOOLS.map((tool) => (
-        <Link
-          key={tool.id}
-          href={tool.slug}
-          className="group border-border/60 hover:border-foreground/20 relative flex flex-col gap-4 rounded-xl border bg-card/20 p-5 transition-colors duration-300 hover:bg-card"
-        >
-          <div className="flex items-center justify-between">
-            <tool.icon
-              className="text-muted-foreground/40 size-4 transition-colors group-hover:text-foreground"
-              aria-hidden
-            />
-            <div className="text-muted-foreground/10 transition-colors group-hover:text-foreground">
-              <ToolCardIndicator />
+      {TOOLS.map((tool, i) => {
+        const featured = i === 0;
+        return (
+          <Link
+            key={tool.id}
+            href={tool.slug}
+            className={cn(
+              "group border-border/60 bg-card relative flex flex-col justify-between gap-8 rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5",
+              featured && "from-primary/10 bg-gradient-to-br to-transparent sm:col-span-2"
+            )}
+          >
+            <div className="flex items-start justify-between">
+              <span
+                className={cn(
+                  "border-border/70 bg-muted/40 text-muted-foreground group-hover:border-primary/30 group-hover:text-primary flex size-10 items-center justify-center rounded-xl border transition-colors",
+                  featured && "border-primary/30 text-primary"
+                )}
+              >
+                <tool.icon className="size-[18px]" aria-hidden />
+              </span>
+              <span className="text-muted-foreground/40 font-mono text-[11px] tracking-[0.18em]">
+                {String(i + 1).padStart(2, "0")}
+              </span>
             </div>
-          </div>
 
-          <div className="space-y-1">
-            <h3 className="font-heading text-[17px] font-bold tracking-tight">
-              {tool.shortName}
-            </h3>
-            <p className="text-muted-foreground text-[13px] leading-snug">
-              {tool.description}
-            </p>
-          </div>
-        </Link>
-      ))}
+            <div className="space-y-1.5">
+              <h3 className="font-heading flex items-center gap-1.5 text-[17px] font-bold tracking-tight">
+                {tool.shortName}
+                <ArrowUpRightIcon
+                  className="text-primary size-4 -translate-x-1 translate-y-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100"
+                  aria-hidden
+                />
+              </h3>
+              <p
+                className={cn(
+                  "text-muted-foreground text-[13px] leading-snug",
+                  !featured && "line-clamp-2"
+                )}
+              >
+                {tool.description}
+              </p>
+            </div>
+          </Link>
+        );
+      })}
     </>
   );
 

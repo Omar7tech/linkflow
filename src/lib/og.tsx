@@ -21,18 +21,19 @@ export function renderOgImage(title: string, subtitle: string) {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <svg width="64" height="64" viewBox="0 0 32 32">
-            <rect width="32" height="32" rx="9.6" fill="#fafafa" />
-            <g
-              transform="rotate(-30 16 16)"
+            <rect width="32" height="32" rx="8" fill="#fafafa" />
+            <path
+              d="M10 24 V14.5 A6.5 6.5 0 0 1 16.5 8 H22"
               fill="none"
               stroke="#10150f"
-              strokeWidth="2.4"
-            >
-              <rect x="5.4" y="13.1" width="12.2" height="5.8" rx="2.9" />
-              <rect x="14.4" y="13.1" width="12.2" height="5.8" rx="2.9" />
-            </g>
+              strokeWidth="3.2"
+              strokeLinecap="round"
+            />
+            <circle cx="20.75" cy="20.75" r="3.4" fill="#10b981" />
           </svg>
-          <div style={{ fontSize: 40, fontWeight: 700 }}>linkflow</div>
+          <div style={{ display: "flex", fontSize: 40, fontWeight: 700 }}>
+            forma<span style={{ color: "#34d399" }}>.</span>
+          </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -42,8 +43,9 @@ export function renderOgImage(title: string, subtitle: string) {
           <div style={{ fontSize: 34, color: "#a1a1aa", maxWidth: 950 }}>{subtitle}</div>
         </div>
 
-        <div style={{ display: "flex", fontSize: 26, color: "#71717a" }}>
-          Create, Share, Connect. · Free · No sign-up · No tracking
+        <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 26, color: "#71717a" }}>
+          <div style={{ width: 12, height: 12, borderRadius: 6, background: "#34d399" }} />
+          Form follows function. · Free · No sign-up · No tracking
         </div>
       </div>
     ),

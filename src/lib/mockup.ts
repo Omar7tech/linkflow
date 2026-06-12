@@ -81,7 +81,7 @@ export const DEFAULT_MOCKUP: Omit<MockupOptions, "width" | "height"> = {
   angle: GRADIENTS[0].angle,
   frame: "browser",
   dark: false,
-  url: "linkflow.app",
+  url: "forma.tools",
   scale: 78,
   radius: 14,
   tilt: 0,

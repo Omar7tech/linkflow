@@ -316,7 +316,7 @@ export function WhatsAppTool() {
                   id="wa-bulk"
                   rows={8}
                   className="font-mono text-xs"
-                  placeholder={"+96171123456, Hi from LinkFlow!\n+14155550123\n+447911123456, \"Hello, world\""}
+                  placeholder={"+96171123456, Hi from Forma!\n+14155550123\n+447911123456, \"Hello, world\""}
                   value={csv}
                   onChange={(e) => setCsv(e.target.value)}
                 />

@@ -32,7 +32,7 @@ export function Header() {
   return (
     <header className="border-border/60 bg-background/70 sticky top-0 z-50 border-b backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4">
-        <Link href="/" aria-label="LinkFlow home">
+        <Link href="/" aria-label="Forma home">
           <Logo className="[&_span:last-child]:hidden sm:[&_span:last-child]:inline" />
         </Link>
 
@@ -62,7 +62,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="right" className="w-72">
               <SheetHeader>
-                <SheetTitle>LinkFlow</SheetTitle>
+                <SheetTitle>Forma</SheetTitle>
               </SheetHeader>
               <nav className="grid gap-1 px-4 pb-6" aria-label="Mobile">
                 {NAV_LINKS.map((link) => (

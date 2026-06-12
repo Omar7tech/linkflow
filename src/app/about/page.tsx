@@ -7,7 +7,7 @@ import { SITE } from "@/constants/site";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "LinkFlow is a free, privacy-first link and QR toolkit. Learn how it keeps your data private and why it costs nothing to use.",
+    "Forma is a free, privacy-first link and QR toolkit. Learn how it keeps your data private and why it costs nothing to use.",
   alternates: { canonical: `${SITE.url}/about` },
 };
 
@@ -25,7 +25,7 @@ const VALUES = [
   {
     icon: HeartIcon,
     title: "Free, with no catch",
-    text: "LinkFlow is lean to operate — so it costs you nothing to use. No freemium walls, no watermarks, no 'your QR code expires in 14 days' emails.",
+    text: "Forma is lean to operate — so it costs you nothing to use. No freemium walls, no watermarks, no 'your QR code expires in 14 days' emails.",
   },
 ];
 
@@ -33,7 +33,7 @@ export default function AboutPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-12">
       <header className="mb-10">
-        <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">About LinkFlow</h1>
+        <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">About Forma</h1>
         <p className="text-muted-foreground mt-3 text-lg">
           {SITE.tagline} A small, fast toolkit that turns the links you need every day into
           something you can copy, scan and share in seconds.
@@ -57,7 +57,7 @@ export default function AboutPage() {
       <section className="border-border bg-muted/30 mt-12 rounded-xl border p-6">
         <h2 className="font-semibold">Under the hood</h2>
         <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-          LinkFlow is built with Next.js, TypeScript and Tailwind CSS, and ships as an installable
+          Forma is built with Next.js, TypeScript and Tailwind CSS, and ships as an installable
           progressive web app. Link generation uses pure, tested functions per protocol — wa.me,
           sms:, tel:, mailto:, vCard 3.0, WiFi QR payloads and UTM parameters — and QR codes are
           static, with no redirect service in the middle.

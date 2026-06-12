@@ -195,7 +195,7 @@ export function QrTool() {
             )}
             {type === "text" && (
               <Field label="Text" htmlFor="qr-text" hint="Any free text — notes, serial numbers, coupon codes.">
-                <Textarea id="qr-text" rows={4} placeholder="LINKFLOW-2026-PROMO" value={text} onChange={(e) => setText(e.target.value)} />
+                <Textarea id="qr-text" rows={4} placeholder="FORMA-2026-PROMO" value={text} onChange={(e) => setText(e.target.value)} />
               </Field>
             )}
             {type === "phone" && (

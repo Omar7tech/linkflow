@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRightIcon } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -37,7 +38,7 @@ const PRINCIPLES = [
   },
   {
     title: "Works offline",
-    text: "LinkFlow installs as a PWA and keeps working with no connection at all. On a plane, in a basement, behind a firewall.",
+    text: "Forma installs as a PWA and keeps working with no connection at all. On a plane, in a basement, behind a firewall.",
   },
   {
     title: "Free, with no catch",
@@ -58,7 +59,8 @@ function SectionHeader({
 }) {
   return (
     <Reveal className={className}>
-      <p className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase">
+      <p className="text-muted-foreground flex items-center gap-2 font-mono text-[11px] tracking-[0.18em] uppercase">
+        <span className="bg-primary h-px w-6" aria-hidden />
         {label}
       </p>
       <h2 id={id} className="font-heading mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -81,7 +83,7 @@ export default function HomePage() {
       {/* Tools */}
       <section className="mx-auto w-full max-w-7xl px-4 py-24" aria-labelledby="tools-heading">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-          <SectionHeader label="01 — The toolkit" title="One workflow, every tool" id="tools-heading" />
+          <SectionHeader label="The toolkit" title="One workflow, every tool" id="tools-heading" />
           <Reveal>
             <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">
               Every generator shares the same instant-preview experience: type on the left, copy on
@@ -92,44 +94,53 @@ export default function HomePage() {
         <ToolGrid animated />
       </section>
 
-      {/* How it works */}
+      {/* How it works — editorial numbered rows */}
       <section className="border-border/70 border-t" aria-labelledby="how-heading">
         <div className="mx-auto max-w-7xl px-4 py-24">
           <SectionHeader
-            label="02 — How it works"
+            label="How it works"
             title="From idea to link in seconds"
             id="how-heading"
             className="mb-14"
           />
-          <Reveal stagger className="grid gap-x-8 gap-y-12 sm:grid-cols-3">
+          <Reveal stagger className="flex flex-col">
             {STEPS.map((step, i) => (
-              <div key={step.title} className="border-border border-t pt-6">
-                <span className="text-muted-foreground font-mono text-[11px] tracking-[0.18em]">
+              <div
+                key={step.title}
+                className="border-border group grid items-baseline gap-x-8 gap-y-3 border-t py-8 last:border-b sm:grid-cols-[80px_1fr_1.4fr]"
+              >
+                <span className="font-heading text-primary/30 group-hover:text-primary text-4xl font-bold tracking-tight transition-colors sm:text-5xl">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <h3 className="font-heading mt-5 text-xl font-semibold tracking-tight">
-                  {step.title}
-                </h3>
-                <p className="text-muted-foreground mt-2.5 text-sm leading-relaxed">{step.text}</p>
+                <h3 className="font-heading text-2xl font-semibold tracking-tight">{step.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
+                  {step.text}
+                </p>
               </div>
             ))}
           </Reveal>
         </div>
       </section>
 
-      {/* Principles */}
+      {/* Principles — cards */}
       <section className="border-border/70 border-t" aria-labelledby="principles-heading">
         <div className="mx-auto max-w-7xl px-4 py-24">
           <SectionHeader
-            label="03 — Why LinkFlow"
+            label="Why Forma"
             title="Private by design, not by promise"
             id="principles-heading"
             className="mb-14"
           />
-          <Reveal stagger className="grid gap-x-8 gap-y-12 sm:grid-cols-3">
+          <Reveal stagger className="grid gap-4 sm:grid-cols-3">
             {PRINCIPLES.map((item) => (
-              <div key={item.title} className="border-border border-t pt-6">
-                <h3 className="font-heading text-xl font-semibold tracking-tight">{item.title}</h3>
+              <div
+                key={item.title}
+                className="border-border/60 bg-card hover:border-primary/30 rounded-2xl border p-7 transition-colors"
+              >
+                <span className="bg-primary inline-block size-2 rounded-full" aria-hidden />
+                <h3 className="font-heading mt-5 text-xl font-semibold tracking-tight">
+                  {item.title}
+                </h3>
                 <p className="text-muted-foreground mt-2.5 text-sm leading-relaxed">{item.text}</p>
               </div>
             ))}
@@ -141,15 +152,19 @@ export default function HomePage() {
       <section className="border-border/70 border-t" aria-labelledby="faq-heading">
         <div className="mx-auto max-w-7xl gap-12 px-4 py-24 lg:grid lg:grid-cols-[1fr_1.6fr]">
           <SectionHeader
-            label="04 — FAQ"
+            label="FAQ"
             title="Good questions, honest answers"
             id="faq-heading"
             className="mb-10 lg:mb-0"
           />
           <Reveal>
-            <Accordion type="single" collapsible className="w-full">
+            <Accordion
+              type="single"
+              collapsible
+              className="border-border/60 bg-card w-full rounded-2xl border px-6"
+            >
               {HOME_FAQ.map((item, i) => (
-                <AccordionItem key={item.question} value={`item-${i}`}>
+                <AccordionItem key={item.question} value={`item-${i}`} className="last:border-b-0">
                   <AccordionTrigger className="text-left">{item.question}</AccordionTrigger>
                   <AccordionContent className="text-muted-foreground leading-relaxed">
                     {item.answer}
@@ -167,20 +182,34 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="border-border/70 border-t">
-        <Reveal className="mx-auto max-w-7xl px-4 py-28">
-          <p className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase">
-            Start now
-          </p>
-          <h2 className="font-heading mt-4 max-w-3xl text-4xl font-bold tracking-tight text-balance sm:text-6xl">
-            Your next link is <span className="text-primary">ten seconds</span> away.
-          </h2>
-          <div className="mt-9 flex flex-wrap items-center gap-4">
-            <Button asChild size="lg" className="h-12 rounded-full px-7 text-base">
-              <Link href="/tools/universal">Open the Universal Generator</Link>
-            </Button>
-            <p className="text-muted-foreground text-sm">No account. No tracking. No expiry.</p>
+      {/* CTA — inverted panel */}
+      <section className="mx-auto w-full max-w-7xl px-4 pt-4 pb-24">
+        <Reveal>
+          <div className="bg-foreground text-background noise relative overflow-hidden rounded-3xl px-8 py-20 sm:px-14">
+            <div
+              className="bg-primary/25 pointer-events-none absolute -top-24 right-[-5%] size-[360px] rounded-full blur-[100px]"
+              aria-hidden
+            />
+            <p className="text-background/60 font-mono text-[11px] tracking-[0.18em] uppercase">
+              Start now
+            </p>
+            <h2 className="font-heading mt-4 max-w-3xl text-4xl font-bold tracking-tight text-balance sm:text-6xl">
+              Your next link is <span className="text-gradient">ten seconds</span> away.
+            </h2>
+            <div className="mt-9 flex flex-wrap items-center gap-4">
+              <Button
+                asChild
+                size="lg"
+                variant="secondary"
+                className="bg-background text-foreground hover:bg-background/90 group h-12 rounded-full px-7 text-base font-bold tracking-tight"
+              >
+                <Link href="/tools/universal">
+                  Open the Universal Generator
+                  <ArrowRightIcon className="transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </Button>
+              <p className="text-background/60 text-sm">No account. No tracking. No expiry.</p>
+            </div>
           </div>
         </Reveal>
       </section>

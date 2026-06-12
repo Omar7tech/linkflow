@@ -37,7 +37,7 @@ export function OutputCard({
   onAction,
   showQr = true,
   qrOptions,
-  filename = "linkflow-qr",
+  filename = "forma-qr",
   openable = true,
   showSnippets = true,
   emptyHint = "Fill in the form and your link appears here instantly.",

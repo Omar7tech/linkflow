@@ -21,7 +21,7 @@ interface QrPreviewProps {
 export function QrPreview({
   value,
   options = DEFAULT_QR_OPTIONS,
-  filename = "linkflow-qr",
+  filename = "forma-qr",
   showActions = true,
   className,
   onAction,

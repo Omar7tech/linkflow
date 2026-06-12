@@ -14,7 +14,7 @@ import { SITE } from "@/constants/site";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Answers about LinkFlow's privacy model, QR code longevity, WhatsApp link formatting, UTM best practices and offline support.",
+    "Answers about Forma's privacy model, QR code longevity, WhatsApp link formatting, UTM best practices and offline support.",
   alternates: { canonical: `${SITE.url}/faq` },
 };
 
@@ -25,7 +25,7 @@ export default function FaqPage() {
       <header className="mb-8">
         <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">Frequently asked questions</h1>
         <p className="text-muted-foreground mt-2">
-          Everything you might want to know about how LinkFlow works — and what it never does with
+          Everything you might want to know about how Forma works — and what it never does with
           your data.
         </p>
       </header>

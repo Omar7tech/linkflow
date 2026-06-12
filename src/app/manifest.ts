@@ -3,7 +3,7 @@ import { SITE } from "@/constants/site";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${SITE.name} — Link & QR Toolkit`,
+    name: `${SITE.name} — The Everyday Tool Studio`,
     short_name: SITE.name,
     description: SITE.description,
     start_url: "/",

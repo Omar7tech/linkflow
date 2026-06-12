@@ -5,9 +5,9 @@ export interface FaqItem {
 
 export const FAQ_ITEMS: FaqItem[] = [
   {
-    question: "Is LinkFlow really free?",
+    question: "Is Forma really free?",
     answer:
-      "Yes — every tool is free with no usage limits, no accounts and no watermarks. LinkFlow is lean to operate, so there are no costs to pass on to you.",
+      "Yes — every tool is free with no usage limits, no accounts and no watermarks. Forma is lean to operate, so there are no costs to pass on to you.",
   },
   {
     question: "Where does my data go?",
@@ -17,12 +17,12 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Do the QR codes expire?",
     answer:
-      "Never. LinkFlow generates static QR codes that encode your data directly — there's no redirect service in the middle, so they keep working forever and scan faster.",
+      "Never. Forma generates static QR codes that encode your data directly — there's no redirect service in the middle, so they keep working forever and scan faster.",
   },
   {
     question: "Can I use the generated links and QR codes commercially?",
     answer:
-      "Absolutely. Everything you create with LinkFlow is yours — use it in ads, packaging, menus, business cards or anywhere else, no attribution required.",
+      "Absolutely. Everything you create with Forma is yours — use it in ads, packaging, menus, business cards or anywhere else, no attribution required.",
   },
   {
     question: "Why isn't my WhatsApp link opening a chat?",
@@ -35,9 +35,9 @@ export const FAQ_ITEMS: FaqItem[] = [
       "Error correction adds redundancy so a code still scans when partially covered or damaged. Low (7%) gives the simplest code; High (30%) survives logos and wear, at the cost of denser modules. If you add a logo overlay, use High.",
   },
   {
-    question: "Does LinkFlow work offline?",
+    question: "Does Forma work offline?",
     answer:
-      "Mostly, yes. LinkFlow is an installable PWA — after your first visit, the app shell is cached and most generators keep working without a connection. Add it to your home screen for an app-like experience.",
+      "Mostly, yes. Forma is an installable PWA — after your first visit, the app shell is cached and most generators keep working without a connection. Add it to your home screen for an app-like experience.",
   },
   {
     question: "How do UTM parameters help me?",

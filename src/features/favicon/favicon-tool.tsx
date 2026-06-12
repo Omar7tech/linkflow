@@ -139,7 +139,7 @@ export function FaviconTool() {
       zip.file(
         "README.txt",
         [
-          "LinkFlow favicon package",
+          "Forma favicon package",
           "",
           "1. Copy these files to the root of your site (or see the framework steps in the app).",
           "2. Add the following to your <head>:",
