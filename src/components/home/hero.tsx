@@ -6,7 +6,6 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Button } from "@/components/ui/button";
 import { LinkLoadingIndicator } from "@/components/shared/link-indicator";
-import { TOOLS } from "@/constants/tools";
 
 gsap.registerPlugin(useGSAP);
 
@@ -14,7 +13,6 @@ const WORDMARK = ["f", "o", "r", "m", "a", "."];
 
 export function Hero() {
   const sectionRef = React.useRef<HTMLElement>(null);
-  const marqueeTween = React.useRef<gsap.core.Tween | null>(null);
 
   useGSAP(
     () => {
@@ -28,16 +26,7 @@ export function Hero() {
             { scaleX: 0, transformOrigin: "left center", duration: 1, ease: "power3.inOut" },
             0.35
           )
-          .from("[data-hero-row] > *", { y: 16, autoAlpha: 0, duration: 0.7, stagger: 0.1 }, 0.6)
-          .from("[data-hero-marquee]", { autoAlpha: 0, duration: 0.8, ease: "power2.out" }, 0.85);
-
-        // Two identical halves inside the track, so -50% loops seamlessly.
-        marqueeTween.current = gsap.to("[data-hero-track]", {
-          xPercent: -50,
-          ease: "none",
-          duration: 32,
-          repeat: -1,
-        });
+          .from("[data-hero-row] > *", { y: 16, autoAlpha: 0, duration: 0.7, stagger: 0.1 }, 0.6);
       });
     },
     { scope: sectionRef }
@@ -90,31 +79,6 @@ export function Hero() {
               <LinkLoadingIndicator />
             </Link>
           </div>
-        </div>
-      </div>
-
-      {/* Tool-name marquee — decorative; the real list lives in the grid below. */}
-      <div
-        data-hero-marquee
-        aria-hidden
-        className="border-border/70 overflow-hidden border-y py-4"
-        onMouseEnter={() => marqueeTween.current?.pause()}
-        onMouseLeave={() => marqueeTween.current?.play()}
-      >
-        <div data-hero-track className="flex w-max">
-          {[0, 1].map((half) => (
-            <div
-              key={half}
-              className="text-muted-foreground flex shrink-0 items-center font-mono text-xs tracking-[0.2em] uppercase"
-            >
-              {TOOLS.map((tool) => (
-                <span key={tool.id} className="flex items-center">
-                  <span className="px-5">{tool.shortName}</span>
-                  <span className="bg-primary size-1 rounded-full" />
-                </span>
-              ))}
-            </div>
-          ))}
         </div>
       </div>
     </section>
