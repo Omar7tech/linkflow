@@ -8,6 +8,7 @@ import {
   FrameIcon,
   Grid3X3Icon,
   HashIcon,
+  ImageUpscaleIcon,
   KeyRoundIcon,
   LayoutGridIcon,
   MailIcon,
@@ -347,6 +348,24 @@ export const TOOLS = [
       "color palette from image",
     ],
     icon: PaletteIcon,
+  },
+  {
+    id: "enhancer",
+    slug: "/tools/image-converter",
+    name: "Image Converter & Resizer",
+    shortName: "Converter",
+    description:
+      "Convert images between PNG, JPEG and WebP, resize or upscale with high-quality resampling, then polish with sharpening, auto levels and color controls. Live file-size estimate — entirely on-device.",
+    keywords: [
+      "image converter",
+      "png to webp",
+      "jpg to png converter",
+      "image resizer",
+      "upscale image",
+      "compress image",
+      "sharpen image",
+    ],
+    icon: ImageUpscaleIcon,
   },
   {
     id: "attention",
