@@ -90,6 +90,23 @@ export function ReadtimeTool() {
                 size="sm"
                 successMessage="Read-time badge copied"
               />
+              <CopyButton
+                text={[
+                  `Words: ${stats.words}`,
+                  `Characters: ${stats.characters}`,
+                  `Sentences: ${stats.sentences}`,
+                  `Reading time: ${formatDuration(readSecs)} (${readingWpm} wpm)`,
+                  `Speaking time: ${formatDuration(speakSecs)} (${speakingWpm} wpm)`,
+                  score ? `Readability: Flesch ${score.ease} (grade ${score.grade})` : null,
+                ]
+                  .filter(Boolean)
+                  .join("\n")}
+                disabled={!hasText}
+                label="Copy report"
+                variant="outline"
+                size="sm"
+                successMessage="Full report copied"
+              />
             </div>
 
             <Separator />
@@ -111,6 +128,40 @@ export function ReadtimeTool() {
                 </div>
               ))}
             </dl>
+
+            {hasText && (
+              <>
+                <Separator />
+                <div className="space-y-1.5">
+                  <p className="text-muted-foreground text-xs font-medium">Fits within</p>
+                  {(
+                    [
+                      ["X / Twitter post", 280],
+                      ["Meta description", 160],
+                      ["Instagram caption", 2200],
+                      ["LinkedIn post", 3000],
+                    ] as const
+                  ).map(([name, limit]) => {
+                    const fits = stats.characters <= limit;
+                    return (
+                      <div key={name} className="flex items-baseline justify-between gap-2 text-xs">
+                        <span className="text-muted-foreground">{name}</span>
+                        <span
+                          className={
+                            fits
+                              ? "font-mono text-emerald-600 dark:text-emerald-400"
+                              : "text-destructive/80 font-mono"
+                          }
+                        >
+                          {fits ? "✓" : `+${(stats.characters - limit).toLocaleString()}`}{" "}
+                          <span className="text-muted-foreground">/ {limit.toLocaleString()}</span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
             {score && (
               <>
