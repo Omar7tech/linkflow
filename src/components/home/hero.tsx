@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Button } from "@/components/ui/button";
 import { LinkLoadingIndicator } from "@/components/shared/link-indicator";
+import SideRays from "./side-rays";
 
 gsap.registerPlugin(useGSAP);
 
@@ -43,6 +44,22 @@ export function Hero() {
         aria-hidden
         className="absolute inset-0 -z-10 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[size:22px_22px] [mask-image:radial-gradient(ellipse_65%_70%_at_30%_25%,black,transparent)]"
       />
+
+      {/* WebGL light rays sweeping in from the top-right corner */}
+      <div aria-hidden className="absolute top-0 right-0 -z-10 h-[420px] w-full sm:h-[520px] sm:w-[70%]">
+        <SideRays
+          speed={1.6}
+          rayColor1="#34d399"
+          rayColor2="#5eead4"
+          intensity={1.4}
+          spread={1.6}
+          origin="top-right"
+          saturation={1.2}
+          blend={0.6}
+          falloff={1.8}
+          opacity={0.55}
+        />
+      </div>
 
       <div className="mx-auto w-full max-w-7xl px-6 pt-24 sm:pt-32">
         {/* Wordmark — flush left, each character rising out of its own mask */}

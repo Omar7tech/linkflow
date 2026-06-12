@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRightIcon } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -19,15 +18,15 @@ const HOME_FAQ = FAQ_ITEMS.slice(0, 5);
 const STEPS = [
   {
     title: "Pick a tool",
-    text: "WhatsApp links, QR codes, share buttons, vCards, UTM URLs, passwords, favicons and more — every generator shares one consistent workflow.",
+    text: "Generators, converters, color and image editors — every tool shares one consistent, instant workflow.",
   },
   {
     title: "Type, and it's done",
-    text: "No submit buttons. Your link and QR code render live with every keystroke, validated as you go.",
+    text: "No submit buttons, no waiting. Your result renders live with every keystroke, validated as you go.",
   },
   {
-    title: "Copy, embed, share",
-    text: "Grab the link, download the QR as PNG or SVG, or export ready-made HTML, React and Markdown snippets.",
+    title: "Copy and ship",
+    text: "Copy the result, download your files, or export ready-made CSS, HTML, React and Markdown snippets.",
   },
 ];
 
@@ -86,8 +85,8 @@ export default function HomePage() {
           <SectionHeader label="The toolkit" title="One workflow, every tool" id="tools-heading" />
           <Reveal>
             <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">
-              Every generator shares the same instant-preview experience: type on the left, copy on
-              the right.
+              Every tool shares the same instant workflow — input on one side, results on the
+              other, nothing uploaded anywhere.
             </p>
           </Reveal>
         </div>
@@ -99,7 +98,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 py-24">
           <SectionHeader
             label="How it works"
-            title="From idea to link in seconds"
+            title="From input to output in seconds"
             id="how-heading"
             className="mb-14"
           />
@@ -182,34 +181,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA — inverted panel */}
-      <section className="mx-auto w-full max-w-7xl px-4 pt-4 pb-24">
-        <Reveal>
-          <div className="bg-foreground text-background noise relative overflow-hidden rounded-3xl px-8 py-20 sm:px-14">
-            <div
-              className="bg-primary/25 pointer-events-none absolute -top-24 right-[-5%] size-[360px] rounded-full blur-[100px]"
-              aria-hidden
-            />
-            <p className="text-background/60 font-mono text-[11px] tracking-[0.18em] uppercase">
-              Start now
+      {/* CTA — Swiss closing statement */}
+      <section className="border-border/70 border-t">
+        <Reveal className="mx-auto grid max-w-7xl gap-10 px-4 py-28 sm:grid-cols-12 sm:items-end">
+          <h2 className="font-heading text-5xl font-bold tracking-tight sm:col-span-8 sm:text-7xl">
+            Pick a tool<span className="text-primary">.</span>
+            <br />
+            Get to work<span className="text-primary">.</span>
+          </h2>
+          <div className="flex flex-col items-start gap-4 sm:col-span-4 sm:items-end">
+            <Button asChild size="lg" className="h-12 rounded-full px-8 text-base font-semibold">
+              <Link href="/tools">Browse all tools</Link>
+            </Button>
+            <p className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase">
+              Free / Private / On-device
             </p>
-            <h2 className="font-heading mt-4 max-w-3xl text-4xl font-bold tracking-tight text-balance sm:text-6xl">
-              Your next link is <span className="text-gradient">ten seconds</span> away.
-            </h2>
-            <div className="mt-9 flex flex-wrap items-center gap-4">
-              <Button
-                asChild
-                size="lg"
-                variant="secondary"
-                className="bg-background text-foreground hover:bg-background/90 group h-12 rounded-full px-7 text-base font-bold tracking-tight"
-              >
-                <Link href="/tools/universal">
-                  Open the Universal Generator
-                  <ArrowRightIcon className="transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              </Button>
-              <p className="text-background/60 text-sm">No account. No tracking. No expiry.</p>
-            </div>
           </div>
         </Reveal>
       </section>
