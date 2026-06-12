@@ -11,6 +11,7 @@ import {
   SparklesIcon,
   TargetIcon,
   Trash2Icon,
+  WandSparklesIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,12 +23,16 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GeneratorLayout } from "@/components/shared/generator-layout";
 import { TOOL_BY_ID } from "@/constants/tools";
 import {
+  attentionGrid,
+  blendSubjectLed,
   computeSaliency,
-  renderHeatmap,
+  computeSkinMap,
   COLORMAPS,
   findHotspots,
   focusScore,
   mergeSaliencyMaps,
+  refineAiMap,
+  renderHeatmap,
   type AttentionWeights,
   type BiasMode,
   type ColormapId,
@@ -47,6 +52,68 @@ interface AiState {
   progress?: number;
 }
 
+const DEFAULT_WEIGHTS: AttentionWeights = {
+  contrast: 55,
+  edges: 70,
+  colorPop: 45,
+  text: 60,
+  people: 55,
+  structure: 60,
+};
+
+interface Preset {
+  id: string;
+  name: string;
+  hint: string;
+  weights: AttentionWeights;
+  bias: BiasMode;
+  mode: AttentionMode;
+}
+
+const PRESETS: Preset[] = [
+  {
+    id: "ui",
+    name: "UI / Landing",
+    hint: "Text and hierarchy first, F-pattern reading",
+    weights: { contrast: 50, edges: 75, colorPop: 40, text: 85, people: 30, structure: 55 },
+    bias: "f",
+    mode: "precision",
+  },
+  {
+    id: "photo",
+    name: "Photo / Ad",
+    hint: "Subject detection with people boost",
+    weights: { contrast: 55, edges: 45, colorPop: 60, text: 35, people: 85, structure: 60 },
+    bias: "center",
+    mode: "hybrid",
+  },
+  {
+    id: "poster",
+    name: "Poster / Print",
+    hint: "Bold structure, Z-pattern scanning",
+    weights: { contrast: 70, edges: 55, colorPop: 65, text: 70, people: 50, structure: 70 },
+    bias: "z",
+    mode: "precision",
+  },
+  {
+    id: "thumbnail",
+    name: "Thumbnail",
+    hint: "Color pop and faces at small sizes",
+    weights: { contrast: 65, edges: 40, colorPop: 80, text: 40, people: 80, structure: 55 },
+    bias: "center",
+    mode: "hybrid",
+  },
+];
+
+const CUE_SLIDERS: { key: keyof AttentionWeights; label: string; hint: string }[] = [
+  { key: "contrast", label: "Local Contrast", hint: "Light-vs-dark pop at two scales" },
+  { key: "edges", label: "Edge Density", hint: "Fine detail and UI chrome" },
+  { key: "colorPop", label: "Color Pop", hint: "Rare colors, warm hues boosted" },
+  { key: "text", label: "Text Likelihood", hint: "Horizontal type bands" },
+  { key: "people", label: "People & Skin", hint: "Skin-tone regions (faces)" },
+  { key: "structure", label: "Structure", hint: "What stands out globally (spectral)" },
+];
+
 /** Hotspot marker diameter as a fraction of image width — one formula for screen and export. */
 function hotspotDiameter(strength: number) {
   return 0.035 + 0.04 * strength;
@@ -65,23 +132,21 @@ export function AttentionTool() {
   const [original, setOriginal] = React.useState<ImageData | null>(null);
   const [originalUrl, setOriginalUrl] = React.useState<string | null>(null);
   const [processing, setProcessing] = React.useState(false);
-  const [mode, setMode] = React.useState<AttentionMode>("hybrid");
+  const [mode, setMode] = React.useState<AttentionMode>("precision");
   const [ai, setAi] = React.useState<AiState>({ phase: "idle" });
   const [dragOver, setDragOver] = React.useState(false);
   const [comparing, setComparing] = React.useState(false);
 
   // Settings
-  const [weights, setWeights] = React.useState<AttentionWeights>({
-    contrast: 60,
-    edges: 80,
-    colorPop: 40,
-  });
+  const [weights, setWeights] = React.useState<AttentionWeights>(DEFAULT_WEIGHTS);
   const [bias, setBias] = React.useState<BiasMode>("center");
   const [hotspotCount, setHotspotCount] = React.useState(5);
   const [colormap, setColormap] = React.useState<ColormapId>("heat");
   const [opacity, setOpacity] = React.useState(0.75);
   const [showHotspots, setShowHotspots] = React.useState(true);
   const [showScanpath, setShowScanpath] = React.useState(true);
+  const [showGrid, setShowGrid] = React.useState(false);
+  const [activePreset, setActivePreset] = React.useState<string | null>(null);
 
   // Cache for the AI map to avoid re-running the model unnecessarily
   const aiMapRef = React.useRef<{ url: string; map: Float32Array } | null>(null);
@@ -124,6 +189,8 @@ export function AttentionTool() {
       setHeatmapUrl(null);
       aiMapRef.current = null;
       setAi({ phase: "idle" });
+      // Every new image starts in instant Precision mode — AI is opt-in.
+      setMode("precision");
       URL.revokeObjectURL(url);
     };
     img.onerror = () => {
@@ -155,7 +222,7 @@ export function AttentionTool() {
     return () => window.removeEventListener("paste", onPaste);
   }, [loadFile]);
 
-  // Compute the saliency map (algorithmic, AI or merged).
+  // Compute the saliency map (algorithmic, AI-refined or merged).
   React.useEffect(() => {
     if (!original || !originalUrl) return;
     let cancelled = false;
@@ -192,10 +259,14 @@ export function AttentionTool() {
             aiMapRef.current = { url: originalUrl, map: aiMap };
           }
           if (cancelled) return;
+          // Shape the raw matte into a saliency-like subject map: interiors over
+          // edges, skin regions (faces) boosted within the subject.
+          const skin = computeSkinMap(smallData);
+          const refined = refineAiMap(aiMapRef.current.map, w, h, skin);
           finalMap =
             mode === "ai"
-              ? aiMapRef.current.map
-              : mergeSaliencyMaps(algoRes.map, aiMapRef.current.map, 0.5);
+              ? blendSubjectLed(algoRes.map, refined)
+              : mergeSaliencyMaps(algoRes.map, refined, 0.55);
           setAi({ phase: "done" });
         }
 
@@ -230,6 +301,11 @@ export function AttentionTool() {
     };
   }, [mapData, hotspotCount]);
 
+  const grid = React.useMemo(
+    () => (mapData && showGrid ? attentionGrid(mapData.map, mapData.w, mapData.h) : null),
+    [mapData, showGrid]
+  );
+
   // Re-paint the heatmap when the map or colormap changes — nothing else recomputes.
   React.useEffect(() => {
     let cancelled = false;
@@ -258,6 +334,18 @@ export function AttentionTool() {
     };
   }, [mapData, colormap]);
 
+  const applyPreset = (preset: Preset) => {
+    setWeights(preset.weights);
+    setBias(preset.bias);
+    setMode(preset.mode);
+    setActivePreset(preset.id);
+  };
+
+  const setWeight = (key: keyof AttentionWeights, v: number) => {
+    setWeights((p) => ({ ...p, [key]: v }));
+    setActivePreset(null);
+  };
+
   const clear = () => {
     setOriginal(null);
     setOriginalUrl(null);
@@ -282,6 +370,35 @@ export function AttentionTool() {
       ctx.globalAlpha = 1;
 
       const px = (p: Hotspot) => [p.x * original.width, p.y * original.height] as const;
+
+      if (showGrid && grid) {
+        ctx.strokeStyle = "rgba(255,255,255,0.35)";
+        ctx.lineWidth = Math.max(1, original.width / 800);
+        for (let i = 1; i < 3; i++) {
+          ctx.beginPath();
+          ctx.moveTo((original.width * i) / 3, 0);
+          ctx.lineTo((original.width * i) / 3, original.height);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(0, (original.height * i) / 3);
+          ctx.lineTo(original.width, (original.height * i) / 3);
+          ctx.stroke();
+        }
+        ctx.font = `bold ${Math.max(12, original.width / 60)}px sans-serif`;
+        ctx.textAlign = "right";
+        ctx.textBaseline = "top";
+        const pad = original.width / 90;
+        for (let cell = 0; cell < 9; cell++) {
+          const cx = ((cell % 3) + 1) * (original.width / 3) - pad;
+          const cy = Math.floor(cell / 3) * (original.height / 3) + pad;
+          const label = `${grid[cell]}%`;
+          ctx.fillStyle = "rgba(0,0,0,0.55)";
+          const tw = ctx.measureText(label).width;
+          ctx.fillRect(cx - tw - pad / 2, cy - pad / 3, tw + pad, original.width / 45);
+          ctx.fillStyle = "white";
+          ctx.fillText(label, cx, cy);
+        }
+      }
 
       if (showScanpath && showHotspots && result.hotspots.length > 1) {
         ctx.beginPath();
@@ -333,7 +450,7 @@ export function AttentionTool() {
   };
 
   const overlaysVisible = !comparing;
-  const manualDisabled = mode === "ai";
+  const activeStops = (COLORMAPS.find((c) => c.id === colormap) ?? COLORMAPS[0]).stops;
 
   return (
     <GeneratorLayout tool={TOOL_BY_ID.attention} output={null}>
@@ -365,8 +482,8 @@ export function AttentionTool() {
                 </label>
               </Button>
               <p className="text-muted-foreground mt-4 max-w-sm text-center text-xs font-medium">
-                …or drag & drop, or paste from the clipboard. Predictive saliency mapping shows
-                where users are likely to look first. Everything runs locally in your browser.
+                …or drag & drop, or paste from the clipboard. Six research-backed cues predict
+                where users look first. Everything runs locally in your browser.
               </p>
             </div>
           </CardContent>
@@ -408,6 +525,21 @@ export function AttentionTool() {
                         style={{ opacity }}
                       />
                     )}
+                    {/* Rule-of-thirds attention distribution */}
+                    {overlaysVisible && grid && (
+                      <div aria-hidden className="pointer-events-none absolute inset-0 grid grid-cols-3 grid-rows-3">
+                        {grid.map((pct, i) => (
+                          <div
+                            key={i}
+                            className="flex items-start justify-end border-[0.5px] border-white/25 p-1"
+                          >
+                            <span className="rounded bg-black/55 px-1 py-px text-[9px] font-bold text-white tabular-nums">
+                              {pct}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {/* Scanpath — predicted gaze order, hotspot 1 → 2 → 3… */}
                     {overlaysVisible && showHotspots && showScanpath && result && result.hotspots.length > 1 && (
                       <svg
@@ -448,6 +580,22 @@ export function AttentionTool() {
                   </div>
                 </div>
 
+                {/* Colormap legend */}
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                    Calm
+                  </span>
+                  <div
+                    className="h-1.5 flex-1 rounded-full"
+                    style={{
+                      background: `linear-gradient(to right, ${activeStops.map((s) => `rgb(${s.join(",")})`).join(",")})`,
+                    }}
+                  />
+                  <span className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                    Hot
+                  </span>
+                </div>
+
                 <div className="flex flex-wrap items-center gap-2">
                   <Button onClick={download} disabled={!result || processing} className="font-semibold">
                     <DownloadIcon className="size-4" /> Download result
@@ -486,22 +634,22 @@ export function AttentionTool() {
                   <div className="space-y-1">
                     <p className="font-bold">Precision</p>
                     <p className="text-muted-foreground">
-                      Contrast, edge density and color rarity. Best for UI screens and landing
-                      pages, where layout hierarchy drives attention.
+                      Six instant cues — contrast, edges, color, text bands, skin tones and
+                      spectral structure. Best for UI screens and landing pages.
                     </p>
                   </div>
                   <div className="space-y-1">
                     <p className="font-bold">Smart AI</p>
                     <p className="text-muted-foreground">
-                      A neural network highlights foreground subjects — the people and products
-                      eyes gravitate to. Best for photos and ads.
+                      A neural network finds the foreground subject; the map is then refined so
+                      faces and subject interiors lead. Best for photos and ads.
                     </p>
                   </div>
                   <div className="space-y-1">
                     <p className="font-bold">Hybrid</p>
                     <p className="text-muted-foreground">
-                      Blends design structure with subject detection for the most balanced
-                      prediction on mixed content.
+                      Subject detection blended with the structural cues — spots where both agree
+                      glow hottest. Best for mixed content.
                     </p>
                   </div>
                 </div>
@@ -513,10 +661,44 @@ export function AttentionTool() {
             <div className="space-y-6 lg:sticky lg:top-20">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Analysis</CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <WandSparklesIcon className="size-4" /> Analysis
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
-                  <Tabs value={mode} onValueChange={(v) => setMode(v as AttentionMode)}>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground text-[11px] tracking-wider uppercase">
+                      Presets
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {PRESETS.map((preset) => (
+                        <button
+                          key={preset.id}
+                          onClick={() => applyPreset(preset)}
+                          title={preset.hint}
+                          className={cn(
+                            "rounded-lg border px-3 py-2 text-left text-xs font-semibold transition-colors",
+                            activePreset === preset.id
+                              ? "border-primary bg-primary/10 text-foreground"
+                              : "border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground"
+                          )}
+                        >
+                          {preset.name}
+                          <span className="text-muted-foreground mt-0.5 block text-[10px] font-normal leading-tight">
+                            {preset.hint}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Tabs
+                    value={mode}
+                    onValueChange={(v) => {
+                      setMode(v as AttentionMode);
+                      setActivePreset(null);
+                    }}
+                  >
                     <TabsList className="w-full">
                       <TabsTrigger value="precision" className="flex-1">
                         <CpuIcon className="mr-2 size-3.5" /> Precision
@@ -532,13 +714,13 @@ export function AttentionTool() {
 
                   {mode === "precision" ? (
                     <p className="text-muted-foreground text-[11px] leading-relaxed">
-                      Instant and mathematical — re-runs live as you tune the weights below.
+                      Instant and mathematical — re-runs live as you tune the cues below.
                     </p>
                   ) : mode === "ai" ? (
                     <div className="space-y-3">
                       <p className="text-muted-foreground text-[11px] leading-relaxed">
-                        Runs RMBG-1.4 entirely on your device (GPU when available). The model is
-                        downloaded once and cached.
+                        Runs RMBG-1.4 on your device (GPU when available), downloaded once and
+                        cached. Your cue weights still shape a quarter of the map.
                       </p>
                       {ai.phase === "working" && (
                         <div className="bg-muted/50 space-y-2 rounded-lg p-3">
@@ -560,8 +742,7 @@ export function AttentionTool() {
                     </div>
                   ) : (
                     <p className="text-muted-foreground text-[11px] leading-relaxed">
-                      Structure and subjects, merged 50/50. Weights below shape the structural
-                      half.
+                      Structure and subjects, blended — agreement between the two glows hottest.
                     </p>
                   )}
                 </CardContent>
@@ -571,48 +752,43 @@ export function AttentionTool() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Settings2Icon className="size-4" />
-                    Weights
-                    {manualDisabled && (
-                      <span className="text-muted-foreground text-[10px] font-normal">
-                        (not used by Smart AI)
-                      </span>
-                    )}
+                    Cues
                   </CardTitle>
                 </CardHeader>
-                <CardContent className={cn("space-y-5", manualDisabled && "opacity-50")}>
-                  <WeightSlider
-                    label="Local Contrast"
-                    value={weights.contrast}
-                    disabled={manualDisabled}
-                    onChange={(v) => setWeights((p) => ({ ...p, contrast: v }))}
-                  />
-                  <WeightSlider
-                    label="Edge Density"
-                    value={weights.edges}
-                    disabled={manualDisabled}
-                    onChange={(v) => setWeights((p) => ({ ...p, edges: v }))}
-                  />
-                  <WeightSlider
-                    label="Color Pop"
-                    value={weights.colorPop}
-                    disabled={manualDisabled}
-                    onChange={(v) => setWeights((p) => ({ ...p, colorPop: v }))}
-                  />
+                <CardContent className="space-y-5">
+                  {CUE_SLIDERS.map((cue) => (
+                    <WeightSlider
+                      key={cue.key}
+                      label={cue.label}
+                      hint={cue.hint}
+                      value={weights[cue.key]}
+                      onChange={(v) => setWeight(cue.key, v)}
+                    />
+                  ))}
 
                   <div className="space-y-2 pt-2">
                     <Label className="text-muted-foreground text-[11px] tracking-wider uppercase">
                       Viewing Bias
                     </Label>
-                    <Tabs value={bias} onValueChange={(v) => setBias(v as BiasMode)}>
+                    <Tabs
+                      value={bias}
+                      onValueChange={(v) => {
+                        setBias(v as BiasMode);
+                        setActivePreset(null);
+                      }}
+                    >
                       <TabsList className="w-full">
-                        <TabsTrigger value="none" disabled={manualDisabled} className="text-xs">
+                        <TabsTrigger value="none" className="text-xs">
                           None
                         </TabsTrigger>
-                        <TabsTrigger value="center" disabled={manualDisabled} className="text-xs">
+                        <TabsTrigger value="center" className="text-xs">
                           Center
                         </TabsTrigger>
-                        <TabsTrigger value="f" disabled={manualDisabled} className="text-xs">
-                          F-Pattern
+                        <TabsTrigger value="f" className="text-xs">
+                          F
+                        </TabsTrigger>
+                        <TabsTrigger value="z" className="text-xs">
+                          Z
                         </TabsTrigger>
                       </TabsList>
                     </Tabs>
@@ -632,7 +808,7 @@ export function AttentionTool() {
                     <Label className="text-muted-foreground text-[11px] tracking-wider uppercase">
                       Colormap
                     </Label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {COLORMAPS.map((cm) => (
                         <button
                           key={cm.id}
@@ -725,6 +901,13 @@ export function AttentionTool() {
                       </div>
                     </>
                   )}
+
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="show-grid" className="cursor-pointer text-sm font-medium">
+                      Thirds grid (% per zone)
+                    </Label>
+                    <Switch id="show-grid" checked={showGrid} onCheckedChange={setShowGrid} />
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -737,22 +920,24 @@ export function AttentionTool() {
 
 function WeightSlider({
   label,
+  hint,
   value,
-  disabled,
   onChange,
 }: {
   label: string;
+  hint: string;
   value: number;
-  disabled?: boolean;
   onChange: (v: number) => void;
 }) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <Label className="text-xs font-medium">{label}</Label>
+      <div className="flex items-baseline justify-between">
+        <Label className="text-xs font-medium" title={hint}>
+          {label}
+        </Label>
         <span className="text-muted-foreground font-mono text-[10px]">{value}</span>
       </div>
-      <Slider value={[value]} min={0} max={100} disabled={disabled} onValueChange={([v]) => onChange(v)} />
+      <Slider value={[value]} min={0} max={100} onValueChange={([v]) => onChange(v)} />
     </div>
   );
 }
