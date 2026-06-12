@@ -23,6 +23,7 @@ import {
   SparklesIcon,
   SquircleIcon,
   TypeIcon,
+  EyeIcon,
 } from "lucide-react";
 import type { ToolMeta } from "@/types";
 
@@ -346,6 +347,22 @@ export const TOOLS = [
       "color palette from image",
     ],
     icon: PaletteIcon,
+  },
+  {
+    id: "attention",
+    slug: "/tools/attention",
+    name: "Attention Heatmap",
+    shortName: "Attention",
+    description:
+      "Predict where users will look in your designs. Uses local contrast, edge density and color rarity to generate a visual-attention saliency map and find hotspots — all on-device.",
+    keywords: [
+      "attention heatmap",
+      "visual attention",
+      "saliency map",
+      "eye tracking proxy",
+      "design hotspot",
+    ],
+    icon: EyeIcon,
   },
 ] as const satisfies readonly ToolMeta[];
 

@@ -36,4 +36,5 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   ),
   bgremover: dynamic(() => import("./bg-remover/bg-remover-tool").then((m) => m.BgRemoverTool)),
   colors: dynamic(() => import("./colors/colors-tool").then((m) => m.ColorsTool)),
+  attention: dynamic(() => import("./attention/attention-tool").then((m) => m.AttentionTool)),
 };
