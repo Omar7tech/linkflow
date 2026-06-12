@@ -7,6 +7,7 @@ import {
   Grid3X3Icon,
   HashIcon,
   KeyRoundIcon,
+  LayoutGridIcon,
   MailIcon,
   MessageCircleIcon,
   MessageSquareIcon,
@@ -228,6 +229,22 @@ export const TOOLS = [
       "Split your images into perfect 3x1, 3x3, or custom grids for Instagram. Locally processed, high-quality slices ready for your profile.",
     keywords: ["image splitter", "instagram grid", "grid maker", "image slicer"],
     icon: Grid3X3Icon,
+  },
+  {
+    id: "grid",
+    slug: "/tools/grid",
+    name: "CSS Grid Builder",
+    shortName: "Grid Builder",
+    description:
+      "Design CSS Grid layouts visually — drag to draw areas, move and resize them with your mouse, tune track sizes and gaps, then export clean CSS, HTML or Tailwind.",
+    keywords: [
+      "css grid generator",
+      "grid layout builder",
+      "grid template areas",
+      "visual grid editor",
+      "tailwind grid",
+    ],
+    icon: LayoutGridIcon,
   },
   {
     id: "colors",

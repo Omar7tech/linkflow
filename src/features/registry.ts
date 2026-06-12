@@ -27,5 +27,6 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   imagesplitter: dynamic(() =>
     import("./image-splitter/image-splitter-tool").then((m) => m.ImageSplitterTool)
   ),
+  grid: dynamic(() => import("./grid/grid-tool").then((m) => m.GridTool)),
   colors: dynamic(() => import("./colors/colors-tool").then((m) => m.ColorsTool)),
 };
