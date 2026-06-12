@@ -79,7 +79,7 @@ export default function HomePage() {
       <Hero />
 
       {/* Tools */}
-      <section className="mx-auto w-full max-w-6xl px-4 py-24" aria-labelledby="tools-heading">
+      <section className="mx-auto w-full max-w-7xl px-4 py-24" aria-labelledby="tools-heading">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
           <SectionHeader label="01 — The toolkit" title="One workflow, every tool" id="tools-heading" />
           <Reveal>
@@ -94,7 +94,7 @@ export default function HomePage() {
 
       {/* How it works */}
       <section className="border-border/70 border-t" aria-labelledby="how-heading">
-        <div className="mx-auto max-w-6xl px-4 py-24">
+        <div className="mx-auto max-w-7xl px-4 py-24">
           <SectionHeader
             label="02 — How it works"
             title="From idea to link in seconds"
@@ -119,7 +119,7 @@ export default function HomePage() {
 
       {/* Principles */}
       <section className="border-border/70 border-t" aria-labelledby="principles-heading">
-        <div className="mx-auto max-w-6xl px-4 py-24">
+        <div className="mx-auto max-w-7xl px-4 py-24">
           <SectionHeader
             label="03 — Why LinkFlow"
             title="Private by design, not by promise"
@@ -139,7 +139,7 @@ export default function HomePage() {
 
       {/* FAQ */}
       <section className="border-border/70 border-t" aria-labelledby="faq-heading">
-        <div className="mx-auto max-w-6xl gap-12 px-4 py-24 lg:grid lg:grid-cols-[1fr_1.6fr]">
+        <div className="mx-auto max-w-7xl gap-12 px-4 py-24 lg:grid lg:grid-cols-[1fr_1.6fr]">
           <SectionHeader
             label="04 — FAQ"
             title="Good questions, honest answers"
@@ -169,7 +169,7 @@ export default function HomePage() {
 
       {/* CTA */}
       <section className="border-border/70 border-t">
-        <Reveal className="mx-auto max-w-6xl px-4 py-28">
+        <Reveal className="mx-auto max-w-7xl px-4 py-28">
           <p className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase">
             Start now
           </p>

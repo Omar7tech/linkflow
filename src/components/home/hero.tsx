@@ -33,7 +33,7 @@ export function Hero() {
       className="flex flex-col"
       aria-label="LinkFlow — Tools for all"
     >
-      <div className="mx-auto w-full max-w-6xl px-6 pt-40 pb-24">
+      <div className="mx-auto w-full max-w-7xl px-6 pt-40 pb-24">
         <div data-hero-content className="flex flex-col items-start gap-8">
           {/* Main Headline */}
           <h1 className="font-heading max-w-4xl text-[clamp(3.5rem,12vw,8rem)] leading-[0.9] font-bold tracking-[-0.06em]">

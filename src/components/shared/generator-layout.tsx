@@ -12,7 +12,7 @@ interface GeneratorLayoutProps {
 
 export function GeneratorLayout({ tool, children, output, footer }: GeneratorLayoutProps) {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-12">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:py-12">
       <header className="mb-8 max-w-2xl">
         <div className="mb-3 flex items-center gap-3">
           <span className="border-border bg-card flex size-11 items-center justify-center rounded-xl border">

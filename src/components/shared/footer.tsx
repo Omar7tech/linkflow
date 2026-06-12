@@ -7,7 +7,7 @@ import { Logo } from "./logo";
 export function Footer() {
   return (
     <footer className="border-border/60 mt-auto border-t">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-3">
           <Logo />
           <p className="text-muted-foreground text-sm">
@@ -72,7 +72,7 @@ export function Footer() {
       </div>
 
       <div className="border-border/60 border-t py-5">
-        <div className="mx-auto max-w-6xl px-4">
+        <div className="mx-auto max-w-7xl px-4">
           <p className="text-muted-foreground text-xs">
             © {new Date().getFullYear()} {SITE.name}. Free forever. No tracking, no accounts.
           </p>
