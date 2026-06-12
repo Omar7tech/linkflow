@@ -1,5 +1,6 @@
 import {
   BarChart3Icon,
+  BlendIcon,
   BookOpenIcon,
   ContactIcon,
   FileSpreadsheetIcon,
@@ -245,6 +246,22 @@ export const TOOLS = [
       "tailwind grid",
     ],
     icon: LayoutGridIcon,
+  },
+  {
+    id: "glass",
+    slug: "/tools/glass",
+    name: "Glassmorphism Generator",
+    shortName: "Glassmorphism",
+    description:
+      "Design frosted-glass cards visually — drag the card over vivid backgrounds while you tune blur, transparency, saturation, tint and highlights, then export CSS or Tailwind with a built-in fallback.",
+    keywords: [
+      "glassmorphism generator",
+      "frosted glass css",
+      "backdrop-filter generator",
+      "glass effect css",
+      "glassmorphism tailwind",
+    ],
+    icon: BlendIcon,
   },
   {
     id: "colors",
