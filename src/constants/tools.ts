@@ -15,7 +15,9 @@ import {
   PaletteIcon,
   PhoneIcon,
   QrCodeIcon,
+  RainbowIcon,
   Share2Icon,
+  SwatchBookIcon,
   SparkleIcon,
   SparklesIcon,
   TypeIcon,
@@ -262,6 +264,38 @@ export const TOOLS = [
       "glassmorphism tailwind",
     ],
     icon: BlendIcon,
+  },
+  {
+    id: "gradient",
+    slug: "/tools/gradient",
+    name: "Gradient Generator",
+    shortName: "Gradient",
+    description:
+      "Craft linear, radial and conic CSS gradients with full stop control, curated presets and a smart randomizer — then export CSS, Tailwind or SVG.",
+    keywords: [
+      "css gradient generator",
+      "linear gradient",
+      "radial gradient",
+      "conic gradient",
+      "tailwind gradient",
+    ],
+    icon: RainbowIcon,
+  },
+  {
+    id: "palette",
+    slug: "/tools/palette",
+    name: "Color Palette Generator",
+    shortName: "Palette",
+    description:
+      "Generate harmonious color palettes with color-theory modes — lock the colors you love and shuffle the rest, then export CSS variables, SCSS, JSON or Tailwind.",
+    keywords: [
+      "color palette generator",
+      "color scheme generator",
+      "color harmony",
+      "random palette",
+      "css color variables",
+    ],
+    icon: SwatchBookIcon,
   },
   {
     id: "colors",

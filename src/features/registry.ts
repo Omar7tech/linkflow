@@ -29,5 +29,7 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   ),
   grid: dynamic(() => import("./grid/grid-tool").then((m) => m.GridTool)),
   glass: dynamic(() => import("./glass/glass-tool").then((m) => m.GlassTool)),
+  gradient: dynamic(() => import("./gradient/gradient-tool").then((m) => m.GradientTool)),
+  palette: dynamic(() => import("./palette/palette-tool").then((m) => m.PaletteTool)),
   colors: dynamic(() => import("./colors/colors-tool").then((m) => m.ColorsTool)),
 };
