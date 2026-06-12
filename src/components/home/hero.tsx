@@ -4,12 +4,15 @@ import * as React from "react";
 import Link from "next/link";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LinkLoadingIndicator } from "@/components/shared/link-indicator";
 
 gsap.registerPlugin(useGSAP);
 
-const MARKS = ["No accounts", "No uploads", "No tracking", "Works offline"];
+const HEADLINE_LINES = [
+  { text: "Form follows", accent: false },
+  { text: "function.", accent: true },
+];
 
 export function Hero() {
   const sectionRef = React.useRef<HTMLElement>(null);
@@ -18,84 +21,74 @@ export function Hero() {
     () => {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.from("[data-hero-content] > *", {
-          y: 15,
-          autoAlpha: 0,
-          duration: 0.7,
-          stagger: 0.1,
-          ease: "power2.out",
-        });
+        gsap
+          .timeline({ defaults: { ease: "power4.out" } })
+          .from("[data-hero-eyebrow]", { y: 12, autoAlpha: 0, duration: 0.6 })
+          .from(
+            "[data-hero-line]",
+            { yPercent: 110, duration: 1.1, stagger: 0.12 },
+            0.1
+          )
+          .from(
+            "[data-hero-rule]",
+            {
+              scaleX: 0,
+              transformOrigin: "left center",
+              duration: 1.1,
+              ease: "power3.inOut",
+            },
+            0.55
+          )
+          .from(
+            "[data-hero-bottom] > *",
+            { y: 18, autoAlpha: 0, duration: 0.7, stagger: 0.1, ease: "power3.out" },
+            0.8
+          );
       });
     },
     { scope: sectionRef }
   );
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative flex flex-col overflow-hidden"
-      aria-label="Forma — The everyday tool studio"
-    >
-      {/* Ambient glow — pure CSS, GPU-composited */}
-      <div
-        className="bg-primary/10 pointer-events-none absolute -top-32 right-[-10%] size-[480px] rounded-full blur-[120px]"
-        aria-hidden
-      />
+    <section ref={sectionRef} aria-label="Forma — The everyday tool studio">
+      <div className="mx-auto w-full max-w-7xl px-6 pt-32 pb-24 sm:pt-44">
+        <p
+          data-hero-eyebrow
+          className="text-muted-foreground font-mono text-[11px] tracking-[0.22em] uppercase"
+        >
+          The everyday tool studio
+        </p>
 
-      <div className="mx-auto w-full max-w-7xl px-6 pt-36 pb-24">
-        <div data-hero-content className="flex flex-col items-start gap-8">
-          {/* Eyebrow */}
-          <p className="border-border/70 bg-card/50 text-muted-foreground flex items-center gap-2.5 rounded-full border px-4 py-1.5 font-mono text-[11px] tracking-[0.22em] uppercase">
-            <span className="relative flex size-1.5" aria-hidden>
-              <span className="bg-primary absolute inline-flex size-full animate-ping rounded-full opacity-60 motion-reduce:hidden" />
-              <span className="bg-primary relative inline-flex size-1.5 rounded-full" />
+        {/* Each line sits in an overflow-hidden mask and slides up into view. */}
+        <h1 className="font-heading mt-8 text-[clamp(3.5rem,12.5vw,9rem)] leading-[0.95] font-bold tracking-[-0.05em]">
+          {HEADLINE_LINES.map((line) => (
+            <span key={line.text} className="block overflow-hidden pb-[0.08em]">
+              <span data-hero-line className={line.accent ? "text-primary block" : "block"}>
+                {line.text}
+              </span>
             </span>
-            Forma — The everyday tool studio
+          ))}
+        </h1>
+
+        <div data-hero-rule className="bg-border mt-20 h-px w-full" aria-hidden />
+
+        <div data-hero-bottom className="mt-10 grid gap-10 sm:grid-cols-2 sm:items-end">
+          <p className="text-muted-foreground max-w-md text-base leading-relaxed sm:text-lg">
+            Precision tools for links, QR codes, color, type and images — free, instant, and
+            entirely on your device.
           </p>
-
-          {/* Main Headline */}
-          <h1 className="font-heading max-w-5xl text-[clamp(3.25rem,11vw,7.5rem)] leading-[0.92] font-bold tracking-[-0.05em]">
-            Form follows
-            <span className="text-primary block">function.</span>
-          </h1>
-
-          {/* Subtext */}
-          <p className="text-muted-foreground max-w-2xl text-xl leading-snug font-medium tracking-tight sm:text-2xl">
-            Precision tools for links, QR codes, color, type and images. Free and instant —
-            everything runs on your device, nothing ever leaves it.
-          </p>
-
-          {/* CTAs */}
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              asChild
-              size="lg"
-              className="group h-12 rounded-full px-8 text-base font-bold tracking-tight shadow-lg shadow-primary/15 transition-all hover:-translate-y-0.5 active:translate-y-0"
-            >
-              <Link href="/tools">
-                Browse the studio
-                <ArrowRightIcon className="transition-transform group-hover:translate-x-0.5" />
-              </Link>
+          <div className="flex flex-wrap items-center gap-7 sm:justify-end">
+            <Button asChild size="lg" className="h-11 rounded-full px-7 font-semibold">
+              <Link href="/tools">Browse all tools</Link>
             </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="ghost"
-              className="h-12 rounded-full px-6 text-base font-bold tracking-tight"
+            <Link
+              href="/tools/universal"
+              className="text-foreground inline-flex items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline"
             >
-              <Link href="/tools/universal">Try the universal generator</Link>
-            </Button>
+              Universal generator
+              <LinkLoadingIndicator />
+            </Link>
           </div>
-
-          {/* Promise strip */}
-          <ul className="text-muted-foreground mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[11px] tracking-[0.18em] uppercase">
-            {MARKS.map((mark) => (
-              <li key={mark} className="flex items-center gap-2">
-                <span className="bg-primary/60 size-1 rounded-full" aria-hidden />
-                {mark}
-              </li>
-            ))}
-          </ul>
         </div>
       </div>
     </section>
