@@ -29,6 +29,7 @@ import {
   EyeIcon,
   SplineIcon,
   BarcodeIcon,
+  SunIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -472,6 +473,23 @@ export const TOOLS = [
       "barcode svg png",
     ],
     icon: BarcodeIcon,
+  },
+  {
+    id: "glow",
+    slug: "/tools/border-glow",
+    name: "Border Glow Generator",
+    shortName: "Border Glow",
+    description:
+      "Design glowing borders for cards and buttons — neon halos, gradient edges, or an animated rotating aurora border with a soft bloom. Tune blur, reach, intensity and speed live on a dark or light stage, then export clean CSS (with a reduced-motion guard) or Tailwind. All on-device.",
+    keywords: [
+      "border glow generator",
+      "css glow effect",
+      "neon border css",
+      "gradient border generator",
+      "animated border css",
+      "glowing card css",
+    ],
+    icon: SunIcon,
   },
 ] as const satisfies readonly ToolMeta[];
 
