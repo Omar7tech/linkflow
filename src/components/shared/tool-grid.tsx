@@ -54,8 +54,8 @@ export function ToolCard({ tool }: { tool: ToolMeta }) {
         )}
       />
 
-      <div className="relative z-10 flex items-start justify-end">
-        <FavoriteButton toolId={tool.id} />
+      <div className="relative z-10 flex items-start justify-start">
+        <FavoriteButton toolId={tool.id} variant="chip" />
       </div>
 
       <div className="relative z-10 space-y-1.5">
