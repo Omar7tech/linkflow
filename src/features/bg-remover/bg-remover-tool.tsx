@@ -80,6 +80,20 @@ export function BgRemoverTool() {
   const overlayRef = React.useRef<HTMLImageElement>(null);
   const finalRef = React.useRef<ImageData | null>(null);
   const aiResultRef = React.useRef<ImageData | null>(null);
+  const modelLoadedRef = React.useRef(false);
+
+  // Free the AI model's buffers when leaving the tool — it otherwise holds
+  // hundreds of MB for the whole session. Weights stay in the HTTP cache.
+  React.useEffect(
+    () => () => {
+      if (modelLoadedRef.current) {
+        import("@/lib/bg-ml")
+          .then((m) => m.disposeModel())
+          .catch(() => {});
+      }
+    },
+    []
+  );
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -127,6 +141,7 @@ export function BgRemoverTool() {
       setAi({ phase: "working", message: "Warming up…", progress: -1 });
       try {
         const { removeBackgroundAI } = await import("@/lib/bg-ml");
+        modelLoadedRef.current = true;
         const out = await removeBackgroundAI(src, srcUrl, (p) =>
           setAi({ phase: "working", message: p.message, progress: p.progress })
         );

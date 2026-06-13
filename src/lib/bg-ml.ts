@@ -86,6 +86,23 @@ function loadModel(onProgress?: (p: MlProgress) => void): Promise<Loaded> {
 }
 
 /**
+ * Free the loaded model and its GPU/WASM buffers, reclaiming the hundreds of
+ * MB it holds. Safe to call when nothing is loaded. The ~44MB weights stay in
+ * the browser's HTTP cache, so the next load is fast.
+ */
+export async function disposeModel(): Promise<void> {
+  if (!loader) return;
+  const pending = loader;
+  loader = null;
+  try {
+    const { model } = await pending;
+    await model.dispose?.();
+  } catch {
+    // Load never finished or already disposed — nothing to reclaim.
+  }
+}
+
+/**
  * Run the segmentation model and apply its alpha mask onto the original
  * pixels. Returns a new ImageData with a transparent background.
  */
