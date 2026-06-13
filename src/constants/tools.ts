@@ -31,6 +31,7 @@ import {
   BarcodeIcon,
   SunIcon,
   WandSparklesIcon,
+  ScanEyeIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -509,6 +510,23 @@ export const TOOLS = [
       "css text effects",
     ],
     icon: WandSparklesIcon,
+  },
+  {
+    id: "logo",
+    slug: "/tools/logo-tester",
+    name: "Logo Visibility Tester",
+    shortName: "Logo Tester",
+    description:
+      "Drop in your logo and see how it really performs — on light, dark, colored and busy backgrounds, shrunk to favicon size, squinted, grayscaled and silhouetted, plus favicon, app-icon and avatar mockups. Get a smart visibility score with graded metrics and plain-English fixes. All analyzed on-device — nothing is uploaded.",
+    keywords: [
+      "logo visibility tester",
+      "logo test tool",
+      "favicon preview",
+      "logo contrast checker",
+      "logo on dark background",
+      "logo legibility test",
+    ],
+    icon: ScanEyeIcon,
   },
 ] as const satisfies readonly ToolMeta[];
 
