@@ -6,22 +6,14 @@ import type { ToolMeta } from "@/types";
 import { FavoriteButton } from "./favorite-button";
 import { ToolCardIndicator } from "./link-indicator";
 
-export function ToolCard({ tool, featured = false }: { tool: ToolMeta; featured?: boolean }) {
+export function ToolCard({ tool }: { tool: ToolMeta }) {
   return (
     <Link
       href={tool.slug}
-      className={cn(
-        "group border-border/60 bg-card relative flex flex-col justify-between gap-10 rounded-2xl border p-7 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5",
-        featured && "from-primary/10 bg-gradient-to-br to-transparent"
-      )}
+      className="group border-border/60 bg-card relative flex flex-col justify-between gap-10 rounded-2xl border p-7 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5"
     >
       <div className="flex items-start justify-between">
-        <span
-          className={cn(
-            "text-muted-foreground group-hover:text-primary transition-colors",
-            featured && "text-primary"
-          )}
-        >
+        <span className="text-muted-foreground group-hover:text-primary transition-colors">
           <tool.icon className="size-6" aria-hidden />
         </span>
         <FavoriteButton toolId={tool.id} />
@@ -34,12 +26,7 @@ export function ToolCard({ tool, featured = false }: { tool: ToolMeta; featured?
             <ToolCardIndicator />
           </span>
         </h3>
-        <p
-          className={cn(
-            "text-muted-foreground text-sm leading-snug",
-            !featured && "line-clamp-2"
-          )}
-        >
+        <p className="text-muted-foreground line-clamp-2 text-sm leading-snug">
           {tool.description}
         </p>
       </div>
@@ -59,8 +46,8 @@ export function ToolGrid({ className, animated = false, limit }: ToolGridProps) 
   const tools = limit ? TOOLS.slice(0, limit) : TOOLS;
   const grid = (
     <>
-      {tools.map((tool, i) => (
-        <ToolCard key={tool.id} tool={tool} featured={i === 0} />
+      {tools.map((tool) => (
+        <ToolCard key={tool.id} tool={tool} />
       ))}
     </>
   );

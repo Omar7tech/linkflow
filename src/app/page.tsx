@@ -60,12 +60,13 @@ function SectionHeader({
 }) {
   return (
     <Reveal className={className}>
-      <p className="text-muted-foreground flex items-center gap-2 font-mono text-[11px] tracking-[0.18em] uppercase">
-        <span className="bg-primary h-px w-6" aria-hidden />
-        {label}
-      </p>
-      <h2 id={id} className="font-heading mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+      <p className="text-muted-foreground/70 text-xs font-medium tracking-wide">{label}</p>
+      <h2
+        id={id}
+        className="font-heading mt-2 text-4xl font-bold tracking-tight sm:text-5xl"
+      >
         {title}
+        <span className="text-primary">.</span>
       </h2>
     </Reveal>
   );
