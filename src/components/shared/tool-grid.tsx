@@ -11,8 +11,8 @@ export function ToolCard({ tool, featured = false }: { tool: ToolMeta; featured?
     <Link
       href={tool.slug}
       className={cn(
-        "group border-border/60 bg-card relative flex flex-col justify-between gap-8 rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5",
-        featured && "from-primary/10 bg-gradient-to-br to-transparent sm:col-span-2"
+        "group border-border/60 bg-card relative flex flex-col justify-between gap-10 rounded-2xl border p-7 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5",
+        featured && "from-primary/10 bg-gradient-to-br to-transparent"
       )}
     >
       <div className="flex items-start justify-between">
@@ -28,7 +28,7 @@ export function ToolCard({ tool, featured = false }: { tool: ToolMeta; featured?
       </div>
 
       <div className="space-y-1.5">
-        <h3 className="font-heading flex items-center gap-1.5 text-xl font-bold tracking-tight">
+        <h3 className="font-heading flex items-center gap-2 text-2xl font-bold tracking-tight">
           {tool.shortName}
           <span className="text-primary">
             <ToolCardIndicator />
@@ -36,7 +36,7 @@ export function ToolCard({ tool, featured = false }: { tool: ToolMeta; featured?
         </h3>
         <p
           className={cn(
-            "text-muted-foreground text-[13px] leading-snug",
+            "text-muted-foreground text-sm leading-snug",
             !featured && "line-clamp-2"
           )}
         >
@@ -65,7 +65,7 @@ export function ToolGrid({ className, animated = false, limit }: ToolGridProps) 
     </>
   );
 
-  const gridClass = cn("grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4", className);
+  const gridClass = cn("grid gap-4 sm:grid-cols-2 lg:grid-cols-3", className);
 
   if (animated) {
     return (

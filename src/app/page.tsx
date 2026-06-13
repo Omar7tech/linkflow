@@ -94,7 +94,7 @@ export default function HomePage() {
             </p>
           </Reveal>
         </div>
-        <ToolGrid limit={8} />
+        <ToolGrid limit={9} />
         <Reveal className="mt-12 flex justify-center">
           <Button asChild size="lg" variant="outline" className="h-11 rounded-full px-7 font-semibold">
             <Link href="/tools">

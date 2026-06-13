@@ -25,7 +25,7 @@ export function FavoritesSection() {
           Your favorites
         </h2>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {favTools.map((tool) => (
           <ToolCard key={tool.id} tool={tool} />
         ))}
