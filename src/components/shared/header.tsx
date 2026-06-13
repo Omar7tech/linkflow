@@ -3,20 +3,10 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MenuIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { TOOLS } from "@/constants/tools";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "./command-palette";
-import { LinkLoadingIndicator } from "./link-indicator";
 import { Logo } from "./logo";
+import { MobileNavPanel, MobileNavTrigger } from "./mobile-nav";
 import { ThemeToggle } from "./theme-toggle";
 
 const NAV_LINKS = [
@@ -54,47 +44,11 @@ export function Header() {
         <div className="ml-auto flex items-center gap-2">
           <CommandPalette />
           <ThemeToggle />
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
-                <MenuIcon />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-72">
-              <SheetHeader>
-                <SheetTitle>Forma</SheetTitle>
-              </SheetHeader>
-              <nav className="grid gap-1 px-4 pb-6" aria-label="Mobile">
-                {NAV_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="hover:bg-muted rounded-lg px-3 py-2 text-sm font-medium"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-                <div className="text-muted-foreground mt-3 px-3 text-xs font-medium uppercase tracking-wide">
-                  Tools
-                </div>
-                {TOOLS.map((tool) => (
-                  <Link
-                    key={tool.id}
-                    href={tool.slug}
-                    onClick={() => setMobileOpen(false)}
-                    className="hover:bg-muted flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm"
-                  >
-                    <tool.icon className="text-muted-foreground size-4" aria-hidden />
-                    {tool.shortName}
-                    <LinkLoadingIndicator className="ml-auto" />
-                  </Link>
-                ))}
-              </nav>
-            </SheetContent>
-          </Sheet>
+          <MobileNavTrigger open={mobileOpen} onToggle={() => setMobileOpen((o) => !o)} />
         </div>
       </div>
+
+      <MobileNavPanel open={mobileOpen} onNavigate={() => setMobileOpen(false)} />
     </header>
   );
 }
