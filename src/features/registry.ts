@@ -44,4 +44,5 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   easing: dynamic(() => import("./easing/easing-tool").then((m) => m.EasingTool)),
   barcode: dynamic(() => import("./barcode/barcode-tool").then((m) => m.BarcodeTool)),
   glow: dynamic(() => import("./glow/glow-tool").then((m) => m.GlowTool)),
+  typography: dynamic(() => import("./typography/typography-tool").then((m) => m.TypographyTool)),
 };

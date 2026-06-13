@@ -30,6 +30,7 @@ import {
   SplineIcon,
   BarcodeIcon,
   SunIcon,
+  WandSparklesIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -490,6 +491,24 @@ export const TOOLS = [
       "glowing card css",
     ],
     icon: SunIcon,
+  },
+  {
+    id: "typography",
+    slug: "/tools/typography",
+    name: "Typography Studio",
+    shortName: "Typography",
+    description:
+      "Ten text effects in one studio — gradient, animated gradient, aurora, split-color, metallic, neon, glow, outline, glass and 3D. Edit your headline live, dial in any font, weight and spacing, shuffle harmonious colors, then export clean CSS (reduced-motion safe) or Tailwind. All on-device.",
+    keywords: [
+      "gradient text generator",
+      "neon text generator",
+      "3d text generator",
+      "metallic text css",
+      "animated gradient text",
+      "outline text generator",
+      "css text effects",
+    ],
+    icon: WandSparklesIcon,
   },
 ] as const satisfies readonly ToolMeta[];
 
