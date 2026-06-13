@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRightIcon } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -93,7 +94,15 @@ export default function HomePage() {
             </p>
           </Reveal>
         </div>
-        <ToolGrid />
+        <ToolGrid limit={8} />
+        <Reveal className="mt-12 flex justify-center">
+          <Button asChild size="lg" variant="outline" className="h-11 rounded-full px-7 font-semibold">
+            <Link href="/tools">
+              Show all tools
+              <ArrowRightIcon className="size-4" aria-hidden />
+            </Link>
+          </Button>
+        </Reveal>
       </section>
 
       {/* How it works — editorial numbered rows */}

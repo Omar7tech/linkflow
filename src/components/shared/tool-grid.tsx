@@ -51,12 +51,15 @@ interface ToolGridProps {
   className?: string;
   /** Wraps the grid in a staggered scroll reveal. */
   animated?: boolean;
+  /** Show only the first N tools (e.g. on the home page). */
+  limit?: number;
 }
 
-export function ToolGrid({ className, animated = false }: ToolGridProps) {
+export function ToolGrid({ className, animated = false, limit }: ToolGridProps) {
+  const tools = limit ? TOOLS.slice(0, limit) : TOOLS;
   const grid = (
     <>
-      {TOOLS.map((tool, i) => (
+      {tools.map((tool, i) => (
         <ToolCard key={tool.id} tool={tool} featured={i === 0} />
       ))}
     </>
