@@ -1,29 +1,37 @@
 import { cn } from "@/lib/utils";
 
-/** Forma mark — a geometric "f" curve with a vermilion point, on a rounded square. */
+/** Forma mark — a standalone geometric "f" with an emerald crossbar. No container. */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" className={cn("size-7", className)} aria-hidden>
-      <rect width="32" height="32" rx="8" className="fill-foreground" />
+    <svg viewBox="0 0 32 32" className={cn("size-7", className)} fill="none" aria-hidden>
+      {/* Stem + top hook of the f */}
       <path
-        d="M10 24 V14.5 A6.5 6.5 0 0 1 16.5 8 H22"
-        fill="none"
-        className="stroke-background"
-        strokeWidth="3.2"
+        d="M11 28 V12 A7 7 0 0 1 18 5 H21"
+        className="stroke-foreground"
+        strokeWidth="3.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Crossbar */}
+      <path
+        d="M5 15 H17"
+        className="stroke-foreground"
+        strokeWidth="3.4"
         strokeLinecap="round"
       />
-      <circle cx="20.75" cy="20.75" r="3.4" className="fill-primary" />
+      {/* Dot — the brand accent */}
+      <circle cx="21.5" cy="26" r="2.2" className="fill-primary" />
     </svg>
   );
 }
 
 export function Logo({ className, withWordmark = true }: { className?: string; withWordmark?: boolean }) {
   return (
-    <span className={cn("flex items-center gap-2.5", className)}>
+    <span className={cn("flex items-center gap-2", className)}>
       <LogoMark />
       {withWordmark && (
         <span className="font-heading text-[17px] font-bold tracking-tight">
-          forma<span className="text-primary">.</span>
+          forma<span className="text-primary"> tools.</span>
         </span>
       )}
     </span>
