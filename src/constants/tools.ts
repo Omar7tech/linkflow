@@ -1,6 +1,7 @@
 import {
   BarChart3Icon,
   BlendIcon,
+  ContrastIcon,
   EraserIcon,
   BookOpenIcon,
   ContactIcon,
@@ -366,6 +367,23 @@ export const TOOLS = [
       "sharpen image",
     ],
     icon: ImageUpscaleIcon,
+  },
+  {
+    id: "contrast",
+    slug: "/tools/contrast-checker",
+    name: "Color Contrast Checker",
+    shortName: "Contrast",
+    description:
+      "Check text and background colors against WCAG 2.1 (AA/AAA) and modern APCA contrast — with a live preview, an eyedropper, and a smart fix that nudges any color to the nearest accessible shade. All on-device.",
+    keywords: [
+      "contrast checker",
+      "wcag contrast",
+      "color accessibility",
+      "apca contrast",
+      "accessible color checker",
+      "aa aaa contrast ratio",
+    ],
+    icon: ContrastIcon,
   },
   {
     id: "attention",
