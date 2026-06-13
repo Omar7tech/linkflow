@@ -37,7 +37,7 @@ const ACCENTS = [
   { icon: "text-emerald-400", border: "hover:border-emerald-400/50", grad: "from-emerald-400/15" },
   { icon: "text-red-400", border: "hover:border-red-400/50", grad: "from-red-400/15" },
   { icon: "text-indigo-400", border: "hover:border-indigo-400/50", grad: "from-indigo-400/15" },
-  { icon: "text-teal-400", border: "hover:border-teal-400/40", grad: "from-teal-400/15" },
+  { icon: "text-teal-400", border: "hover:border-teal-400/50", grad: "from-teal-400/15" },
   { icon: "text-orange-400", border: "hover:border-orange-400/50", grad: "from-orange-400/15" },
   { icon: "text-fuchsia-600", border: "hover:border-fuchsia-600/50", grad: "from-fuchsia-600/15" },
   { icon: "text-sky-400", border: "hover:border-sky-400/50", grad: "from-sky-400/15" },
@@ -57,6 +57,10 @@ function accentFor(id: string) {
 
 export function ToolCard({ tool }: { tool: ToolMeta }) {
   const accent = accentFor(tool.id);
+  
+  // Extracting the Tailwind base color name for the background grid (e.g., "purple-600" from "text-purple-600")
+  const colorName = accent.icon.replace("text-", "");
+
   return (
     <Link
       href={tool.slug}
@@ -65,6 +69,16 @@ export function ToolCard({ tool }: { tool: ToolMeta }) {
         accent.border
       )}
     >
+      {/* Dynamic Geometric Grid Pattern Layer */}
+      <div 
+        className="pointer-events-none absolute inset-0 opacity-[0.015] mix-blend-overlay transition-opacity duration-300 group-hover:opacity-[0.04]"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
+          backgroundSize: '12px 12px',
+          color: `var(--${colorName}, currentColor)`
+        }}
+      />
+
       {/* Faded icon watermark bleeding off the right edge */}
       <tool.icon
         className={cn(
@@ -73,6 +87,7 @@ export function ToolCard({ tool }: { tool: ToolMeta }) {
         )}
         aria-hidden
       />
+      
       {/* Soft colour wash from the right */}
       <div
         aria-hidden
