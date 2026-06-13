@@ -8,18 +8,18 @@ import { ToolCardIndicator } from "./link-indicator";
 
 /** Per-card accent palette. Each entry: icon text colour, hover border, and the right-edge tint. */
 const ACCENTS = [
-  { icon: "text-emerald-500", border: "hover:border-emerald-500/40", grad: "from-emerald-500/10" },
-  { icon: "text-sky-500", border: "hover:border-sky-500/40", grad: "from-sky-500/10" },
-  { icon: "text-violet-500", border: "hover:border-violet-500/40", grad: "from-violet-500/10" },
-  { icon: "text-amber-500", border: "hover:border-amber-500/40", grad: "from-amber-500/10" },
-  { icon: "text-rose-500", border: "hover:border-rose-500/40", grad: "from-rose-500/10" },
-  { icon: "text-teal-500", border: "hover:border-teal-500/40", grad: "from-teal-500/10" },
-  { icon: "text-indigo-500", border: "hover:border-indigo-500/40", grad: "from-indigo-500/10" },
-  { icon: "text-fuchsia-500", border: "hover:border-fuchsia-500/40", grad: "from-fuchsia-500/10" },
-  { icon: "text-orange-500", border: "hover:border-orange-500/40", grad: "from-orange-500/10" },
-  { icon: "text-cyan-500", border: "hover:border-cyan-500/40", grad: "from-cyan-500/10" },
-  { icon: "text-lime-500", border: "hover:border-lime-500/40", grad: "from-lime-500/10" },
-  { icon: "text-blue-500", border: "hover:border-blue-500/40", grad: "from-blue-500/10" },
+  { icon: "text-emerald-500", border: "hover:border-emerald-500/50", grad: "from-emerald-500/15" },
+  { icon: "text-sky-500", border: "hover:border-sky-500/50", grad: "from-sky-500/15" },
+  { icon: "text-violet-500", border: "hover:border-violet-500/50", grad: "from-violet-500/15" },
+  { icon: "text-amber-500", border: "hover:border-amber-500/50", grad: "from-amber-500/15" },
+  { icon: "text-rose-500", border: "hover:border-rose-500/50", grad: "from-rose-500/15" },
+  { icon: "text-teal-500", border: "hover:border-teal-500/50", grad: "from-teal-500/15" },
+  { icon: "text-indigo-500", border: "hover:border-indigo-500/50", grad: "from-indigo-500/15" },
+  { icon: "text-fuchsia-500", border: "hover:border-fuchsia-500/50", grad: "from-fuchsia-500/15" },
+  { icon: "text-orange-500", border: "hover:border-orange-500/50", grad: "from-orange-500/15" },
+  { icon: "text-cyan-500", border: "hover:border-cyan-500/50", grad: "from-cyan-500/15" },
+  { icon: "text-lime-500", border: "hover:border-lime-500/50", grad: "from-lime-500/15" },
+  { icon: "text-blue-500", border: "hover:border-blue-500/50", grad: "from-blue-500/15" },
 ] as const;
 
 function accentFor(id: string) {
