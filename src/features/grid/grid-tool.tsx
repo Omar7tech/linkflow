@@ -1,7 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { LayoutGridIcon, MinusIcon, PlusIcon, SparklesIcon, Trash2Icon, WandIcon } from "lucide-react";
+import {
+  CopyPlusIcon,
+  EyeIcon,
+  LayoutGridIcon,
+  MinusIcon,
+  PencilIcon,
+  PlusIcon,
+  SparklesIcon,
+  Trash2Icon,
+  WandIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,6 +38,8 @@ import {
   clampArea,
   collides,
   fillEmptyCells,
+  findFreeArea,
+  inBounds,
   isValidTrack,
   sanitizeName,
   toCss,
@@ -37,6 +49,7 @@ import {
   type GridArea,
   type GridConfig,
 } from "@/lib/grid";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { GridCanvas } from "./grid-canvas";
 
@@ -47,6 +60,7 @@ export function GridTool() {
   const [config, setConfig] = React.useState<GridConfig>(() => applyPreset(GRID_PRESETS[1]));
   const [presetId, setPresetId] = React.useState(GRID_PRESETS[1].id);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const [preview, setPreview] = React.useState(false);
 
   const selected = config.items.find((i) => i.id === selectedId) ?? null;
   const css = toCss(config);
@@ -81,6 +95,46 @@ export function GridTool() {
   const removeItem = (id: string) => {
     setConfig((prev) => ({ ...prev, items: prev.items.filter((i) => i.id !== id) }));
     setSelectedId(null);
+  };
+
+  /** Drop a copy of the selected area into the first free slot of the same size. */
+  const duplicateSelected = () => {
+    if (!selected) return;
+    const h = selected.area.r2 - selected.area.r1 + 1;
+    const w = selected.area.c2 - selected.area.c1 + 1;
+    const area = findFreeArea(config, h, w);
+    if (!area) {
+      toast.error("No room to duplicate — add a row or column first");
+      return;
+    }
+    const id = crypto.randomUUID();
+    setConfig((prev) => ({
+      ...prev,
+      items: [
+        ...prev.items,
+        { id, name: uniqueName(selected.name, prev.items), area, color: selected.color },
+      ],
+    }));
+    setSelectedId(id);
+  };
+
+  /** Arrow-key editing of the selected area: move, or resize the bottom-right edge. */
+  const nudgeSelected = (dr: number, dc: number, mode: "move" | "resize") => {
+    setConfig((prev) => {
+      const idx = prev.items.findIndex((i) => i.id === selectedId);
+      if (idx < 0) return prev;
+      const a = prev.items[idx].area;
+      const area: GridArea =
+        mode === "move"
+          ? { r1: a.r1 + dr, c1: a.c1 + dc, r2: a.r2 + dr, c2: a.c2 + dc }
+          : { r1: a.r1, c1: a.c1, r2: a.r2 + dr, c2: a.c2 + dc };
+      if (area.r2 < area.r1 || area.c2 < area.c1) return prev;
+      if (!inBounds(area, prev.rows.length, prev.columns.length)) return prev;
+      if (collides(area, prev.items, prev.items[idx].id)) return prev;
+      const items = [...prev.items];
+      items[idx] = { ...items[idx], area };
+      return { ...prev, items };
+    });
   };
 
   const renameSelected = (raw: string) => {
@@ -151,17 +205,38 @@ export function GridTool() {
     setSelectedId(null);
   };
 
-  // Delete/Backspace removes the selected area — unless the user is typing.
+  // Keyboard editing of the selected area — disabled while typing or in preview.
+  const ARROW_DELTAS: Record<string, [number, number]> = {
+    ArrowUp: [-1, 0],
+    ArrowDown: [1, 0],
+    ArrowLeft: [0, -1],
+    ArrowRight: [0, 1],
+  };
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Delete" && e.key !== "Backspace") return;
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
-      if (selectedId) removeItem(selectedId);
+      if (preview || !selectedId) return;
+
+      if (e.key === "Delete" || e.key === "Backspace") {
+        removeItem(selectedId);
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && (e.key === "d" || e.key === "D")) {
+        e.preventDefault();
+        duplicateSelected();
+        return;
+      }
+      const delta = ARROW_DELTAS[e.key];
+      if (delta) {
+        e.preventDefault();
+        nudgeSelected(delta[0], delta[1], e.shiftKey ? "resize" : "move");
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selectedId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, preview, config]);
 
   const exportTabs = [
     { id: "css", name: "CSS", code: css },
@@ -217,28 +292,62 @@ export function GridTool() {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <LayoutGridIcon className="text-primary size-4" />
-              Canvas
-            </CardTitle>
-            <CardDescription>
-              Drag across empty cells to draw an area. Drag an area to move it, or pull its
-              corners to resize. Click an area to rename or delete it.
-            </CardDescription>
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1.5">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <LayoutGridIcon className="text-primary size-4" />
+                  Canvas
+                </CardTitle>
+                <CardDescription>
+                  {preview
+                    ? "Live preview of the finished layout."
+                    : "Drag across cells to draw an area; drag to move, pull corners to resize. With an area selected, arrow keys move it and Shift + arrows resize."}
+                </CardDescription>
+              </div>
+              <div className="bg-muted/50 flex shrink-0 rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setPreview(false)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                    !preview ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+                  )}
+                >
+                  <PencilIcon className="size-3.5" /> Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreview(true);
+                    setSelectedId(null);
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                    preview ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+                  )}
+                >
+                  <EyeIcon className="size-3.5" /> Preview
+                </button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <GridCanvas
-              columns={config.columns}
-              rows={config.rows}
-              gap={config.gap}
-              items={config.items}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              onCreate={createItem}
-              onMoveResize={moveResizeItem}
-            />
+            {preview ? (
+              <GridPreview config={config} />
+            ) : (
+              <GridCanvas
+                columns={config.columns}
+                rows={config.rows}
+                gap={config.gap}
+                items={config.items}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                onCreate={createItem}
+                onMoveResize={moveResizeItem}
+              />
+            )}
 
-            {selected && (
+            {!preview && selected && (
               <div className="border-border bg-muted/30 flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2">
                 <Label htmlFor="area-name" className="text-xs">
                   Area name
@@ -255,31 +364,44 @@ export function GridTool() {
                   rows {selected.area.r1}–{selected.area.r2} · cols {selected.area.c1}–
                   {selected.area.c2}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeItem(selected.id)}
-                  className="text-muted-foreground hover:text-destructive ml-auto h-8"
-                >
-                  <Trash2Icon className="size-3.5" /> Delete
-                </Button>
+                <div className="ml-auto flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={duplicateSelected}
+                    className="text-muted-foreground h-8"
+                    title="Duplicate area (Ctrl/⌘ + D)"
+                  >
+                    <CopyPlusIcon className="size-3.5" /> Duplicate
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeItem(selected.id)}
+                    className="text-muted-foreground hover:text-destructive h-8"
+                  >
+                    <Trash2Icon className="size-3.5" /> Delete
+                  </Button>
+                </div>
               </div>
             )}
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="secondary" size="sm" onClick={fillEmpty}>
-                <WandIcon className="size-3.5" /> Fill empty cells
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearItems}
-                disabled={config.items.length === 0}
-                className="text-muted-foreground hover:text-destructive"
-              >
-                <Trash2Icon className="size-3.5" /> Clear areas
-              </Button>
-            </div>
+            {!preview && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="secondary" size="sm" onClick={fillEmpty}>
+                  <WandIcon className="size-3.5" /> Fill empty cells
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearItems}
+                  disabled={config.items.length === 0}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2Icon className="size-3.5" /> Clear areas
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -354,6 +476,44 @@ export function GridTool() {
         </Card>
       </div>
     </GeneratorLayout>
+  );
+}
+
+/** Read-only render of the grid as the finished layout — no editing chrome. */
+function GridPreview({ config }: { config: GridConfig }) {
+  if (config.items.length === 0) {
+    return (
+      <div className="border-border/60 text-muted-foreground flex min-h-40 items-center justify-center rounded-xl border border-dashed text-sm">
+        Draw some areas in Edit mode to preview the layout.
+      </div>
+    );
+  }
+  return (
+    <div
+      className="rounded-xl"
+      style={{
+        display: "grid",
+        gridTemplateColumns: config.columns.join(" "),
+        gridTemplateRows: config.rows.join(" "),
+        gap: `${config.gap}px`,
+        minHeight: config.rows.length * 56,
+      }}
+    >
+      {config.items.map((item) => (
+        <div
+          key={item.id}
+          className={cn(
+            "flex min-h-12 items-center justify-center rounded-md border px-2 text-center font-mono text-xs font-bold",
+            ITEM_COLORS[item.color % ITEM_COLORS.length]
+          )}
+          style={{
+            gridArea: `${item.area.r1} / ${item.area.c1} / ${item.area.r2 + 1} / ${item.area.c2 + 1}`,
+          }}
+        >
+          {item.name}
+        </div>
+      ))}
+    </div>
   );
 }
 

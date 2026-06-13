@@ -67,6 +67,19 @@ export function collides(area: GridArea, items: GridItem[], ignoreId?: string): 
   return items.some((item) => item.id !== ignoreId && areasOverlap(area, item.area));
 }
 
+/** First free area of the given size (top-left scan), or null if none fits. */
+export function findFreeArea(config: GridConfig, h: number, w: number): GridArea | null {
+  const rows = config.rows.length;
+  const cols = config.columns.length;
+  for (let r = 1; r + h - 1 <= rows; r++) {
+    for (let c = 1; c + w - 1 <= cols; c++) {
+      const area: GridArea = { r1: r, c1: c, r2: r + h - 1, c2: c + w - 1 };
+      if (!collides(area, config.items)) return area;
+    }
+  }
+  return null;
+}
+
 /** Clamp an item's area into the grid, shrinking it if the grid got smaller. */
 export function clampArea(area: GridArea, rows: number, cols: number): GridArea | null {
   const clamped: GridArea = {
