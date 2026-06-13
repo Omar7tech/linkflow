@@ -93,7 +93,7 @@ export default function HomePage() {
             </p>
           </Reveal>
         </div>
-        <ToolGrid animated />
+        <ToolGrid />
       </section>
 
       {/* How it works — editorial numbered rows */}
