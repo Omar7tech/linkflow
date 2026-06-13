@@ -12,7 +12,6 @@ import {
   KeyRoundIcon,
   LayoutGridIcon,
   MailIcon,
-  MessageCircleIcon,
   MessageSquareIcon,
   PaletteIcon,
   PhoneIcon,
@@ -26,6 +25,7 @@ import {
   TypeIcon,
   EyeIcon,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
 
 export const TOOLS = [
@@ -47,7 +47,7 @@ export const TOOLS = [
     description:
       "Create click-to-chat WhatsApp links with a prefilled message, format group invites, and bulk-generate links from a CSV of numbers.",
     keywords: ["whatsapp link generator", "wa.me", "click to chat", "whatsapp qr"],
-    icon: MessageCircleIcon,
+    icon: WhatsAppIcon,
   },
   {
     id: "qr",
