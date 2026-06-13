@@ -33,6 +33,7 @@ import {
   WandSparklesIcon,
   ScanEyeIcon,
   Code2Icon,
+  ShapesIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -545,6 +546,23 @@ export const TOOLS = [
       "syntax highlight image",
     ],
     icon: Code2Icon,
+  },
+  {
+    id: "blob",
+    slug: "/tools/blob-generator",
+    name: "Blob & Wave Generator",
+    shortName: "Blobs & Waves",
+    description:
+      "Generate organic SVG blobs and layered section-divider waves — tune points, randomness, layers and amplitude, shuffle for endless variations, and pour in a gradient. Export crisp SVG, a CSS background snippet, or PNG. All on-device.",
+    keywords: [
+      "svg blob generator",
+      "blob maker",
+      "svg wave generator",
+      "section divider svg",
+      "organic shape generator",
+      "css background shape",
+    ],
+    icon: ShapesIcon,
   },
 ] as const satisfies readonly ToolMeta[];
 

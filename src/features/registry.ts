@@ -47,4 +47,5 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   typography: dynamic(() => import("./typography/typography-tool").then((m) => m.TypographyTool)),
   logo: dynamic(() => import("./logo/logo-tool").then((m) => m.LogoTool)),
   codeshot: dynamic(() => import("./codeshot/codeshot-tool").then((m) => m.CodeshotTool)),
+  blob: dynamic(() => import("./blob/blob-tool").then((m) => m.BlobTool)),
 };
