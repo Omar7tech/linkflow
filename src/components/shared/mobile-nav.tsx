@@ -93,7 +93,7 @@ export function MobileNavPanel({ open, onNavigate }: { open: boolean; onNavigate
   );
 
   return (
-    <div ref={panelRef} className="overflow-hidden md:hidden">
+    <div ref={panelRef} className="h-0 overflow-hidden md:hidden">
       <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3" aria-label="Mobile">
         {MOBILE_NAV_LINKS.map((link, i) => {
           const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
