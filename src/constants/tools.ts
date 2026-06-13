@@ -28,6 +28,7 @@ import {
   TypeIcon,
   EyeIcon,
   SplineIcon,
+  BarcodeIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -454,6 +455,23 @@ export const TOOLS = [
       "animation curve editor",
     ],
     icon: SplineIcon,
+  },
+  {
+    id: "barcode",
+    slug: "/tools/barcode",
+    name: "Barcode Generator",
+    shortName: "Barcode",
+    description:
+      "Make scannable 1D barcodes — Code 128, EAN-13, UPC-A, EAN-8, ITF-14, Code 39, Codabar and Pharmacode. Smart format auto-detection, live validation, full color and density control, crisp SVG or high-res PNG export, and batch-generate a whole list into a ZIP. All on-device.",
+    keywords: [
+      "barcode generator",
+      "code 128 generator",
+      "ean 13 barcode",
+      "upc barcode generator",
+      "batch barcode generator",
+      "barcode svg png",
+    ],
+    icon: BarcodeIcon,
   },
 ] as const satisfies readonly ToolMeta[];
 

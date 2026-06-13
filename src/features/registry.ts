@@ -42,4 +42,5 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   attention: dynamic(() => import("./attention/attention-tool").then((m) => m.AttentionTool)),
   enhancer: dynamic(() => import("./enhancer/enhancer-tool").then((m) => m.EnhancerTool)),
   easing: dynamic(() => import("./easing/easing-tool").then((m) => m.EasingTool)),
+  barcode: dynamic(() => import("./barcode/barcode-tool").then((m) => m.BarcodeTool)),
 };
