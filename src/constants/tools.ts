@@ -32,6 +32,7 @@ import {
   SunIcon,
   WandSparklesIcon,
   ScanEyeIcon,
+  Code2Icon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -527,6 +528,23 @@ export const TOOLS = [
       "logo legibility test",
     ],
     icon: ScanEyeIcon,
+  },
+  {
+    id: "codeshot",
+    slug: "/tools/code-image",
+    name: "Code Image Generator",
+    shortName: "Code Image",
+    description:
+      "Turn any code snippet into a beautiful, shareable image — VS Code-grade syntax highlighting for 20+ languages via Shiki, real editor themes, window chrome, gradient backdrops, line numbers and retina PNG export. Perfect for X, slides, docs and READMEs. All on-device.",
+    keywords: [
+      "code image generator",
+      "code to image",
+      "code screenshot",
+      "carbon alternative",
+      "beautiful code snippets",
+      "syntax highlight image",
+    ],
+    icon: Code2Icon,
   },
 ] as const satisfies readonly ToolMeta[];
 

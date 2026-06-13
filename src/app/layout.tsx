@@ -7,6 +7,7 @@ import { Header } from "@/components/shared/header";
 import { SwRegister } from "@/components/shared/sw-register";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { SITE } from "@/constants/site";
+import { firaCode, jetbrainsMono } from "@/lib/fonts";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -74,7 +75,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${firaCode.variable} h-full antialiased`}
     >
       {/* suppressHydrationWarning: browser extensions (e.g. ColorZilla) inject body attributes pre-hydration */}
       <body className="flex min-h-screen flex-col" suppressHydrationWarning>
