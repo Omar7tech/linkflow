@@ -104,11 +104,11 @@ export function NeumorphismTool() {
                       type="button"
                       onClick={() => set("light", corner.id)}
                       className={cn(
-                        "absolute flex size-8 items-center justify-center rounded-full transition-all",
+                        "absolute flex size-8 items-center justify-center rounded-full shadow-md ring-1 ring-black/10 backdrop-blur-sm transition-all",
                         corner.className,
                         config.light === corner.id
-                          ? "bg-amber-400 text-amber-950 shadow-lg"
-                          : "text-black/30 hover:bg-black/5 dark:text-white/30"
+                          ? "bg-amber-400 text-amber-950"
+                          : "bg-white/80 text-black/60 hover:bg-white"
                       )}
                       aria-label={`Light from ${corner.id}`}
                       title="Light source"
