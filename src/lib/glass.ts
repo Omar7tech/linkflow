@@ -25,6 +25,12 @@ export interface GlassConfig {
   gradient: boolean;
   /** Subtle SVG grain baked into the surface — classic frosted look. */
   noise: boolean;
+  /** Refractive lens edge — chromatic dispersion rim, the "liquid glass" look. */
+  lens: boolean;
+  /** Soft inner glow, as if the glass were lit from within. */
+  glow: boolean;
+  /** Animated specular sheen sweeping across the surface. */
+  sheen: boolean;
 }
 
 /** Tiling fractal-noise SVG, alpha baked in — the standard frost-grain trick. */
@@ -63,12 +69,43 @@ function backdropFilter({ blur, saturation, brightness }: GlassConfig): string {
   return parts.join(" ");
 }
 
-function boxShadow({ shadow, highlight }: GlassConfig): string | null {
+function boxShadow({ shadow, highlight, lens, glow }: GlassConfig): string | null {
   const layers: string[] = [];
   if (shadow > 0) layers.push(`0 8px 32px rgba(0, 0, 0, ${(shadow / 100).toFixed(2)})`);
   if (highlight) layers.push(`inset 0 1px 0 rgba(255, 255, 255, 0.4)`);
+  if (lens) {
+    // Bright specular rim on the light side, plus two chromatic refraction
+    // edges (cool + warm) that read as glass bending the light behind it.
+    layers.push(
+      `inset 1px 1px 1px rgba(255, 255, 255, 0.55)`,
+      `inset -1px -1px 1px rgba(255, 255, 255, 0.2)`,
+      `inset 3px 3px 7px rgba(130, 170, 255, 0.3)`,
+      `inset -3px -3px 7px rgba(255, 140, 190, 0.24)`,
+    );
+  }
+  if (glow) layers.push(`inset 0 0 22px rgba(255, 255, 255, 0.18)`);
   return layers.length ? layers.join(", ") : null;
 }
+
+/** The animated specular sweep, emitted as a ::before layer in the CSS export. */
+const SHEEN_CSS = (className: string) =>
+  [
+    ``,
+    `.${className} { position: relative; overflow: hidden; isolation: isolate; }`,
+    `.${className}::before {`,
+    `  content: "";`,
+    `  position: absolute;`,
+    `  inset: 0;`,
+    `  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);`,
+    `  transform: translateX(-100%);`,
+    `  animation: glass-sheen 5s ease-in-out infinite;`,
+    `  pointer-events: none;`,
+    `}`,
+    `@keyframes glass-sheen {`,
+    `  0%, 55% { transform: translateX(-100%); }`,
+    `  100% { transform: translateX(100%); }`,
+    `}`,
+  ].join("\n");
 
 /** Inline style object for the live preview — same values the CSS export uses. */
 export function toStyle(config: GlassConfig): CSSProperties {
@@ -108,6 +145,7 @@ export function toCss(config: GlassConfig, className = "glass"): string {
     `  }`,
     `}`
   );
+  if (config.sheen) lines.push(SHEEN_CSS(className));
   return lines.join("\n");
 }
 
@@ -130,10 +168,18 @@ export function toTailwind(config: GlassConfig): string {
   classes.push(`rounded-[${config.radius}px]`);
   const shadowValue = boxShadow(config);
   if (shadowValue) classes.push(`shadow-[${shadowValue.replace(/\s/g, "_")}]`);
-  const noiseNote = config.noise
-    ? `\n<!-- Frost grain uses an SVG background layer — grab it from the CSS export. -->`
-    : "";
-  return `<div class="${classes.join(" ")}">\n  <!-- content -->\n</div>${noiseNote}`;
+  const notes = [
+    config.noise
+      ? `<!-- Frost grain uses an SVG background layer — grab it from the CSS export. -->`
+      : "",
+    config.sheen
+      ? `<!-- Animated sheen needs the ::before layer + @keyframes from the CSS export. -->`
+      : "",
+  ]
+    .filter(Boolean)
+    .map((n) => `\n${n}`)
+    .join("");
+  return `<div class="${classes.join(" ")}">\n  <!-- content -->\n</div>${notes}`;
 }
 
 export interface GlassPreset {
@@ -147,9 +193,22 @@ const base = {
   borderWidth: 1,
   gradient: false,
   noise: false,
+  lens: false,
+  glow: false,
+  sheen: false,
 };
 
 export const GLASS_PRESETS: GlassPreset[] = [
+  {
+    id: "liquid",
+    name: "Liquid Glass",
+    config: { ...base, tint: "#ffffff", opacity: 12, blur: 10, saturation: 180, brightness: 108, radius: 28, borderOpacity: 35, borderWidth: 1, shadow: 28, highlight: true, gradient: true, lens: true, glow: true, sheen: true },
+  },
+  {
+    id: "lens",
+    name: "Lens",
+    config: { ...base, tint: "#ffffff", opacity: 8, blur: 6, saturation: 200, brightness: 110, radius: 32, borderOpacity: 25, shadow: 22, highlight: false, lens: true, glow: true },
+  },
   {
     id: "frosted",
     name: "Frosted",

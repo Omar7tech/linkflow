@@ -173,14 +173,25 @@ export function GlassTool() {
                 >
                   <div
                     onPointerDown={startDrag}
-                    className="absolute w-60 -translate-x-1/2 -translate-y-1/2 cursor-grab p-5 active:cursor-grabbing"
+                    className="absolute w-60 -translate-x-1/2 -translate-y-1/2 cursor-grab overflow-hidden p-5 isolate active:cursor-grabbing"
                     style={{
                       left: `${pos.x}%`,
                       top: `${pos.y}%`,
                       ...toStyle(config),
                     }}
                   >
-                    <div className="pointer-events-none space-y-3">
+                    {config.sheen && (
+                      <span
+                        aria-hidden
+                        className="pointer-events-none absolute inset-0"
+                        style={{
+                          background:
+                            "linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%)",
+                          animation: "glass-sheen 5s ease-in-out infinite",
+                        }}
+                      />
+                    )}
+                    <div className="pointer-events-none relative space-y-3">
                       <div className="flex items-center gap-3">
                         <div
                           className={cn(
@@ -430,6 +441,24 @@ export function GlassTool() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
+                <GlassToggle
+                  label="Lens refraction"
+                  hint="Chromatic dispersion rim — the Apple liquid-glass edge."
+                  checked={config.lens}
+                  onChange={(v) => set("lens", v)}
+                />
+                <GlassToggle
+                  label="Inner glow"
+                  hint="Soft light blooming from inside the glass."
+                  checked={config.glow}
+                  onChange={(v) => set("glow", v)}
+                />
+                <GlassToggle
+                  label="Liquid sheen"
+                  hint="An animated specular streak sweeping across."
+                  checked={config.sheen}
+                  onChange={(v) => set("sheen", v)}
+                />
                 <GlassToggle
                   label="Edge highlight"
                   hint="A bright inner top edge, like light catching the glass."

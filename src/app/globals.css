@@ -163,6 +163,17 @@
   }
 }
 
+/* Specular sweep for the glassmorphism "liquid glass" sheen preview. */
+@keyframes glass-sheen {
+  0%,
+  55% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .text-gradient {
     animation: none;
