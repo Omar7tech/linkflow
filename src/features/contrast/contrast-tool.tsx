@@ -158,7 +158,12 @@ function ColorField({
 }) {
   const hex = toHex(value);
   const [draft, setDraft] = React.useState(hex);
-  React.useEffect(() => setDraft(hex), [hex]);
+  // Sync the editable draft when the upstream color changes (picker, swap, fix).
+  const [lastHex, setLastHex] = React.useState(hex);
+  if (hex !== lastHex) {
+    setLastHex(hex);
+    setDraft(hex);
+  }
 
   const commit = (raw: string) => {
     const rgb = parseHex(raw);
