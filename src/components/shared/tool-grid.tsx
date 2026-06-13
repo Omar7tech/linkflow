@@ -54,10 +54,7 @@ export function ToolCard({ tool }: { tool: ToolMeta }) {
         )}
       />
 
-      <div className="relative z-10 flex items-start justify-between">
-        <span className={cn("transition-colors", accent.icon)}>
-          <tool.icon className="size-6" aria-hidden />
-        </span>
+      <div className="relative z-10 flex items-start justify-end">
         <FavoriteButton toolId={tool.id} />
       </div>
 
