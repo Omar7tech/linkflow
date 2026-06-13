@@ -3,6 +3,7 @@ import {
   BlendIcon,
   ContrastIcon,
   EraserIcon,
+  FingerprintIcon,
   BookOpenIcon,
   ContactIcon,
   FileSpreadsheetIcon,
@@ -384,6 +385,23 @@ export const TOOLS = [
       "aa aaa contrast ratio",
     ],
     icon: ContrastIcon,
+  },
+  {
+    id: "brand",
+    slug: "/tools/brand-personality",
+    name: "Brand Personality Mapper",
+    shortName: "Brand Mapper",
+    description:
+      "Map your brand on Aaker's five personality dimensions — Sincerity, Excitement, Competence, Sophistication and Ruggedness — and get a live radar chart plus a tailored palette, type, and tone-of-voice kit. All on-device.",
+    keywords: [
+      "brand personality",
+      "aaker brand dimensions",
+      "brand archetype",
+      "brand identity tool",
+      "brand voice generator",
+      "brand strategy",
+    ],
+    icon: FingerprintIcon,
   },
   {
     id: "attention",
