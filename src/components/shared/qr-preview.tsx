@@ -28,13 +28,15 @@ export function QrPreview({
 }: QrPreviewProps) {
   const [dataUrl, setDataUrl] = React.useState<string | null>(null);
 
-  const { fgColor, bgColor, size, errorLevel, logoDataUrl } = options;
+  const { size } = options;
+  // Re-render on any option change without listing each field by hand.
+  const optionsKey = JSON.stringify(options);
 
   React.useEffect(() => {
     if (!value) return;
     let cancelled = false;
     const handle = setTimeout(() => {
-      qrToPngDataUrl(value, { fgColor, bgColor, size, errorLevel, logoDataUrl })
+      qrToPngDataUrl(value, options)
         .then((url) => {
           if (!cancelled) setDataUrl(url);
         })
@@ -46,7 +48,8 @@ export function QrPreview({
       cancelled = true;
       clearTimeout(handle);
     };
-  }, [value, fgColor, bgColor, size, errorLevel, logoDataUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- optionsKey captures all option fields
+  }, [value, optionsKey]);
 
   if (!value || !dataUrl) {
     return (
@@ -70,7 +73,20 @@ export function QrPreview({
       <img
         src={dataUrl}
         alt={`QR code for ${value.slice(0, 80)}`}
-        className="border-border w-full max-w-55 rounded-xl border bg-white p-2"
+        className={cn(
+          "border-border w-full max-w-55 rounded-xl border p-2",
+          options.transparent ? "" : "bg-white"
+        )}
+        style={
+          options.transparent
+            ? {
+                backgroundImage:
+                  "linear-gradient(45deg,#e5e5e5 25%,transparent 25%),linear-gradient(-45deg,#e5e5e5 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e5e5e5 75%),linear-gradient(-45deg,transparent 75%,#e5e5e5 75%)",
+                backgroundSize: "16px 16px",
+                backgroundPosition: "0 0,0 8px,8px -8px,-8px 0",
+              }
+            : undefined
+        }
         width={size}
         height={size}
       />
