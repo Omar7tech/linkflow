@@ -38,6 +38,7 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   colors: dynamic(() => import("./colors/colors-tool").then((m) => m.ColorsTool)),
   contrast: dynamic(() => import("./contrast/contrast-tool").then((m) => m.ContrastTool)),
   brand: dynamic(() => import("./brand/brand-tool").then((m) => m.BrandTool)),
+  fluid: dynamic(() => import("./fluid/fluid-tool").then((m) => m.FluidTool)),
   attention: dynamic(() => import("./attention/attention-tool").then((m) => m.AttentionTool)),
   enhancer: dynamic(() => import("./enhancer/enhancer-tool").then((m) => m.EnhancerTool)),
 };

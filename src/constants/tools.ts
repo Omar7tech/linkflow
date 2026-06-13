@@ -1,4 +1,5 @@
 import {
+  ALargeSmallIcon,
   BarChart3Icon,
   BlendIcon,
   ContrastIcon,
@@ -385,6 +386,23 @@ export const TOOLS = [
       "aa aaa contrast ratio",
     ],
     icon: ContrastIcon,
+  },
+  {
+    id: "fluid",
+    slug: "/tools/fluid-type",
+    name: "Fluid Type Scale Generator",
+    shortName: "Fluid Type",
+    description:
+      "Generate responsive CSS clamp() font sizes that scale smoothly between any two viewports — a full modular type scale with a live resize preview. Export to CSS variables or Tailwind. All on-device.",
+    keywords: [
+      "fluid typography",
+      "css clamp generator",
+      "responsive font size",
+      "modular type scale",
+      "clamp font size",
+      "fluid type scale",
+    ],
+    icon: ALargeSmallIcon,
   },
   {
     id: "brand",
