@@ -41,4 +41,5 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   fluid: dynamic(() => import("./fluid/fluid-tool").then((m) => m.FluidTool)),
   attention: dynamic(() => import("./attention/attention-tool").then((m) => m.AttentionTool)),
   enhancer: dynamic(() => import("./enhancer/enhancer-tool").then((m) => m.EnhancerTool)),
+  easing: dynamic(() => import("./easing/easing-tool").then((m) => m.EasingTool)),
 };

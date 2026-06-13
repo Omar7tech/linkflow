@@ -27,6 +27,7 @@ import {
   SquircleIcon,
   TypeIcon,
   EyeIcon,
+  SplineIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -436,6 +437,23 @@ export const TOOLS = [
       "design hotspot",
     ],
     icon: EyeIcon,
+  },
+  {
+    id: "easing",
+    slug: "/tools/easing",
+    name: "Easing & Motion Studio",
+    shortName: "Easing",
+    description:
+      "Shape animation timing visually — drag a cubic-bezier curve or tune a real spring, watch it loop on position, scale, rotation and opacity, then export CSS, Tailwind or Framer. Springs bake down to a modern CSS linear() curve. All on-device.",
+    keywords: [
+      "cubic bezier generator",
+      "easing function generator",
+      "css linear easing",
+      "spring animation css",
+      "transition timing function",
+      "animation curve editor",
+    ],
+    icon: SplineIcon,
   },
 ] as const satisfies readonly ToolMeta[];
 
