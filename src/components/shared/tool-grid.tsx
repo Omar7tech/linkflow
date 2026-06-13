@@ -18,17 +18,17 @@ export function ToolCard({ tool, featured = false }: { tool: ToolMeta; featured?
       <div className="flex items-start justify-between">
         <span
           className={cn(
-            "border-border/70 bg-muted/40 text-muted-foreground group-hover:border-primary/30 group-hover:text-primary flex size-10 items-center justify-center rounded-xl border transition-colors",
-            featured && "border-primary/30 text-primary"
+            "text-muted-foreground group-hover:text-primary transition-colors",
+            featured && "text-primary"
           )}
         >
-          <tool.icon className="size-[18px]" aria-hidden />
+          <tool.icon className="size-6" aria-hidden />
         </span>
         <FavoriteButton toolId={tool.id} />
       </div>
 
       <div className="space-y-1.5">
-        <h3 className="font-heading flex items-center gap-1.5 text-[17px] font-bold tracking-tight">
+        <h3 className="font-heading flex items-center gap-1.5 text-xl font-bold tracking-tight">
           {tool.shortName}
           <span className="text-primary">
             <ToolCardIndicator />
