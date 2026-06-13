@@ -23,16 +23,24 @@ export function renderOgImage(title: string, subtitle: string) {
           <svg width="64" height="64" viewBox="0 0 32 32">
             <rect width="32" height="32" rx="8" fill="#fafafa" />
             <path
-              d="M10 24 V14.5 A6.5 6.5 0 0 1 16.5 8 H22"
+              d="M13 25 V12 A6 6 0 0 1 19 6 H21"
               fill="none"
               stroke="#10150f"
-              strokeWidth="3.2"
+              strokeWidth="3.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M8 15 H17"
+              fill="none"
+              stroke="#10150f"
+              strokeWidth="3.4"
               strokeLinecap="round"
             />
-            <circle cx="20.75" cy="20.75" r="3.4" fill="#10b981" />
+            <circle cx="21" cy="23" r="2.3" fill="#10b981" />
           </svg>
           <div style={{ display: "flex", fontSize: 40, fontWeight: 700 }}>
-            forma<span style={{ color: "#34d399" }}>.</span>
+            forma<span style={{ color: "#34d399" }}>&nbsp;tools.</span>
           </div>
         </div>
 
