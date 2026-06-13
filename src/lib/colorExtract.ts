@@ -120,6 +120,23 @@ export function hslString(rgb: RGB): string {
   return `hsl(${h}, ${s}%, ${l}%)`;
 }
 
+export function rgbToCmyk([r, g, b]: RGB): [number, number, number, number] {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const k = 1 - Math.max(rn, gn, bn);
+  if (k === 1) return [0, 0, 0, 100];
+  const c = (1 - rn - k) / (1 - k);
+  const m = (1 - gn - k) / (1 - k);
+  const y = (1 - bn - k) / (1 - k);
+  return [Math.round(c * 100), Math.round(m * 100), Math.round(y * 100), Math.round(k * 100)];
+}
+
+export function cmykString(rgb: RGB): string {
+  const [c, m, y, k] = rgbToCmyk(rgb);
+  return `cmyk(${c}%, ${m}%, ${y}%, ${k}%)`;
+}
+
 /** Relative luminance per WCAG, for choosing readable overlay text. */
 export function luminance([r, g, b]: RGB): number {
   const channel = (c: number) => {
@@ -187,11 +204,12 @@ export function colorName([r, g, b]: RGB): string {
   return best;
 }
 
-export type ColorFormat = "hex" | "rgb" | "hsl";
+export type ColorFormat = "hex" | "rgb" | "hsl" | "cmyk";
 
 export function formatColor(rgb: RGB, format: ColorFormat): string {
   if (format === "rgb") return rgbString(rgb);
   if (format === "hsl") return hslString(rgb);
+  if (format === "cmyk") return cmykString(rgb);
   return rgbToHex(rgb);
 }
 

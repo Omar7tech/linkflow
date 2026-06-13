@@ -258,6 +258,7 @@ export function PaletteTool() {
                     <SelectItem value="hex">HEX</SelectItem>
                     <SelectItem value="rgb">RGB</SelectItem>
                     <SelectItem value="hsl">HSL</SelectItem>
+                    <SelectItem value="cmyk">CMYK</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
