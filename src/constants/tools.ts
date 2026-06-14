@@ -38,6 +38,7 @@ import {
   DropletsIcon,
   WallpaperIcon,
   Rotate3dIcon,
+  VectorSquareIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -346,6 +347,22 @@ export const TOOLS = [
       "hover tilt javascript",
     ],
     icon: Rotate3dIcon,
+  },
+  {
+    id: "clippath",
+    slug: "/tools/clip-path",
+    name: "Clip-Path Editor",
+    shortName: "Clip Path",
+    description:
+      "Carve any element into a custom shape — drag polygon handles on a live preview, start from 16 ready-made shapes, add or remove points, and clip your own image. Export the clip-path as CSS or Tailwind. All on-device.",
+    keywords: [
+      "clip-path generator",
+      "css clip path polygon",
+      "image shape mask css",
+      "clippy alternative",
+      "polygon clip path editor",
+    ],
+    icon: VectorSquareIcon,
   },
   {
     id: "gradient",

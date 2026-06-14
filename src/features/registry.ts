@@ -54,4 +54,7 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   transform3d: dynamic(() =>
     import("./transform3d/transform3d-tool").then((m) => m.Transform3DTool)
   ),
+  clippath: dynamic(() =>
+    import("./clippath/clippath-tool").then((m) => m.ClipPathTool)
+  ),
 };
