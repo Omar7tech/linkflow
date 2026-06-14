@@ -36,7 +36,7 @@ import {
   ShapesIcon,
   BoxSelectIcon,
   DropletsIcon,
-  GridIcon,
+  WallpaperIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -328,7 +328,7 @@ export const TOOLS = [
       "repeating background generator",
       "hero patterns alternative",
     ],
-    icon: GridIcon,
+    icon: WallpaperIcon,
   },
   {
     id: "gradient",
