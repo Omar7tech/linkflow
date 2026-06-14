@@ -34,6 +34,7 @@ import {
   ScanEyeIcon,
   Code2Icon,
   ShapesIcon,
+  BoxSelectIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -278,6 +279,22 @@ export const TOOLS = [
       "glassmorphism tailwind",
     ],
     icon: BlendIcon,
+  },
+  {
+    id: "shadow",
+    slug: "/tools/shadow",
+    name: "Smooth Shadow Generator",
+    shortName: "Shadow",
+    description:
+      "Design layered, naturalistic box-shadows — stack up to eight shadows with smooth penumbra falloff, dial in the light direction, distance, blur and color, then export clean CSS or Tailwind. Far softer than a single drop shadow. All on-device.",
+    keywords: [
+      "box shadow generator",
+      "css smooth shadow",
+      "layered shadow css",
+      "soft shadow generator",
+      "tailwind box shadow",
+    ],
+    icon: BoxSelectIcon,
   },
   {
     id: "gradient",
