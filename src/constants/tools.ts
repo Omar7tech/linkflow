@@ -35,6 +35,7 @@ import {
   Code2Icon,
   ShapesIcon,
   BoxSelectIcon,
+  DropletsIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -295,6 +296,22 @@ export const TOOLS = [
       "tailwind box shadow",
     ],
     icon: BoxSelectIcon,
+  },
+  {
+    id: "mesh",
+    slug: "/tools/mesh",
+    name: "Mesh Gradient Generator",
+    shortName: "Mesh Gradient",
+    description:
+      "Paint silky mesh gradients the Stripe way — drag color blobs around the canvas, shuffle harmonious palettes, add film grain, then export pure-CSS radial gradients, a standalone SVG, or a PNG. All on-device.",
+    keywords: [
+      "mesh gradient generator",
+      "css mesh gradient",
+      "gradient mesh background",
+      "stripe gradient",
+      "svg mesh gradient",
+    ],
+    icon: DropletsIcon,
   },
   {
     id: "gradient",
