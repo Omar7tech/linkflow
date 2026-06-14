@@ -2,8 +2,10 @@
 
 import * as React from "react";
 import {
+  DicesIcon,
   DownloadIcon,
   GridIcon,
+  ImageIcon,
   RefreshCwIcon,
   SlidersHorizontalIcon,
 } from "lucide-react";
@@ -19,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CopyButton } from "@/components/shared/copy-button";
 import { GeneratorLayout } from "@/components/shared/generator-layout";
@@ -28,9 +31,10 @@ import { useHistory } from "@/hooks/useHistory";
 import {
   PATTERNS,
   PATTERN_PRESETS,
+  randomPattern,
+  renderPng,
   toCss,
   toStyle,
-  toSvg,
   toTailwind,
   type PatternConfig,
   type PatternType,
@@ -59,34 +63,34 @@ export function PatternTool() {
   };
 
   const swap = () => patch({ fg: config.bg, bg: config.fg });
+  const randomize = () => {
+    setPresetId("custom");
+    setConfig((prev) => randomPattern(prev));
+  };
 
   const css = toCss(config);
   const tailwind = toTailwind(config);
-  const svg = toSvg(config);
   const commit = () =>
     history.add(`Pattern · ${meta.name} · ${config.size}px · ${config.fg}`, css);
 
-  const downloadSvg = () => {
+  const downloadPng = async (transparent: boolean) => {
     try {
-      const blob = new Blob([toSvg(config, 1600, 1000)], {
-        type: "image/svg+xml",
-      });
+      const blob = await renderPng(config, transparent);
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = `pattern-${config.type}.svg`;
+      a.download = `pattern-${config.type}${transparent ? "-transparent" : ""}.png`;
       a.click();
       URL.revokeObjectURL(a.href);
       commit();
-      toast.success("SVG downloaded");
+      toast.success(transparent ? "Transparent PNG downloaded" : "PNG downloaded");
     } catch {
-      toast.error("Could not export SVG");
+      toast.error("Could not export PNG");
     }
   };
 
   const exportTabs = [
     { id: "css", name: "CSS", code: css },
     { id: "tailwind", name: "Tailwind", code: tailwind },
-    { id: "svg", name: "SVG", code: svg },
   ];
 
   return (
@@ -126,12 +130,28 @@ export function PatternTool() {
                     <RefreshCwIcon className="size-3.5" /> Swap colors
                   </Button>
                   <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={randomize}
+                    className="h-8 text-xs"
+                  >
+                    <DicesIcon className="size-3.5" /> Randomize
+                  </Button>
+                  <Button
                     variant="ghost"
                     size="sm"
-                    onClick={downloadSvg}
+                    onClick={() => downloadPng(false)}
                     className="text-muted-foreground ml-auto h-8 text-xs"
                   >
-                    <DownloadIcon className="size-3.5" /> SVG
+                    <ImageIcon className="size-3.5" /> PNG
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => downloadPng(true)}
+                    className="text-muted-foreground h-8 text-xs"
+                  >
+                    <DownloadIcon className="size-3.5" /> Transparent PNG
                   </Button>
                 </div>
               </CardContent>
@@ -244,10 +264,48 @@ export function PatternTool() {
                 />
                 <ColorField
                   id="pattern-bg"
-                  label="Background"
+                  label={config.gradient ? "Gradient from" : "Background"}
                   value={config.bg}
                   onChange={(v) => patch({ bg: v })}
                 />
+                {config.gradient && (
+                  <ColorField
+                    id="pattern-bg2"
+                    label="Gradient to"
+                    value={config.bg2}
+                    onChange={(v) => patch({ bg2: v })}
+                  />
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <label className="flex items-center gap-3">
+                  <Switch
+                    checked={config.gradient}
+                    onCheckedChange={(v) => patch({ gradient: v })}
+                    aria-label="Gradient background"
+                  />
+                  <span className="text-sm">
+                    Gradient background
+                    <span className="text-muted-foreground block text-xs">
+                      Blend two colors behind the pattern instead of a flat fill.
+                    </span>
+                  </span>
+                </label>
+
+                {config.gradient && (
+                  <div className="pl-12">
+                    <PatternSlider
+                      label="Gradient angle"
+                      value={config.bgAngle}
+                      unit="°"
+                      min={0}
+                      max={360}
+                      step={5}
+                      onChange={(v) => patch({ bgAngle: v })}
+                    />
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
