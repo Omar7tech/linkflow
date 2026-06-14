@@ -57,4 +57,7 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   clippath: dynamic(() =>
     import("./clippath/clippath-tool").then((m) => m.ClipPathTool)
   ),
+  filterlab: dynamic(() =>
+    import("./filterlab/filterlab-tool").then((m) => m.FilterLabTool)
+  ),
 };

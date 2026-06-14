@@ -39,6 +39,7 @@ import {
   WallpaperIcon,
   Rotate3dIcon,
   VectorSquareIcon,
+  ApertureIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -363,6 +364,22 @@ export const TOOLS = [
       "polygon clip path editor",
     ],
     icon: VectorSquareIcon,
+  },
+  {
+    id: "filterlab",
+    slug: "/tools/filter-lab",
+    name: "CSS Filter Lab",
+    shortName: "Filter Lab",
+    description:
+      "Tune photo filters live and compare with a draggable before/after split — brightness, contrast, saturation, hue, sepia, grayscale, invert, blur and a real drop-shadow. Start from 12 looks, drop in your own photo, then export the filter as CSS or Tailwind. All on-device.",
+    keywords: [
+      "css filter generator",
+      "image filter css",
+      "photo filter editor",
+      "before after compare slider",
+      "css drop-shadow filter",
+    ],
+    icon: ApertureIcon,
   },
   {
     id: "gradient",
