@@ -50,4 +50,5 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   blob: dynamic(() => import("./blob/blob-tool").then((m) => m.BlobTool)),
   shadow: dynamic(() => import("./shadow/shadow-tool").then((m) => m.ShadowTool)),
   mesh: dynamic(() => import("./mesh/mesh-tool").then((m) => m.MeshTool)),
+  pattern: dynamic(() => import("./pattern/pattern-tool").then((m) => m.PatternTool)),
 };

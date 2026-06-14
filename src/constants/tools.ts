@@ -36,6 +36,7 @@ import {
   ShapesIcon,
   BoxSelectIcon,
   DropletsIcon,
+  GridIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -312,6 +313,22 @@ export const TOOLS = [
       "svg mesh gradient",
     ],
     icon: DropletsIcon,
+  },
+  {
+    id: "pattern",
+    slug: "/tools/pattern",
+    name: "CSS Pattern Generator",
+    shortName: "Patterns",
+    description:
+      "Build seamless background patterns from pure CSS — dots, grids, stripes, checks, crosshatch, triangles and zigzag. Tune tile size, weight, angle, opacity and colors, then export CSS, Tailwind or SVG. Razor-sharp at any zoom, zero image weight. All on-device.",
+    keywords: [
+      "css pattern generator",
+      "background pattern css",
+      "css dots grid pattern",
+      "repeating background generator",
+      "hero patterns alternative",
+    ],
+    icon: GridIcon,
   },
   {
     id: "gradient",
