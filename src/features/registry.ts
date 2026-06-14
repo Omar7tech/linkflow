@@ -51,4 +51,7 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   shadow: dynamic(() => import("./shadow/shadow-tool").then((m) => m.ShadowTool)),
   mesh: dynamic(() => import("./mesh/mesh-tool").then((m) => m.MeshTool)),
   pattern: dynamic(() => import("./pattern/pattern-tool").then((m) => m.PatternTool)),
+  transform3d: dynamic(() =>
+    import("./transform3d/transform3d-tool").then((m) => m.Transform3DTool)
+  ),
 };

@@ -37,6 +37,7 @@ import {
   BoxSelectIcon,
   DropletsIcon,
   WallpaperIcon,
+  Rotate3dIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolMeta } from "@/types";
@@ -329,6 +330,22 @@ export const TOOLS = [
       "hero patterns alternative",
     ],
     icon: WallpaperIcon,
+  },
+  {
+    id: "transform3d",
+    slug: "/tools/3d-transform",
+    name: "3D Transform Studio",
+    shortName: "3D Transform",
+    description:
+      "Orbit any element in 3D — drag to tilt, then tune perspective, rotation, depth and scale with live light glare and a reactive floor shadow. Export the transform as CSS, Tailwind, or a drop-in pointer-tilt JS snippet for hover effects. All on-device.",
+    keywords: [
+      "css 3d transform generator",
+      "perspective generator",
+      "rotateX rotateY css",
+      "3d card tilt effect",
+      "hover tilt javascript",
+    ],
+    icon: Rotate3dIcon,
   },
   {
     id: "gradient",
