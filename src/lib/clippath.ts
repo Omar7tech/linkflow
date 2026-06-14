@@ -5,10 +5,7 @@ export interface ClipPoint {
   y: number;
 }
 
-const fmt = (n: number) => {
-  const r = Math.round(n * 10) / 10;
-  return Number.isInteger(r) ? `${r}` : `${r}`;
-};
+const fmt = (n: number) => `${Math.round(n * 10) / 10}`;
 
 /** The `polygon(...)` value for the current points. */
 export function toPolygon(points: ClipPoint[]): string {
