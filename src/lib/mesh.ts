@@ -15,14 +15,21 @@ export interface MeshConfig {
   base: string;
   /** Reach of each blob as a % of the canvas — bigger = softer blend. */
   spread: number;
+  /** Core opacity of every blob, 0–100 (%). */
+  strength: number;
   /** Color points painted on top of the base. */
   points: MeshPoint[];
   /** Whisper of film grain baked over the blend. */
   grain: boolean;
+  /** Grain strength, 0–100 (%). Only used when grain is on. */
+  grainAmount: number;
 }
 
-/** Tiling fractal-noise SVG with alpha baked in — the classic grain trick. */
-const GRAIN_LAYER = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.06'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`;
+/** Tiling fractal-noise SVG — alpha scales with the requested amount. */
+function grainLayer(amount: number): string {
+  const slope = ((amount / 100) * 0.18).toFixed(3);
+  return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='${slope}'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`;
+}
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const value = hex.replace("#", "");
@@ -38,14 +45,21 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
 }
 
 /** One blob: a radial gradient that fades to a transparent version of itself. */
-function blob(point: MeshPoint, spread: number): string {
+function blob(point: MeshPoint, spread: number, strength: number): string {
   const { r, g, b } = hexToRgb(point.color);
-  return `radial-gradient(circle at ${point.x}% ${point.y}%, rgba(${r}, ${g}, ${b}, 0.9) 0px, rgba(${r}, ${g}, ${b}, 0) ${spread}%)`;
+  const alpha = (strength / 100).toFixed(2);
+  return `radial-gradient(circle at ${point.x}% ${point.y}%, rgba(${r}, ${g}, ${b}, ${alpha}) 0px, rgba(${r}, ${g}, ${b}, 0) ${spread}%)`;
+}
+
+function layers(config: MeshConfig): string[] {
+  const blobs = config.points.map((p) => blob(p, config.spread, config.strength));
+  return config.grain && config.grainAmount > 0
+    ? [grainLayer(config.grainAmount), ...blobs]
+    : blobs;
 }
 
 function backgroundImage(config: MeshConfig): string {
-  const blobs = config.points.map((p) => blob(p, config.spread));
-  return config.grain ? [GRAIN_LAYER, ...blobs].join(", ") : blobs.join(", ");
+  return layers(config).join(", ");
 }
 
 export function toStyle(config: MeshConfig): CSSProperties {
@@ -56,10 +70,9 @@ export function toStyle(config: MeshConfig): CSSProperties {
 }
 
 export function toCss(config: MeshConfig, className = "mesh"): string {
-  const blobs = config.points.map((p) => blob(p, config.spread));
-  const layers = config.grain ? [GRAIN_LAYER, ...blobs] : blobs;
-  const indented = layers
-    .map((l, i) => `    ${l}${i < layers.length - 1 ? "," : ";"}`)
+  const list = layers(config);
+  const indented = list
+    .map((l, i) => `    ${l}${i < list.length - 1 ? "," : ";"}`)
     .join("\n");
   return [
     `.${className} {`,
@@ -70,6 +83,12 @@ export function toCss(config: MeshConfig, className = "mesh"): string {
   ].join("\n");
 }
 
+/** Tailwind arbitrary values — base color plus a multi-layer background-image. */
+export function toTailwind(config: MeshConfig): string {
+  const image = layers(config).join(", ").replace(/\s+/g, "_");
+  return `bg-[${config.base}] bg-[image:${image}]`;
+}
+
 /** A standalone SVG with the same blobs — drop into Figma or an <img>. */
 export function toSvg(config: MeshConfig, width = 1200, height = 800): string {
   const defs = config.points
@@ -77,7 +96,7 @@ export function toSvg(config: MeshConfig, width = 1200, height = 800): string {
       const { r, g, b } = hexToRgb(p.color);
       return [
         `    <radialGradient id="m${i}" cx="${p.x}%" cy="${p.y}%" r="${config.spread}%">`,
-        `      <stop offset="0%" stop-color="rgb(${r},${g},${b})" stop-opacity="0.9"/>`,
+        `      <stop offset="0%" stop-color="rgb(${r},${g},${b})" stop-opacity="${(config.strength / 100).toFixed(2)}"/>`,
         `      <stop offset="100%" stop-color="rgb(${r},${g},${b})" stop-opacity="0"/>`,
         `    </radialGradient>`,
       ].join("\n");
@@ -180,11 +199,16 @@ export const MESH_PRESETS: MeshPreset[] = [
   },
 ];
 
-export function presetToConfig(preset: MeshPreset, spread = 55, grain = false): MeshConfig {
+export function presetToConfig(
+  preset: MeshPreset,
+  prev?: Pick<MeshConfig, "spread" | "strength" | "grain" | "grainAmount">,
+): MeshConfig {
   return {
     base: preset.base,
-    spread,
-    grain,
+    spread: prev?.spread ?? 55,
+    strength: prev?.strength ?? 90,
+    grain: prev?.grain ?? false,
+    grainAmount: prev?.grainAmount ?? 30,
     points: preset.stops.map(([x, y, color]) => makePoint(x, y, color)),
   };
 }
@@ -199,4 +223,21 @@ const SHUFFLE_COLORS = [
 export function shuffleColors(points: MeshPoint[]): MeshPoint[] {
   const pool = [...SHUFFLE_COLORS].sort(() => Math.random() - 0.5);
   return points.map((p, i) => ({ ...p, color: pool[i % pool.length] }));
+}
+
+const RANDOM_BASES = ["#0f172a", "#020617", "#022c22", "#1e1b4b", "#082f49", "#111827", "#3b0764"];
+const rand = (min: number, max: number) => Math.round(min + Math.random() * (max - min));
+
+/** A fresh, balanced mesh — random count, positions and harmonious colors. */
+export function randomMesh(prev: MeshConfig): MeshConfig {
+  const count = rand(3, 5);
+  const pool = [...SHUFFLE_COLORS].sort(() => Math.random() - 0.5);
+  const points = Array.from({ length: count }, (_, i) =>
+    makePoint(rand(12, 88), rand(12, 88), pool[i % pool.length]),
+  );
+  return {
+    ...prev,
+    base: RANDOM_BASES[rand(0, RANDOM_BASES.length - 1)],
+    points,
+  };
 }

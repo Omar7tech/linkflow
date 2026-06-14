@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import {
+  DicesIcon,
   DownloadIcon,
   PlusIcon,
   ShuffleIcon,
@@ -32,15 +33,18 @@ import {
   MESH_PRESETS,
   makePoint,
   presetToConfig,
+  randomMesh,
   shuffleColors,
   toCss,
   toStyle,
   toSvg,
+  toTailwind,
   type MeshConfig,
 } from "@/lib/mesh";
 import { cn } from "@/lib/utils";
 
-const MAX_POINTS = 7;
+const MAX_POINTS = 8;
+const MIN_POINTS = 1;
 
 export function MeshTool() {
   const history = useHistory("mesh");
@@ -62,7 +66,13 @@ export function MeshTool() {
     const preset = MESH_PRESETS.find((p) => p.id === id);
     if (!preset) return;
     setPresetId(id);
-    setConfig((prev) => presetToConfig(preset, prev.spread, prev.grain));
+    setConfig((prev) => presetToConfig(preset, prev));
+    setActiveId(null);
+  };
+
+  const randomize = () => {
+    setPresetId("custom");
+    setConfig((prev) => randomMesh(prev));
     setActiveId(null);
   };
 
@@ -81,7 +91,7 @@ export function MeshTool() {
   };
 
   const removePoint = (id: string) => {
-    if (config.points.length <= 2) return;
+    if (config.points.length <= MIN_POINTS) return;
     patch({ points: config.points.filter((p) => p.id !== id) });
     if (activeId === id) setActiveId(null);
   };
@@ -122,6 +132,7 @@ export function MeshTool() {
   };
 
   const css = toCss(config);
+  const tailwind = toTailwind(config);
   const svg = toSvg(config);
   const commit = () =>
     history.add(`Mesh · ${config.points.length} colors · ${config.base}`, css);
@@ -159,6 +170,7 @@ export function MeshTool() {
 
   const exportTabs = [
     { id: "css", name: "CSS", code: css },
+    { id: "tailwind", name: "Tailwind", code: tailwind },
     { id: "svg", name: "SVG", code: svg },
   ];
 
@@ -230,6 +242,14 @@ export function MeshTool() {
                     className="h-8 text-xs"
                   >
                     <ShuffleIcon className="size-3.5" /> Shuffle
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={randomize}
+                    className="h-8 text-xs"
+                  >
+                    <DicesIcon className="size-3.5" /> Randomize
                   </Button>
                   <Button
                     variant="ghost"
@@ -311,6 +331,21 @@ export function MeshTool() {
                 </div>
 
                 <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Color strength</Label>
+                    <span className="text-muted-foreground font-mono text-xs">
+                      {config.strength}%
+                    </span>
+                  </div>
+                  <Slider
+                    min={20}
+                    max={100}
+                    value={[config.strength]}
+                    onValueChange={([v]) => patch({ strength: v })}
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="mesh-base">Base color</Label>
                   <div className="flex items-center gap-2">
                     <Input
@@ -328,19 +363,38 @@ export function MeshTool() {
                 </div>
               </div>
 
-              <label className="flex items-center gap-3">
-                <Switch
-                  checked={config.grain}
-                  onCheckedChange={(v) => patch({ grain: v })}
-                  aria-label="Grain"
-                />
-                <span className="text-sm">
-                  Film grain
-                  <span className="text-muted-foreground block text-xs">
-                    A whisper of SVG noise over the blend — kills color banding.
+              <div className="space-y-4">
+                <label className="flex items-center gap-3">
+                  <Switch
+                    checked={config.grain}
+                    onCheckedChange={(v) => patch({ grain: v })}
+                    aria-label="Grain"
+                  />
+                  <span className="text-sm">
+                    Film grain
+                    <span className="text-muted-foreground block text-xs">
+                      A layer of SVG noise over the blend — kills color banding.
+                    </span>
                   </span>
-                </span>
-              </label>
+                </label>
+
+                {config.grain && (
+                  <div className="space-y-2 pl-12">
+                    <div className="flex items-center justify-between">
+                      <Label>Grain amount</Label>
+                      <span className="text-muted-foreground font-mono text-xs">
+                        {config.grainAmount}%
+                      </span>
+                    </div>
+                    <Slider
+                      min={5}
+                      max={100}
+                      value={[config.grainAmount]}
+                      onValueChange={([v]) => patch({ grainAmount: v })}
+                    />
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
