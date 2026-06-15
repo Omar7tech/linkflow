@@ -1,5 +1,6 @@
 "use client";
 
+import { LayoutGridIcon, type LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { TOOLS, TOOL_CATEGORIES } from "@/constants/tools";
 import { cn } from "@/lib/utils";
@@ -8,8 +9,8 @@ import { ToolCard } from "./tool-grid";
 
 type Filter = ToolCategory | "all";
 
-const PILLS: readonly { id: Filter; label: string }[] = [
-  { id: "all", label: "All" },
+const PILLS: readonly { id: Filter; label: string; icon: LucideIcon }[] = [
+  { id: "all", label: "All", icon: LayoutGridIcon },
   ...TOOL_CATEGORIES,
 ];
 
@@ -31,6 +32,7 @@ export function ToolsBrowser() {
       >
         {PILLS.map((pill) => {
           const selected = active === pill.id;
+          const Icon = pill.icon;
           return (
             <button
               key={pill.id}
@@ -39,12 +41,13 @@ export function ToolsBrowser() {
               aria-selected={selected}
               onClick={() => setActive(pill.id)}
               className={cn(
-                "inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-95",
+                "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-95",
                 selected
                   ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                   : "border-border/60 bg-card text-muted-foreground hover:border-emerald-500/40 hover:text-foreground"
               )}
             >
+              <Icon className="size-4" aria-hidden />
               {pill.label}
             </button>
           );

@@ -40,6 +40,11 @@ import {
   Rotate3dIcon,
   VectorSquareIcon,
   ApertureIcon,
+  LinkIcon,
+  PaintbrushIcon,
+  ImageIcon,
+  FileTextIcon,
+  type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolCategory, ToolMeta } from "@/types";
@@ -718,11 +723,15 @@ export const TOOL_BY_ID = Object.fromEntries(
   TOOLS.map((t) => [t.id, t])
 ) as unknown as Record<ToolId, ToolMeta>;
 
-/** Human labels + display order for the tools-page category filter. */
-export const TOOL_CATEGORIES: readonly { id: ToolCategory; label: string }[] = [
-  { id: "links", label: "Links & QR" },
-  { id: "css", label: "CSS & Layout" },
-  { id: "color", label: "Color" },
-  { id: "image", label: "Image" },
-  { id: "text", label: "Text & Data" },
+/** Human labels, icons + display order for the tools-page category filter. */
+export const TOOL_CATEGORIES: readonly {
+  id: ToolCategory;
+  label: string;
+  icon: LucideIcon;
+}[] = [
+  { id: "links", label: "Links & QR", icon: LinkIcon },
+  { id: "css", label: "Styles & Effects", icon: PaintbrushIcon },
+  { id: "color", label: "Color", icon: PaletteIcon },
+  { id: "image", label: "Image", icon: ImageIcon },
+  { id: "text", label: "Text & Data", icon: FileTextIcon },
 ];
