@@ -42,7 +42,7 @@ import {
   ApertureIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
-import type { ToolMeta } from "@/types";
+import type { ToolCategory, ToolMeta } from "@/types";
 
 export const TOOLS = [
   {
@@ -54,6 +54,7 @@ export const TOOLS = [
       "Pick a link type — WhatsApp, SMS, call, email, WiFi or plain URL — and the form morphs instantly. One tool, every protocol.",
     keywords: ["universal link generator", "link builder", "qr generator"],
     icon: SparklesIcon,
+    category: "links",
   },
   {
     id: "whatsapp",
@@ -64,6 +65,7 @@ export const TOOLS = [
       "Create click-to-chat WhatsApp links with a prefilled message, format group invites, and bulk-generate links from a CSV of numbers.",
     keywords: ["whatsapp link generator", "wa.me", "click to chat", "whatsapp qr"],
     icon: WhatsAppIcon,
+    category: "links",
   },
   {
     id: "qr",
@@ -74,6 +76,7 @@ export const TOOLS = [
       "Generate QR codes for URLs, text, phone numbers, email, WiFi networks and vCards. Customize colors, size, error correction and add your logo.",
     keywords: ["qr code generator", "wifi qr code", "custom qr code", "vcard qr"],
     icon: QrCodeIcon,
+    category: "links",
   },
   {
     id: "share",
@@ -84,6 +87,7 @@ export const TOOLS = [
       "Build share links for WhatsApp, Telegram, X, Facebook, LinkedIn, Reddit and email — plus a native share button for mobile.",
     keywords: ["share link generator", "social share links", "share button"],
     icon: Share2Icon,
+    category: "links",
   },
   {
     id: "sms",
@@ -94,6 +98,7 @@ export const TOOLS = [
       "Create sms: links that open the messaging app with the number and message already filled in. Perfect for ads, posters and email signatures.",
     keywords: ["sms link generator", "sms link", "text message link"],
     icon: MessageSquareIcon,
+    category: "links",
   },
   {
     id: "tel",
@@ -104,6 +109,7 @@ export const TOOLS = [
       "Generate tel: links that start a phone call with one tap. Validate any international number with a built-in country picker.",
     keywords: ["tel link generator", "click to call", "phone link"],
     icon: PhoneIcon,
+    category: "links",
   },
   {
     id: "email",
@@ -114,6 +120,7 @@ export const TOOLS = [
       "Compose mailto: links with subject, body, CC and BCC prefilled. Great for support buttons, signatures and landing pages.",
     keywords: ["mailto link generator", "email link", "mailto builder"],
     icon: MailIcon,
+    category: "links",
   },
   {
     id: "vcard",
@@ -124,6 +131,7 @@ export const TOOLS = [
       "Build a complete vCard 3.0 contact card, preview it live, download the .vcf file and share it as a scannable QR code.",
     keywords: ["vcard generator", "vcf file", "digital business card", "contact qr"],
     icon: ContactIcon,
+    category: "links",
   },
   {
     id: "utm",
@@ -134,6 +142,7 @@ export const TOOLS = [
       "Append UTM parameters to any URL with handy presets for common channels. Keep your analytics clean and consistent.",
     keywords: ["utm builder", "utm link generator", "campaign url builder"],
     icon: BarChart3Icon,
+    category: "links",
   },
   {
     id: "password",
@@ -150,6 +159,7 @@ export const TOOLS = [
       "pin generator",
     ],
     icon: KeyRoundIcon,
+    category: "text",
   },
   {
     id: "hash",
@@ -167,6 +177,7 @@ export const TOOLS = [
       "file hash",
     ],
     icon: HashIcon,
+    category: "text",
   },
   {
     id: "lorem",
@@ -183,6 +194,7 @@ export const TOOLS = [
       "lorem ipsum html",
     ],
     icon: TypeIcon,
+    category: "text",
   },
   {
     id: "readtime",
@@ -199,6 +211,7 @@ export const TOOLS = [
       "readability score",
     ],
     icon: BookOpenIcon,
+    category: "text",
   },
   {
     id: "mockup",
@@ -216,6 +229,7 @@ export const TOOLS = [
       "screen recording frame",
     ],
     icon: FrameIcon,
+    category: "image",
   },
   {
     id: "favicon",
@@ -232,6 +246,7 @@ export const TOOLS = [
       "favicon package",
     ],
     icon: SparkleIcon,
+    category: "image",
   },
   {
     id: "jsoncsv",
@@ -242,6 +257,7 @@ export const TOOLS = [
       "Transform nested JSON objects or arrays into flat, clean CSV files for Excel or Google Sheets. Features smart object flattening and instant preview.",
     keywords: ["json to csv", "json flattener", "json converter", "data transform"],
     icon: FileSpreadsheetIcon,
+    category: "text",
   },
   {
     id: "imagesplitter",
@@ -252,6 +268,7 @@ export const TOOLS = [
       "Split your images into perfect 3x1, 3x3, or custom grids for Instagram. Locally processed, high-quality slices ready for your profile.",
     keywords: ["image splitter", "instagram grid", "grid maker", "image slicer"],
     icon: Grid3X3Icon,
+    category: "image",
   },
   {
     id: "grid",
@@ -268,6 +285,7 @@ export const TOOLS = [
       "tailwind grid",
     ],
     icon: LayoutGridIcon,
+    category: "css",
   },
   {
     id: "glass",
@@ -284,6 +302,7 @@ export const TOOLS = [
       "glassmorphism tailwind",
     ],
     icon: BlendIcon,
+    category: "css",
   },
   {
     id: "shadow",
@@ -300,6 +319,7 @@ export const TOOLS = [
       "tailwind box shadow",
     ],
     icon: BoxSelectIcon,
+    category: "css",
   },
   {
     id: "mesh",
@@ -316,6 +336,7 @@ export const TOOLS = [
       "svg mesh gradient",
     ],
     icon: DropletsIcon,
+    category: "color",
   },
   {
     id: "pattern",
@@ -332,6 +353,7 @@ export const TOOLS = [
       "hero patterns alternative",
     ],
     icon: WallpaperIcon,
+    category: "css",
   },
   {
     id: "transform3d",
@@ -348,6 +370,7 @@ export const TOOLS = [
       "hover tilt javascript",
     ],
     icon: Rotate3dIcon,
+    category: "css",
   },
   {
     id: "clippath",
@@ -364,6 +387,7 @@ export const TOOLS = [
       "polygon clip path editor",
     ],
     icon: VectorSquareIcon,
+    category: "css",
   },
   {
     id: "filterlab",
@@ -380,6 +404,7 @@ export const TOOLS = [
       "css drop-shadow filter",
     ],
     icon: ApertureIcon,
+    category: "css",
   },
   {
     id: "gradient",
@@ -396,6 +421,7 @@ export const TOOLS = [
       "tailwind gradient",
     ],
     icon: RainbowIcon,
+    category: "color",
   },
   {
     id: "palette",
@@ -412,6 +438,7 @@ export const TOOLS = [
       "css color variables",
     ],
     icon: SwatchBookIcon,
+    category: "color",
   },
   {
     id: "neumorphism",
@@ -428,6 +455,7 @@ export const TOOLS = [
       "soft ui generator",
     ],
     icon: SquircleIcon,
+    category: "css",
   },
   {
     id: "bgremover",
@@ -444,6 +472,7 @@ export const TOOLS = [
       "ai background removal",
     ],
     icon: EraserIcon,
+    category: "image",
   },
   {
     id: "colors",
@@ -460,6 +489,7 @@ export const TOOLS = [
       "color palette from image",
     ],
     icon: PaletteIcon,
+    category: "color",
   },
   {
     id: "enhancer",
@@ -478,6 +508,7 @@ export const TOOLS = [
       "sharpen image",
     ],
     icon: ImageUpscaleIcon,
+    category: "image",
   },
   {
     id: "contrast",
@@ -495,6 +526,7 @@ export const TOOLS = [
       "aa aaa contrast ratio",
     ],
     icon: ContrastIcon,
+    category: "color",
   },
   {
     id: "fluid",
@@ -512,6 +544,7 @@ export const TOOLS = [
       "fluid type scale",
     ],
     icon: ALargeSmallIcon,
+    category: "css",
   },
   {
     id: "brand",
@@ -529,6 +562,7 @@ export const TOOLS = [
       "brand strategy",
     ],
     icon: FingerprintIcon,
+    category: "color",
   },
   {
     id: "attention",
@@ -545,6 +579,7 @@ export const TOOLS = [
       "design hotspot",
     ],
     icon: EyeIcon,
+    category: "image",
   },
   {
     id: "easing",
@@ -562,6 +597,7 @@ export const TOOLS = [
       "animation curve editor",
     ],
     icon: SplineIcon,
+    category: "css",
   },
   {
     id: "barcode",
@@ -579,6 +615,7 @@ export const TOOLS = [
       "barcode svg png",
     ],
     icon: BarcodeIcon,
+    category: "links",
   },
   {
     id: "glow",
@@ -596,6 +633,7 @@ export const TOOLS = [
       "glowing card css",
     ],
     icon: SunIcon,
+    category: "css",
   },
   {
     id: "typography",
@@ -614,6 +652,7 @@ export const TOOLS = [
       "css text effects",
     ],
     icon: WandSparklesIcon,
+    category: "css",
   },
   {
     id: "logo",
@@ -631,6 +670,7 @@ export const TOOLS = [
       "logo legibility test",
     ],
     icon: ScanEyeIcon,
+    category: "image",
   },
   {
     id: "codeshot",
@@ -648,6 +688,7 @@ export const TOOLS = [
       "syntax highlight image",
     ],
     icon: Code2Icon,
+    category: "image",
   },
   {
     id: "blob",
@@ -665,6 +706,7 @@ export const TOOLS = [
       "css background shape",
     ],
     icon: ShapesIcon,
+    category: "css",
   },
 ] as const satisfies readonly ToolMeta[];
 
@@ -675,3 +717,12 @@ export type ToolId = (typeof TOOLS)[number]["id"];
 export const TOOL_BY_ID = Object.fromEntries(
   TOOLS.map((t) => [t.id, t])
 ) as unknown as Record<ToolId, ToolMeta>;
+
+/** Human labels + display order for the tools-page category filter. */
+export const TOOL_CATEGORIES: readonly { id: ToolCategory; label: string }[] = [
+  { id: "links", label: "Links & QR" },
+  { id: "css", label: "CSS & Layout" },
+  { id: "color", label: "Color" },
+  { id: "image", label: "Image" },
+  { id: "text", label: "Text & Data" },
+];

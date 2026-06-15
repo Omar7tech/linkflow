@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ToolGrid } from "@/components/shared/tool-grid";
+import { ToolsBrowser } from "@/components/shared/tools-browser";
 import { SITE } from "@/constants/site";
 
 export const metadata: Metadata = {
@@ -18,7 +18,7 @@ export default function ToolsPage() {
           one and start creating.
         </p>
       </header>
-      <ToolGrid />
+      <ToolsBrowser />
     </div>
   );
 }

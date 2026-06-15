@@ -5,6 +5,9 @@ import type { ToolId } from "@/constants/tools";
 /** Derived from the TOOLS registry in constants/tools.ts — adding a tool there updates it. */
 export type { ToolId };
 
+/** Top-level grouping used by the tools-page filter. */
+export type ToolCategory = "links" | "css" | "color" | "image" | "text";
+
 export interface ToolMeta {
   readonly id: string;
   readonly slug: string;
@@ -13,6 +16,7 @@ export interface ToolMeta {
   readonly description: string;
   readonly keywords: readonly string[];
   readonly icon: LucideIcon;
+  readonly category: ToolCategory;
 }
 
 export interface HistoryEntry {
