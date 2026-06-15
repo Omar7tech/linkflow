@@ -43,7 +43,6 @@ import {
   LinkIcon,
   PaintbrushIcon,
   ImageIcon,
-  FileTextIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -164,7 +163,7 @@ export const TOOLS = [
       "pin generator",
     ],
     icon: KeyRoundIcon,
-    category: "text",
+    category: "developer",
   },
   {
     id: "hash",
@@ -182,7 +181,7 @@ export const TOOLS = [
       "file hash",
     ],
     icon: HashIcon,
-    category: "text",
+    category: "developer",
   },
   {
     id: "lorem",
@@ -199,7 +198,7 @@ export const TOOLS = [
       "lorem ipsum html",
     ],
     icon: TypeIcon,
-    category: "text",
+    category: "developer",
   },
   {
     id: "readtime",
@@ -216,7 +215,7 @@ export const TOOLS = [
       "readability score",
     ],
     icon: BookOpenIcon,
-    category: "text",
+    category: "developer",
   },
   {
     id: "mockup",
@@ -262,7 +261,7 @@ export const TOOLS = [
       "Transform nested JSON objects or arrays into flat, clean CSV files for Excel or Google Sheets. Features smart object flattening and instant preview.",
     keywords: ["json to csv", "json flattener", "json converter", "data transform"],
     icon: FileSpreadsheetIcon,
-    category: "text",
+    category: "developer",
   },
   {
     id: "imagesplitter",
@@ -290,7 +289,7 @@ export const TOOLS = [
       "tailwind grid",
     ],
     icon: LayoutGridIcon,
-    category: "css",
+    category: "developer",
   },
   {
     id: "glass",
@@ -307,7 +306,7 @@ export const TOOLS = [
       "glassmorphism tailwind",
     ],
     icon: BlendIcon,
-    category: "css",
+    category: "design",
   },
   {
     id: "shadow",
@@ -324,7 +323,7 @@ export const TOOLS = [
       "tailwind box shadow",
     ],
     icon: BoxSelectIcon,
-    category: "css",
+    category: "design",
   },
   {
     id: "mesh",
@@ -358,7 +357,7 @@ export const TOOLS = [
       "hero patterns alternative",
     ],
     icon: WallpaperIcon,
-    category: "css",
+    category: "design",
   },
   {
     id: "transform3d",
@@ -375,7 +374,7 @@ export const TOOLS = [
       "hover tilt javascript",
     ],
     icon: Rotate3dIcon,
-    category: "css",
+    category: "design",
   },
   {
     id: "clippath",
@@ -392,7 +391,7 @@ export const TOOLS = [
       "polygon clip path editor",
     ],
     icon: VectorSquareIcon,
-    category: "css",
+    category: "design",
   },
   {
     id: "filterlab",
@@ -409,7 +408,7 @@ export const TOOLS = [
       "css drop-shadow filter",
     ],
     icon: ApertureIcon,
-    category: "css",
+    category: "design",
   },
   {
     id: "gradient",
@@ -460,7 +459,7 @@ export const TOOLS = [
       "soft ui generator",
     ],
     icon: SquircleIcon,
-    category: "css",
+    category: "design",
   },
   {
     id: "bgremover",
@@ -549,7 +548,7 @@ export const TOOLS = [
       "fluid type scale",
     ],
     icon: ALargeSmallIcon,
-    category: "css",
+    category: "developer",
   },
   {
     id: "brand",
@@ -567,7 +566,7 @@ export const TOOLS = [
       "brand strategy",
     ],
     icon: FingerprintIcon,
-    category: "color",
+    category: "design",
   },
   {
     id: "attention",
@@ -602,7 +601,7 @@ export const TOOLS = [
       "animation curve editor",
     ],
     icon: SplineIcon,
-    category: "css",
+    category: "design",
   },
   {
     id: "barcode",
@@ -638,7 +637,7 @@ export const TOOLS = [
       "glowing card css",
     ],
     icon: SunIcon,
-    category: "css",
+    category: "design",
   },
   {
     id: "typography",
@@ -657,7 +656,7 @@ export const TOOLS = [
       "css text effects",
     ],
     icon: WandSparklesIcon,
-    category: "css",
+    category: "design",
   },
   {
     id: "logo",
@@ -693,7 +692,7 @@ export const TOOLS = [
       "syntax highlight image",
     ],
     icon: Code2Icon,
-    category: "image",
+    category: "developer",
   },
   {
     id: "blob",
@@ -711,7 +710,7 @@ export const TOOLS = [
       "css background shape",
     ],
     icon: ShapesIcon,
-    category: "css",
+    category: "design",
   },
 ] as const satisfies readonly ToolMeta[];
 
@@ -730,8 +729,8 @@ export const TOOL_CATEGORIES: readonly {
   icon: LucideIcon;
 }[] = [
   { id: "links", label: "Links & QR", icon: LinkIcon },
-  { id: "css", label: "Styles & Effects", icon: PaintbrushIcon },
+  { id: "design", label: "Design", icon: PaintbrushIcon },
   { id: "color", label: "Color", icon: PaletteIcon },
   { id: "image", label: "Image", icon: ImageIcon },
-  { id: "text", label: "Text & Data", icon: FileTextIcon },
+  { id: "developer", label: "Developer", icon: Code2Icon },
 ];
