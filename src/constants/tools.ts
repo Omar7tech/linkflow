@@ -43,6 +43,7 @@ import {
   LinkIcon,
   PaintbrushIcon,
   ImageIcon,
+  BookMarkedIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -442,6 +443,24 @@ export const TOOLS = [
       "css color variables",
     ],
     icon: SwatchBookIcon,
+    category: "color",
+  },
+  {
+    id: "pantone",
+    slug: "/tools/pantone",
+    name: "Pantone Color Finder",
+    shortName: "Pantone",
+    description:
+      "Find the closest Pantone colors to any hex, RGB or on-screen color — matched perceptually with the CIEDE2000 formula, not crude RGB distance. Pick a color, eyedrop the screen or browse the PMS library, then copy the exact ink name.",
+    keywords: [
+      "pantone color finder",
+      "hex to pantone",
+      "rgb to pantone converter",
+      "pantone matching system",
+      "closest pantone color",
+      "pms color finder",
+    ],
+    icon: BookMarkedIcon,
     category: "color",
   },
   {
