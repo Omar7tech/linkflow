@@ -451,7 +451,7 @@ export const TOOLS = [
     name: "Pantone Color Finder",
     shortName: "Pantone",
     description:
-      "Find the closest Pantone colors to any hex, RGB or on-screen color — matched perceptually with the CIEDE2000 formula, not crude RGB distance. Pick a color, eyedrop the screen or browse the PMS library, then copy the exact ink name.",
+      "Find the closest Pantone colors to any hex, RGB or on-screen color — matched against the full 1,341-ink PMS Solid Coated library and ranked perceptually with the CIEDE2000 formula, not crude RGB distance. Pick a color, eyedrop the screen or browse the library, then copy the exact ink name.",
     keywords: [
       "pantone color finder",
       "hex to pantone",
