@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { PipetteIcon, SearchIcon, ShieldCheckIcon, ShuffleIcon } from "lucide-react";
+import {
+  ArrowLeftRightIcon,
+  PipetteIcon,
+  RotateCcwIcon,
+  SearchIcon,
+  ShieldCheckIcon,
+  ShuffleIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,6 +62,8 @@ export function PantoneTool() {
   // Separate from `hex` so a half-typed/invalid draft doesn't reset the color.
   const [draft, setDraft] = React.useState(DEFAULT_HEX);
   const [query, setQuery] = React.useState("");
+  // Which ink is pinned into the comparison panel — null means "the closest".
+  const [compareCode, setCompareCode] = React.useState<string | null>(null);
   const [recents, setRecents, recentsReady] = useLocalStorage<string[]>("pantone:recents", []);
   const { copy } = useCopy();
 
@@ -68,6 +77,8 @@ export function PantoneTool() {
     const normalized = rgbToHex(parsed);
     setHex(normalized);
     setDraft(normalized);
+    // The color changed, so any pinned comparison is stale — fall back to closest.
+    setCompareCode(null);
   }, []);
 
   const onHexInput = (value: string) => {
@@ -124,6 +135,10 @@ export function PantoneTool() {
   const copyHex = (value: string) => copy(value.toUpperCase(), `${value.toUpperCase()} copied`);
 
   const best = matches[0];
+  // The ink shown in the comparison panel: the user's pinned choice, or the closest.
+  const selected = (compareCode && matches.find((m) => m.code === compareCode)) || best;
+  const isClosest = !!best && selected.code === best.code;
+  const others = matches.filter((m) => m.code !== selected.code);
 
   return (
     <GeneratorLayout
@@ -132,11 +147,13 @@ export function PantoneTool() {
         <Card>
           <CardContent className="space-y-3">
             <div className="flex items-baseline justify-between">
-              <h2 className="text-sm font-semibold">Closest Pantone match</h2>
+              <h2 className="text-sm font-semibold">
+                {isClosest ? "Closest Pantone match" : "Comparison"}
+              </h2>
               <span className="text-muted-foreground text-[11px]">ranked by ΔE 2000</span>
             </div>
 
-            {/* Your color vs the nearest ink — the at-a-glance trust check. */}
+            {/* Your color vs the selected ink — the at-a-glance trust check. */}
             {best && (
               <div className="space-y-2">
                 <div className="border-border grid grid-cols-2 overflow-hidden rounded-xl border">
@@ -154,36 +171,48 @@ export function PantoneTool() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => copyHex(best.hex)}
+                    onClick={() => copyHex(selected.hex)}
                     className="flex h-24 flex-col justify-between p-3 text-left"
-                    style={{ backgroundColor: best.hex, color: contrastText(best.rgb) }}
+                    style={{ backgroundColor: selected.hex, color: contrastText(selected.rgb) }}
                     title="Copy the Pantone hex"
                   >
-                    <span className="text-[10px] font-semibold tracking-widest uppercase opacity-90">
-                      Pantone
+                    <span className="flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase opacity-90">
+                      Pantone {isClosest && "· closest"}
                     </span>
-                    <span className="font-mono text-sm font-bold">{best.code}</span>
+                    <span className="font-mono text-sm font-bold">{selected.code}</span>
                   </button>
                 </div>
 
                 <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-sm font-medium">{fullName(best.code)}</span>
+                  <span className="truncate text-sm font-medium">{fullName(selected.code)}</span>
                   <div className="flex shrink-0 items-center gap-1.5">
                     <Badge
                       variant="secondary"
                       className={cn(
                         "border-0 px-1.5 py-0 text-[10px]",
-                        QUALITY_STYLES[matchQuality(best.deltaE).tone]
+                        QUALITY_STYLES[matchQuality(selected.deltaE).tone]
                       )}
                     >
-                      {matchQuality(best.deltaE).label} · ΔE {best.deltaE.toFixed(1)}
+                      {matchQuality(selected.deltaE).label} · ΔE {selected.deltaE.toFixed(1)}
                     </Badge>
+                    {!isClosest && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => setCompareCode(null)}
+                        title="Back to the closest match"
+                        aria-label="Back to the closest match"
+                      >
+                        <RotateCcwIcon />
+                      </Button>
+                    )}
                     <CopyButton
-                      text={fullName(best.code)}
+                      text={fullName(selected.code)}
                       label="Copy"
                       variant="outline"
                       size="sm"
-                      successMessage={`${fullName(best.code)} copied`}
+                      successMessage={`${fullName(selected.code)} copied`}
                     />
                   </div>
                 </div>
@@ -191,9 +220,17 @@ export function PantoneTool() {
             )}
 
             <div className="space-y-1">
-              <span className="text-muted-foreground text-[11px] font-medium">Other close inks</span>
-              {matches.slice(1).map((m) => (
-                <PantoneRow key={m.code} match={m} onCopyHex={copyHex} />
+              <span className="text-muted-foreground text-[11px] font-medium">
+                Other close inks — tap{" "}
+                <ArrowLeftRightIcon className="inline size-3 align-[-1px]" aria-hidden /> to compare
+              </span>
+              {others.map((m) => (
+                <PantoneRow
+                  key={m.code}
+                  match={m}
+                  onCopyHex={copyHex}
+                  onCompare={() => setCompareCode(m.code)}
+                />
               ))}
             </div>
 
@@ -388,9 +425,11 @@ export function PantoneTool() {
 function PantoneRow({
   match,
   onCopyHex,
+  onCompare,
 }: {
   match: PantoneMatch;
   onCopyHex: (hex: string) => void;
+  onCompare: () => void;
 }) {
   const quality = matchQuality(match.deltaE);
 
@@ -422,6 +461,17 @@ function PantoneRow({
         </div>
       </div>
 
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        onClick={onCompare}
+        title="Compare with your color"
+        aria-label={`Compare ${fullName(match.code)} with your color`}
+        className="text-muted-foreground hover:text-foreground shrink-0"
+      >
+        <ArrowLeftRightIcon />
+      </Button>
       <CopyButton
         text={fullName(match.code)}
         label=""
