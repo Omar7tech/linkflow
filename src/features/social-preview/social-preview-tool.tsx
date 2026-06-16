@@ -3,11 +3,14 @@
 import * as React from "react";
 import {
   CheckIcon,
+  CopyIcon,
   GlobeIcon,
   MoreHorizontalIcon,
+  PlusIcon,
   ShieldCheckIcon,
   TriangleAlertIcon,
   UploadIcon,
+  XIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,15 +22,22 @@ import { CopyButton } from "@/components/shared/copy-button";
 import { GeneratorLayout } from "@/components/shared/generator-layout";
 import { SITE } from "@/constants/site";
 import { TOOL_BY_ID } from "@/constants/tools";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import {
   buildMetaTags,
   clip,
   domainOf,
+  EMPTY_META,
   isDataUri,
   metaScore,
   type SocialMeta,
 } from "@/lib/social-preview";
 import { cn } from "@/lib/utils";
+
+interface Page {
+  id: string;
+  meta: SocialMeta;
+}
 
 const DEFAULT_META: SocialMeta = {
   title: "Forma — Free, Private Tools for Devs & Designers",
@@ -40,6 +50,8 @@ const DEFAULT_META: SocialMeta = {
   twitterHandle: SITE.twitter,
 };
 
+const FIRST_PAGE: Page[] = [{ id: "page-1", meta: DEFAULT_META }];
+
 const PLATFORMS = [
   { id: "google", label: "Google" },
   { id: "whatsapp", label: "WhatsApp" },
@@ -50,6 +62,11 @@ const PLATFORMS = [
 ] as const;
 
 const IDEAL_RATIO = 1200 / 630; // 1.905
+
+const newId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `page-${Date.now()}`;
+
+const pageLabel = (meta: SocialMeta) => meta.title.trim() || domainOf(meta.url) || "Untitled";
 
 /** Load an image to read its real dimensions, ignoring stale results. */
 function useImageInfo(src: string) {
@@ -69,15 +86,71 @@ function useImageInfo(src: string) {
 }
 
 export function SocialPreviewTool() {
-  const [meta, setMeta] = React.useState<SocialMeta>(DEFAULT_META);
-  // Uploaded OG image lives here (a data: URI) — preview-only, never persisted
-  // or injected into the tags, since crawlers need a hosted URL.
-  const [upload, setUpload] = React.useState("");
+  // Pages persist; the bulky uploaded data: URIs stay in-session only.
+  const [pages, setPages] = useLocalStorage<Page[]>("forma:social-preview", FIRST_PAGE);
+  const [activeId, setActiveId] = React.useState("page-1");
+  const [uploads, setUploads] = React.useState<Record<string, string>>({});
 
+  const active = pages.find((p) => p.id === activeId) ?? pages[0] ?? FIRST_PAGE[0];
+  const meta = active.meta;
+  const upload = uploads[active.id] ?? "";
+
+  const patch = (partial: Partial<SocialMeta>) =>
+    setPages((prev) =>
+      prev.map((p) => (p.id === active.id ? { ...p, meta: { ...p.meta, ...partial } } : p))
+    );
   const update =
     (key: keyof SocialMeta) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setMeta((m) => ({ ...m, [key]: e.target.value }));
+      patch({ [key]: e.target.value });
+
+  const setUpload = (value: string) => setUploads((u) => ({ ...u, [active.id]: value }));
+
+  const addPage = () => {
+    const id = newId();
+    // A new page of the same site inherits the site-wide bits, clears the rest.
+    setPages((prev) => [
+      ...prev,
+      {
+        id,
+        meta: {
+          ...EMPTY_META,
+          url: meta.url,
+          siteName: meta.siteName,
+          twitterHandle: meta.twitterHandle,
+          favicon: meta.favicon,
+        },
+      },
+    ]);
+    setActiveId(id);
+  };
+
+  const duplicatePage = () => {
+    const id = newId();
+    setPages((prev) => {
+      const idx = prev.findIndex((p) => p.id === active.id);
+      const next = [...prev];
+      next.splice(idx + 1, 0, { id, meta: { ...active.meta } });
+      return next;
+    });
+    if (upload) setUploads((u) => ({ ...u, [id]: upload }));
+    setActiveId(id);
+  };
+
+  const deletePage = (id: string) => {
+    const idx = pages.findIndex((p) => p.id === id);
+    const remaining = pages.filter((p) => p.id !== id);
+    setPages(remaining.length ? remaining : FIRST_PAGE);
+    setUploads((u) => {
+      const next = { ...u };
+      delete next[id];
+      return next;
+    });
+    if (active.id === id) {
+      const neighbor = remaining[idx] ?? remaining[idx - 1] ?? remaining[0] ?? FIRST_PAGE[0];
+      setActiveId(neighbor.id);
+    }
+  };
 
   const readFile = (file: File | undefined, onResult: (dataUri: string) => void) => {
     if (!file || !file.type.startsWith("image/")) return;
@@ -88,7 +161,6 @@ export function SocialPreviewTool() {
 
   const domain = domainOf(meta.url);
   const siteName = meta.siteName.trim() || domain;
-  // What the cards actually render: a pasted URL wins, else the upload.
   const previewImage = meta.image.trim() || upload;
   const cardMeta: SocialMeta = { ...meta, image: previewImage };
   const dims = useImageInfo(previewImage);
@@ -101,7 +173,14 @@ export function SocialPreviewTool() {
       output={
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Live unfurl preview</CardTitle>
+            <CardTitle className="flex items-center justify-between gap-2 text-base">
+              <span>Live unfurl preview</span>
+              {pages.length > 1 && (
+                <span className="text-muted-foreground max-w-[45%] truncate text-xs font-normal">
+                  {pageLabel(meta)}
+                </span>
+              )}
+            </CardTitle>
             <CardDescription>Exactly how your link looks where it gets shared.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -136,8 +215,8 @@ export function SocialPreviewTool() {
 
             <p className="text-muted-foreground mt-4 flex items-start gap-2 text-xs">
               <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-              Everything renders on-device — uploads and image URLs stay in your browser, nothing is
-              sent to us or the platforms.
+              Everything renders on-device — pages are saved in this browser only, nothing is sent to
+              us or the platforms.
             </p>
           </CardContent>
         </Card>
@@ -147,8 +226,9 @@ export function SocialPreviewTool() {
           <CardHeader>
             <CardTitle className="text-base">Meta tags</CardTitle>
             <CardDescription>
-              Paste into your page&apos;s <code className="font-mono">&lt;head&gt;</code> — covers
-              Open Graph (Facebook, LinkedIn, Slack, Discord, WhatsApp) and Twitter/X cards.
+              For <span className="font-medium">{pageLabel(meta)}</span> — paste into the page&apos;s{" "}
+              <code className="font-mono">&lt;head&gt;</code>. Covers Open Graph (Facebook, LinkedIn,
+              Slack, Discord, WhatsApp) and Twitter/X cards.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -171,6 +251,60 @@ export function SocialPreviewTool() {
       }
     >
       <div className="space-y-6">
+        {/* Pages workspace — switch, add, duplicate, delete. */}
+        <Card>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">
+                Pages <span className="text-muted-foreground font-normal">({pages.length})</span>
+              </span>
+              <div className="flex gap-1">
+                <Button type="button" variant="outline" size="sm" onClick={duplicatePage}>
+                  <CopyIcon /> Duplicate
+                </Button>
+                <Button type="button" size="sm" onClick={addPage}>
+                  <PlusIcon /> New page
+                </Button>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {pages.map((p) => {
+                const isActive = p.id === active.id;
+                return (
+                  <div
+                    key={p.id}
+                    className={cn(
+                      "flex shrink-0 items-center gap-1 rounded-lg border py-1 pr-1 pl-2.5 text-sm transition-colors",
+                      isActive
+                        ? "border-foreground bg-muted"
+                        : "border-border hover:bg-muted/50"
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setActiveId(p.id)}
+                      className="max-w-[150px] truncate py-0.5"
+                      title={pageLabel(p.meta)}
+                    >
+                      {pageLabel(p.meta)}
+                    </button>
+                    {pages.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => deletePage(p.id)}
+                        className="text-muted-foreground hover:text-destructive hover:bg-background rounded p-0.5"
+                        aria-label={`Delete ${pageLabel(p.meta)}`}
+                      >
+                        <XIcon className="size-3" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardContent className="space-y-4">
             <Field label="Title" hint={`${meta.title.length} chars`}>
@@ -217,7 +351,7 @@ export function SocialPreviewTool() {
                   onChange={update("favicon")}
                   placeholder="https://example.com/favicon.ico"
                 />
-                <UploadButton onFile={(f) => readFile(f, (d) => setMeta((m) => ({ ...m, favicon: d }))) } />
+                <UploadButton onFile={(f) => readFile(f, (d) => patch({ favicon: d }))} />
               </div>
               {isDataUri(meta.favicon) && (
                 <p className="text-muted-foreground flex items-center justify-between text-[11px]">
@@ -225,7 +359,7 @@ export function SocialPreviewTool() {
                   <button
                     type="button"
                     className="hover:text-foreground underline"
-                    onClick={() => setMeta((m) => ({ ...m, favicon: "" }))}
+                    onClick={() => patch({ favicon: "" })}
                   >
                     Remove
                   </button>
@@ -321,7 +455,13 @@ function UploadButton({ onFile }: { onFile: (file: File | undefined) => void }) 
           e.target.value = "";
         }}
       />
-      <Button type="button" variant="outline" size="icon" onClick={() => ref.current?.click()} title="Upload an image">
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        onClick={() => ref.current?.click()}
+        title="Upload an image"
+      >
         <UploadIcon />
       </Button>
     </>
@@ -339,7 +479,8 @@ function ImageStatus({
   dims: { w: number; h: number } | null;
   onClearUpload: () => void;
 }) {
-  const ratioOk = dims && dims.w > 0 && Math.abs(dims.w / dims.h - IDEAL_RATIO) < 0.12 && dims.w >= 600;
+  const ratioOk =
+    dims && dims.w > 0 && Math.abs(dims.w / dims.h - IDEAL_RATIO) < 0.12 && dims.w >= 600;
 
   return (
     <div className="space-y-1 text-[11px]">
@@ -452,9 +593,7 @@ function XPreview({ meta, domain }: { meta: SocialMeta; domain: string }) {
       <PreviewImage src={meta.image} className="aspect-[1.91/1] w-full" />
       <div className="border-border border-t px-3 py-2">
         <div className="text-muted-foreground text-[13px]">{domain}</div>
-        <div className="line-clamp-1 text-[15px] font-medium">
-          {meta.title || "Your page title"}
-        </div>
+        <div className="line-clamp-1 text-[15px] font-medium">{meta.title || "Your page title"}</div>
         <p className="text-muted-foreground line-clamp-1 text-[13px]">{meta.description}</p>
       </div>
     </div>
