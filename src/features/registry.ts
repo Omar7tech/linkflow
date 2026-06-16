@@ -64,4 +64,7 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   socialpreview: dynamic(() =>
     import("./social-preview/social-preview-tool").then((m) => m.SocialPreviewTool)
   ),
+  steganography: dynamic(() =>
+    import("./steganography/steganography-tool").then((m) => m.SteganographyTool)
+  ),
 };

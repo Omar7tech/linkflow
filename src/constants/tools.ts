@@ -45,6 +45,7 @@ import {
   ImageIcon,
   BookMarkedIcon,
   LayoutTemplateIcon,
+  VenetianMaskIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -481,6 +482,24 @@ export const TOOLS = [
     ],
     icon: LayoutTemplateIcon,
     category: "developer",
+  },
+  {
+    id: "steganography",
+    slug: "/tools/steganography",
+    name: "Image Secrets",
+    shortName: "Image Secrets",
+    description:
+      "Hide a secret message inside any image — the pixels carry your text invisibly using LSB steganography, with optional AES-256 encryption so only your passphrase can read it. Decode it back just as easily. Everything runs on-device; nothing is ever uploaded.",
+    keywords: [
+      "steganography tool",
+      "hide message in image",
+      "image steganography online",
+      "encrypt text in photo",
+      "lsb steganography",
+      "secret message image",
+    ],
+    icon: VenetianMaskIcon,
+    category: "image",
   },
   {
     id: "neumorphism",
