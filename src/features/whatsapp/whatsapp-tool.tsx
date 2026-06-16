@@ -15,6 +15,7 @@ import { OutputCard } from "@/components/shared/output-card";
 import { PhoneInput } from "@/components/shared/phone-input";
 import { PresetsBar } from "@/components/shared/presets-bar";
 import { CopyButton } from "@/components/shared/copy-button";
+import { QrCustomizeTip } from "@/components/shared/qr-customize-tip";
 import { TOOL_BY_ID } from "@/constants/tools";
 import { useGenerator } from "@/hooks/useGenerator";
 import { useHistory } from "@/hooks/useHistory";
@@ -135,6 +136,7 @@ export function WhatsAppTool() {
         onAction={chat.commit}
         filename="whatsapp-qr"
         emptyHint="Enter a valid phone number and your wa.me link appears instantly."
+        qrTip={chat.output ? <QrCustomizeTip url={chat.output} /> : null}
       />
     ),
     message: (
@@ -144,6 +146,7 @@ export function WhatsAppTool() {
         onAction={messageOnly.commit}
         filename="whatsapp-message-qr"
         emptyHint="Type a message — the recipient picks who to send it to."
+        qrTip={messageOnly.output ? <QrCustomizeTip url={messageOnly.output} /> : null}
       />
     ),
     group: (
@@ -153,6 +156,7 @@ export function WhatsAppTool() {
         onAction={group.commit}
         filename="whatsapp-group-qr"
         emptyHint="Paste a group invite link or code to get a clean, shareable link."
+        qrTip={group.output ? <QrCustomizeTip url={group.output} /> : null}
       />
     ),
     bulk: (

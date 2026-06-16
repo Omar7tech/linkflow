@@ -28,6 +28,8 @@ interface OutputCardProps {
   /** Hide export snippets for outputs that aren't hyperlinks. */
   showSnippets?: boolean;
   emptyHint?: string;
+  /** Optional note rendered under the QR preview (e.g. a customize tip). */
+  qrTip?: React.ReactNode;
   children?: React.ReactNode;
 }
 
@@ -41,6 +43,7 @@ export function OutputCard({
   openable = true,
   showSnippets = true,
   emptyHint = "Fill in the form and your link appears here instantly.",
+  qrTip,
   children,
 }: OutputCardProps) {
   const mounted = useMounted();
@@ -107,6 +110,7 @@ export function OutputCard({
           <>
             <Separator />
             <QrPreview value={output} filename={filename} options={qrOptions} onAction={onAction} />
+            {qrTip}
           </>
         )}
 
