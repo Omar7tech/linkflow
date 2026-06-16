@@ -61,4 +61,7 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
     import("./filterlab/filterlab-tool").then((m) => m.FilterLabTool)
   ),
   pantone: dynamic(() => import("./pantone/pantone-tool").then((m) => m.PantoneTool)),
+  socialpreview: dynamic(() =>
+    import("./social-preview/social-preview-tool").then((m) => m.SocialPreviewTool)
+  ),
 };

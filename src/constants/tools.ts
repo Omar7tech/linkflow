@@ -44,6 +44,7 @@ import {
   PaintbrushIcon,
   ImageIcon,
   BookMarkedIcon,
+  LayoutTemplateIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -462,6 +463,24 @@ export const TOOLS = [
     ],
     icon: BookMarkedIcon,
     category: "color",
+  },
+  {
+    id: "socialpreview",
+    slug: "/tools/social-preview",
+    name: "Social Link Preview",
+    shortName: "Link Preview",
+    description:
+      "See exactly how your link unfurls on Google, X, Facebook, Slack and Discord before you ship it — fill in the title, description and image once, watch every card update live, then copy production-ready Open Graph and Twitter meta tags. All on-device.",
+    keywords: [
+      "open graph preview",
+      "og meta tag generator",
+      "twitter card preview",
+      "social media preview",
+      "link unfurl preview",
+      "meta tags generator",
+    ],
+    icon: LayoutTemplateIcon,
+    category: "developer",
   },
   {
     id: "neumorphism",
