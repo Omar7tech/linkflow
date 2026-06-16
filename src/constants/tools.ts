@@ -48,6 +48,7 @@ import {
   VenetianMaskIcon,
   Layers2Icon,
   GripIcon,
+  GlassesIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -537,6 +538,24 @@ export const TOOLS = [
       "dot screen filter",
     ],
     icon: GripIcon,
+    category: "image",
+  },
+  {
+    id: "stereogram",
+    slug: "/tools/magic-eye",
+    name: "Magic Eye Maker",
+    shortName: "Magic Eye",
+    description:
+      "Hide a secret word or shape inside a field of colorful dots — a real autostereogram that pops into 3D when you relax your eyes, just like the 90s Magic Eye posters. Tune the depth, pattern and colors, then download the PNG. Generated entirely on-device.",
+    keywords: [
+      "magic eye generator",
+      "autostereogram maker",
+      "stereogram generator",
+      "hidden 3d image",
+      "sirds generator",
+      "hidden message image",
+    ],
+    icon: GlassesIcon,
     category: "image",
   },
   {

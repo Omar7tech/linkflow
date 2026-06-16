@@ -69,4 +69,7 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   ),
   duotone: dynamic(() => import("./duotone/duotone-tool").then((m) => m.DuotoneTool)),
   halftone: dynamic(() => import("./halftone/halftone-tool").then((m) => m.HalftoneTool)),
+  stereogram: dynamic(() =>
+    import("./stereogram/stereogram-tool").then((m) => m.StereogramTool)
+  ),
 };
