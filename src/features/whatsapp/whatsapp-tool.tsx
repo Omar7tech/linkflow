@@ -34,6 +34,7 @@ import {
 } from "@/lib/validators";
 import { DEFAULT_QR_OPTIONS } from "@/types";
 import { WhatsAppButtonGallery } from "./whatsapp-button-gallery";
+import { MessageEditor } from "./whatsapp-message-editor";
 
 interface ChatValues {
   phone: string;
@@ -255,11 +256,20 @@ export function WhatsAppTool() {
                 error={chat.form.formState.errors.message?.message}
                 hint={`${chat.values.message?.length ?? 0} / 4096 characters`}
               >
-                <Textarea
-                  id="wa-message"
-                  rows={4}
-                  placeholder="Hi! I'm interested in your services…"
-                  {...chat.form.register("message")}
+                <Controller
+                  control={chat.form.control}
+                  name="message"
+                  render={({ field }) => (
+                    <MessageEditor
+                      id="wa-message"
+                      rows={4}
+                      placeholder="Hi! I'm interested in your services…"
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      contactName={chat.values.phone}
+                    />
+                  )}
                 />
               </Field>
               <PresetsBar
@@ -281,11 +291,19 @@ export function WhatsAppTool() {
                 error={messageOnly.form.formState.errors.message?.message}
                 hint="Recipients choose a contact after tapping the link — great for 'share this' campaigns."
               >
-                <Textarea
-                  id="wa-msg-only"
-                  rows={5}
-                  placeholder="Check out this amazing offer: https://example.com"
-                  {...messageOnly.form.register("message")}
+                <Controller
+                  control={messageOnly.form.control}
+                  name="message"
+                  render={({ field }) => (
+                    <MessageEditor
+                      id="wa-msg-only"
+                      rows={5}
+                      placeholder="Check out this amazing offer: https://example.com"
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                    />
+                  )}
                 />
               </Field>
             </TabsContent>
