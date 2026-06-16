@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CopyButton } from "@/components/shared/copy-button";
 import { GeneratorLayout } from "@/components/shared/generator-layout";
 import { TOOL_BY_ID } from "@/constants/tools";
+import { useCopy } from "@/hooks/useCopy";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import {
   cmykString,
   contrastText,
@@ -41,6 +43,7 @@ const QUALITY_STYLES: Record<ReturnType<typeof matchQuality>["tone"], string> = 
 
 /** Cap on chips rendered at once — the full library is 1300+ inks. */
 const BROWSE_LIMIT = 120;
+const DEFAULT_HEX = "#10b981";
 
 /** "PANTONE 185 C" — the canonical Solid Coated display form. */
 function fullName(code: string) {
@@ -48,10 +51,12 @@ function fullName(code: string) {
 }
 
 export function PantoneTool() {
-  const [hex, setHex] = React.useState("#10b981");
+  const [hex, setHex] = React.useState(DEFAULT_HEX);
   // Separate from `hex` so a half-typed/invalid draft doesn't reset the color.
-  const [draft, setDraft] = React.useState("#10b981");
+  const [draft, setDraft] = React.useState(DEFAULT_HEX);
   const [query, setQuery] = React.useState("");
+  const [recents, setRecents, recentsReady] = useLocalStorage<string[]>("pantone:recents", []);
+  const { copy } = useCopy();
 
   const rgb = React.useMemo<RGB>(() => parseHex(hex) ?? [16, 185, 129], [hex]);
   const matches = React.useMemo(() => nearestPantone(rgb, 7), [rgb]);
@@ -69,6 +74,31 @@ export function PantoneTool() {
     setDraft(value);
     if (parseHex(value)) applyColor(value);
   };
+
+  // Remember colors the user settles on — debounced so dragging the picker
+  // records one entry, not a hundred.
+  React.useEffect(() => {
+    const id = setTimeout(() => {
+      setRecents((prev) => [hex, ...prev.filter((h) => h !== hex)].slice(0, 10));
+    }, 600);
+    return () => clearTimeout(id);
+  }, [hex, setRecents]);
+
+  // Paste a hex from anywhere on the page (unless typing in a field).
+  React.useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) return;
+      const text = e.clipboardData?.getData("text");
+      const parsed = text ? parseHex(text) : null;
+      if (parsed) {
+        applyColor(text!);
+        toast.success(`Loaded ${rgbToHex(parsed)}`);
+      }
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [applyColor]);
 
   const pickFromScreen = async () => {
     const Ctor = (window as unknown as { EyeDropper?: EyeDropperCtor }).EyeDropper;
@@ -91,6 +121,8 @@ export function PantoneTool() {
     applyColor(`#${v}`);
   };
 
+  const copyHex = (value: string) => copy(value.toUpperCase(), `${value.toUpperCase()} copied`);
+
   const best = matches[0];
 
   return (
@@ -100,15 +132,68 @@ export function PantoneTool() {
         <Card>
           <CardContent className="space-y-3">
             <div className="flex items-baseline justify-between">
-              <h2 className="text-sm font-semibold">Closest Pantone colors</h2>
+              <h2 className="text-sm font-semibold">Closest Pantone match</h2>
               <span className="text-muted-foreground text-[11px]">ranked by ΔE 2000</span>
             </div>
 
-            {best && <PantoneCard match={best} featured />}
+            {/* Your color vs the nearest ink — the at-a-glance trust check. */}
+            {best && (
+              <div className="space-y-2">
+                <div className="border-border grid grid-cols-2 overflow-hidden rounded-xl border">
+                  <button
+                    type="button"
+                    onClick={() => copyHex(hex)}
+                    className="flex h-24 flex-col justify-between p-3 text-left"
+                    style={{ backgroundColor: hex, color: contrastText(rgb) }}
+                    title="Copy your hex"
+                  >
+                    <span className="text-[10px] font-medium tracking-wide uppercase opacity-80">
+                      Your color
+                    </span>
+                    <span className="font-mono text-sm font-semibold uppercase">{hex}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => copyHex(best.hex)}
+                    className="flex h-24 flex-col justify-between p-3 text-left"
+                    style={{ backgroundColor: best.hex, color: contrastText(best.rgb) }}
+                    title="Copy the Pantone hex"
+                  >
+                    <span className="text-[10px] font-semibold tracking-widest uppercase opacity-90">
+                      Pantone
+                    </span>
+                    <span className="font-mono text-sm font-bold">{best.code}</span>
+                  </button>
+                </div>
 
-            <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate text-sm font-medium">{fullName(best.code)}</span>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <Badge
+                      variant="secondary"
+                      className={cn(
+                        "border-0 px-1.5 py-0 text-[10px]",
+                        QUALITY_STYLES[matchQuality(best.deltaE).tone]
+                      )}
+                    >
+                      {matchQuality(best.deltaE).label} · ΔE {best.deltaE.toFixed(1)}
+                    </Badge>
+                    <CopyButton
+                      text={fullName(best.code)}
+                      label="Copy"
+                      variant="outline"
+                      size="sm"
+                      successMessage={`${fullName(best.code)} copied`}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <span className="text-muted-foreground text-[11px] font-medium">Other close inks</span>
               {matches.slice(1).map((m) => (
-                <PantoneCard key={m.code} match={m} />
+                <PantoneRow key={m.code} match={m} onCopyHex={copyHex} />
               ))}
             </div>
 
@@ -193,16 +278,55 @@ export function PantoneTool() {
                   ["HSL", hslString(rgb)],
                   ["CMYK", cmykString(rgb)],
                 ].map(([label, value]) => (
-                  <div key={label} className="bg-muted/50 rounded-lg px-2 py-1.5">
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => copy(value, `${value} copied`)}
+                    className="bg-muted/50 hover:bg-muted rounded-lg px-2 py-1.5 text-left transition-colors"
+                    title={`Copy ${value}`}
+                  >
                     <div className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
                       {label}
                     </div>
                     <div className="mt-0.5 font-mono text-[11px] leading-tight break-all">
                       {value}
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
+
+              {recentsReady && recents.length > 0 && (
+                <div className="mt-auto space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground text-[11px] font-medium">Recent</span>
+                    <button
+                      type="button"
+                      onClick={() => setRecents([])}
+                      className="text-muted-foreground hover:text-foreground text-[11px]"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {recents.map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => applyColor(r)}
+                        title={r.toUpperCase()}
+                        aria-label={`Use ${r}`}
+                        className={cn(
+                          "size-7 rounded-md border transition-transform hover:scale-110",
+                          r.toLowerCase() === hex.toLowerCase()
+                            ? "border-foreground ring-foreground/20 ring-2"
+                            : "border-border"
+                        )}
+                        style={{ backgroundColor: r }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
             {/* ------------------------------ Browse ------------------------------ */}
@@ -261,39 +385,29 @@ export function PantoneTool() {
   );
 }
 
-function PantoneCard({ match, featured = false }: { match: PantoneMatch; featured?: boolean }) {
+function PantoneRow({
+  match,
+  onCopyHex,
+}: {
+  match: PantoneMatch;
+  onCopyHex: (hex: string) => void;
+}) {
   const quality = matchQuality(match.deltaE);
-  const ink = contrastText(match.rgb);
 
   return (
-    <div
-      className={cn(
-        "flex items-center gap-3 rounded-lg",
-        featured ? "border-border border p-1.5" : "px-1"
-      )}
-    >
-      <div
-        className={cn(
-          "flex shrink-0 flex-col justify-between rounded-md",
-          featured ? "h-16 w-20 p-2.5" : "size-10"
-        )}
-        style={{ backgroundColor: match.hex, color: ink }}
-      >
-        {featured && (
-          <>
-            <span className="text-[9px] font-semibold tracking-widest uppercase opacity-90">
-              Pantone
-            </span>
-            <span className="font-mono text-sm font-bold">{match.code}</span>
-          </>
-        )}
-      </div>
+    <div className="hover:bg-muted/50 flex items-center gap-3 rounded-lg px-1 py-1 transition-colors">
+      <button
+        type="button"
+        onClick={() => onCopyHex(match.hex)}
+        className="border-border size-10 shrink-0 rounded-md border"
+        style={{ backgroundColor: match.hex }}
+        title={`Copy ${match.hex}`}
+        aria-label={`Copy ${match.hex}`}
+      />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className={cn("truncate font-medium", featured ? "text-sm" : "text-[13px]")}>
-            {fullName(match.code)}
-          </span>
+          <span className="truncate text-[13px] font-medium">{fullName(match.code)}</span>
           <Badge
             variant="secondary"
             className={cn("shrink-0 border-0 px-1.5 py-0 text-[10px]", QUALITY_STYLES[quality.tone])}
