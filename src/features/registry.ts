@@ -67,4 +67,5 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   steganography: dynamic(() =>
     import("./steganography/steganography-tool").then((m) => m.SteganographyTool)
   ),
+  duotone: dynamic(() => import("./duotone/duotone-tool").then((m) => m.DuotoneTool)),
 };

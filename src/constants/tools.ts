@@ -46,6 +46,7 @@ import {
   BookMarkedIcon,
   LayoutTemplateIcon,
   VenetianMaskIcon,
+  Layers2Icon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -499,6 +500,24 @@ export const TOOLS = [
       "secret message image",
     ],
     icon: VenetianMaskIcon,
+    category: "image",
+  },
+  {
+    id: "duotone",
+    slug: "/tools/duotone",
+    name: "Duotone Studio",
+    shortName: "Duotone",
+    description:
+      "Turn any photo into a striking two-tone image — map the shadows to one color and the highlights to another, with curated presets, contrast, midpoint and film-grain controls. Recolor live and export a crisp PNG. All on-device.",
+    keywords: [
+      "duotone generator",
+      "duotone image maker",
+      "two tone photo effect",
+      "gradient map image",
+      "spotify duotone effect",
+      "duotone png export",
+    ],
+    icon: Layers2Icon,
     category: "image",
   },
   {
