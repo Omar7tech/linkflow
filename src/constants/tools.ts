@@ -47,6 +47,7 @@ import {
   LayoutTemplateIcon,
   VenetianMaskIcon,
   Layers2Icon,
+  GripIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -518,6 +519,24 @@ export const TOOLS = [
       "duotone png export",
     ],
     icon: Layers2Icon,
+    category: "image",
+  },
+  {
+    id: "halftone",
+    slug: "/tools/halftone",
+    name: "Halftone Studio",
+    shortName: "Halftone",
+    description:
+      "Turn any photo into a retro halftone — a rotated screen of dots sized by brightness, the classic newsprint and comic-book look. Choose dot shape, spacing, angle and ink/paper colors, then export a PNG or a crisp, infinitely-scalable SVG for print. All on-device.",
+    keywords: [
+      "halftone generator",
+      "halftone image maker",
+      "comic dot effect",
+      "newsprint effect",
+      "halftone svg export",
+      "dot screen filter",
+    ],
+    icon: GripIcon,
     category: "image",
   },
   {
