@@ -74,4 +74,5 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   ),
   spectro: dynamic(() => import("./spectro/spectro-tool").then((m) => m.SpectroTool)),
   dna: dynamic(() => import("./dna/dna-tool").then((m) => m.DnaTool)),
+  foundry: dynamic(() => import("./foundry/foundry-tool").then((m) => m.FoundryTool)),
 };

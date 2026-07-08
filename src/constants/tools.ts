@@ -51,6 +51,7 @@ import {
   GlassesIcon,
   AudioLinesIcon,
   DnaIcon,
+  AnvilIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -298,6 +299,24 @@ export const TOOLS = [
     ],
     icon: LayoutGridIcon,
     category: "developer",
+  },
+  {
+    id: "foundry",
+    slug: "/tools/theme-foundry",
+    name: "Theme Foundry",
+    shortName: "Foundry",
+    description:
+      "Forge a complete design system from a single brand color — perceptually even OKLCH color ramps, contrast-checked light and dark themes, font pairings, a modular type scale, spacing, radii and shadows, all previewed live on a mini product page. Export CSS variables, Tailwind v4, a paste-ready shadcn/ui theme, or JSON tokens.",
+    keywords: [
+      "design system generator",
+      "shadcn theme generator",
+      "tailwind color palette generator",
+      "oklch color ramp generator",
+      "dark mode theme generator",
+      "brand color scale",
+    ],
+    icon: AnvilIcon,
+    category: "brand",
   },
   {
     id: "dna",
