@@ -177,30 +177,38 @@ function collectPlateFaces(plate: Plate, rx: number, ry: number): Face[] {
 function drawTexturedTriangle(
   ctx: CanvasRenderingContext2D,
   tex: HTMLCanvasElement,
-  s: { x: number; y: number }[],
-  t: { x: number; y: number }[]
+  dest: { x: number; y: number }[],
+  src: { x: number; y: number }[]
 ) {
-  const [p0, p1, p2] = s;
-  const [q0, q1, q2] = t;
-  const den = q0.x * (q1.y - q2.y) + q1.x * (q2.y - q0.y) + q2.x * (q0.y - q1.y);
+  const [d0, d1, d2] = dest;
+  const [s0, s1, s2] = src;
+  const den = s0.x * (s1.y - s2.y) + s1.x * (s2.y - s0.y) + s2.x * (s0.y - s1.y);
   if (Math.abs(den) < 1e-8) return;
-  const a = (p0.x * (q1.y - q2.y) + p1.x * (q2.y - q0.y) + p2.x * (q0.y - q1.y)) / den;
-  const b = (p0.y * (q1.y - q2.y) + p1.y * (q2.y - q0.y) + p2.y * (q0.y - q1.y)) / den;
-  const c = (p0.x * (q2.x - q1.x) + p1.x * (q0.x - q2.x) + p2.x * (q1.x - q0.x)) / den;
-  const d = (p0.y * (q2.x - q1.x) + p1.y * (q0.x - q2.x) + p2.y * (q1.x - q0.x)) / den;
-  const e = p0.x - a * q0.x - c * q0.y;
-  const f = p0.y - b * q0.x - d * q0.y;
+  const a = (d0.x * (s1.y - s2.y) + d1.x * (s2.y - s0.y) + d2.x * (s0.y - s1.y)) / den;
+  const b = (d0.y * (s1.y - s2.y) + d1.y * (s2.y - s0.y) + d2.y * (s0.y - s1.y)) / den;
+  const c = (d0.x * (s2.x - s1.x) + d1.x * (s0.x - s2.x) + d2.x * (s1.x - s0.x)) / den;
+  const d = (d0.y * (s2.x - s1.x) + d1.y * (s0.x - s2.x) + d2.y * (s1.x - s0.x)) / den;
+  const e =
+    (d0.x * (s1.x * s2.y - s2.x * s1.y) +
+      d1.x * (s2.x * s0.y - s0.x * s2.y) +
+      d2.x * (s0.x * s1.y - s1.x * s0.y)) /
+    den;
+  const f =
+    (d0.y * (s1.x * s2.y - s2.x * s1.y) +
+      d1.y * (s2.x * s0.y - s0.x * s2.y) +
+      d2.y * (s0.x * s1.y - s1.x * s0.y)) /
+    den;
 
   // Inflate the clip a hair from the centroid to hide grid seams.
-  const cx = (p0.x + p1.x + p2.x) / 3;
-  const cy = (p0.y + p1.y + p2.y) / 3;
+  const cx = (d0.x + d1.x + d2.x) / 3;
+  const cy = (d0.y + d1.y + d2.y) / 3;
   const grow = (p: { x: number; y: number }) => ({
     x: cx + (p.x - cx) * 1.03,
     y: cy + (p.y - cy) * 1.03,
   });
-  const g0 = grow(p0);
-  const g1 = grow(p1);
-  const g2 = grow(p2);
+  const g0 = grow(d0);
+  const g1 = grow(d1);
+  const g2 = grow(d2);
 
   ctx.save();
   ctx.beginPath();
@@ -210,6 +218,7 @@ function drawTexturedTriangle(
   ctx.closePath();
   ctx.clip();
   ctx.transform(a, b, c, d, e, f);
+  ctx.imageSmoothingEnabled = true;
   ctx.drawImage(tex, 0, 0);
   ctx.restore();
 }
@@ -284,36 +293,39 @@ export function renderScene(
   }
 
   const faces = plates.flatMap((plate) => collectPlateFaces(plate, opts.rotX, opts.rotY));
-  faces.sort((a, b) => a.z - b.z);
+  const fillFaces = faces.filter((face) => face.kind === "fill");
+  const texFaces = faces.filter((face) => face.kind === "tex");
+  fillFaces.sort((a, b) => a.z - b.z);
+  texFaces.sort((a, b) => a.z - b.z);
 
   const toCanvas = (p: { x: number; y: number }) => ({ x: cx + p.x * scale, y: cy + p.y * scale });
 
-  for (const face of faces) {
-    if (face.kind === "fill") {
-      const pts = face.pts.map(toCanvas);
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-      ctx.closePath();
-      ctx.fillStyle = face.color;
-      ctx.strokeStyle = face.color;
-      ctx.lineWidth = 0.8;
-      ctx.fill();
-      ctx.stroke();
-    } else {
-      const q = face.quad.map(toCanvas);
-      const [u0, v0, u1, v1] = face.uv;
-      drawTexturedTriangle(ctx, face.texture, [q[0], q[1], q[2]], [
-        { x: u0, y: v0 },
-        { x: u1, y: v0 },
-        { x: u1, y: v1 },
-      ]);
-      drawTexturedTriangle(ctx, face.texture, [q[0], q[2], q[3]], [
-        { x: u0, y: v0 },
-        { x: u1, y: v1 },
-        { x: u0, y: v1 },
-      ]);
-    }
+  for (const face of fillFaces) {
+    const pts = face.pts.map(toCanvas);
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.closePath();
+    ctx.fillStyle = face.color;
+    ctx.strokeStyle = face.color;
+    ctx.lineWidth = 0.8;
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  for (const face of texFaces) {
+    const q = face.quad.map(toCanvas);
+    const [u0, v0, u1, v1] = face.uv;
+    drawTexturedTriangle(ctx, face.texture, [q[0], q[1], q[2]], [
+      { x: u0, y: v0 },
+      { x: u1, y: v0 },
+      { x: u1, y: v1 },
+    ]);
+    drawTexturedTriangle(ctx, face.texture, [q[0], q[2], q[3]], [
+      { x: u0, y: v0 },
+      { x: u1, y: v1 },
+      { x: u0, y: v1 },
+    ]);
   }
 }
 
