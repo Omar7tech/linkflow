@@ -1,15 +1,10 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { extractCss, type DesignDna } from "@/lib/design-dna";
-import { clientIpFrom, createRateLimiter } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const checkRate = createRateLimiter({ perMinute: 8, perDay: 80 });
-/** Inspections currently running — hard ceiling so a burst can't pile up fetches. */
-let inFlight = 0;
-const MAX_IN_FLIGHT = 6;
 const MAX_BODY_BYTES = 4096;
 const MAX_URL_LENGTH = 2048;
 
@@ -231,28 +226,6 @@ function findFavicon(html: string, base: URL): string {
 /* ----------------------------------------------------------------- route */
 
 export async function POST(request: Request): Promise<Response> {
-  // Only our own frontend may call this from a browser. Non-browser clients
-  // (no Origin header) are allowed but still rate-limited below.
-  const origin = request.headers.get("origin");
-  const host = request.headers.get("host");
-  if (origin && host) {
-    try {
-      if (new URL(origin).host !== host) {
-        return Response.json({ error: "Cross-origin requests aren't allowed." }, { status: 403 });
-      }
-    } catch {
-      return Response.json({ error: "Cross-origin requests aren't allowed." }, { status: 403 });
-    }
-  }
-
-  const verdict = checkRate(clientIpFrom(request));
-  if (!verdict.ok) {
-    return Response.json(
-      { error: verdict.message },
-      { status: 429, headers: { "retry-after": String(verdict.retryAfterS) } }
-    );
-  }
-
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > MAX_BODY_BYTES) {
     return Response.json({ error: "Request body too large." }, { status: 413 });
@@ -271,13 +244,6 @@ export async function POST(request: Request): Promise<Response> {
   }
   if (!/^https?:\/\//i.test(target)) target = `https://${target}`;
 
-  if (inFlight >= MAX_IN_FLIGHT) {
-    return Response.json(
-      { error: "The inspector is busy right now — try again in a few seconds." },
-      { status: 503, headers: { "retry-after": "5" } }
-    );
-  }
-  inFlight++;
   try {
     const page = await fetchGuarded(target, "text/html,application/xhtml+xml", MAX_HTML_BYTES);
     const html = page.text;
@@ -341,7 +307,5 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: error.message }, { status: error.status });
     }
     return Response.json({ error: "Something went wrong inspecting that site." }, { status: 500 });
-  } finally {
-    inFlight--;
   }
 }

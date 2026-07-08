@@ -21,6 +21,29 @@ import {
 
 const EXAMPLES = ["stripe.com", "linear.app", "vercel.com", "airbnb.com"];
 
+const DAILY_LIMIT = 60;
+const QUOTA_KEY = "forma:dna:uses";
+
+/**
+ * Soft daily quota kept in localStorage — a courtesy brake, not a security
+ * boundary. Counts one lookup per call; if storage is unavailable, allow.
+ */
+function underDailyLimit(): boolean {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const stored = JSON.parse(localStorage.getItem(QUOTA_KEY) ?? "null") as {
+      date?: string;
+      count?: number;
+    } | null;
+    const count = stored?.date === today ? (stored.count ?? 0) : 0;
+    if (count >= DAILY_LIMIT) return false;
+    localStorage.setItem(QUOTA_KEY, JSON.stringify({ date: today, count: count + 1 }));
+    return true;
+  } catch {
+    return true;
+  }
+}
+
 /** Rough client-side check so token values that are colors get a swatch. */
 function looksLikeColor(value: string): boolean {
   return /^(#[0-9a-f]{3,8}|rgba?\(|hsla?\(|oklch\()/i.test(value.trim());
@@ -35,6 +58,10 @@ export function DnaTool() {
   const inspect = async (target: string) => {
     const trimmed = target.trim();
     if (!trimmed) return;
+    if (!underDailyLimit()) {
+      toast.error(`Daily limit reached (${DAILY_LIMIT} lookups) — come back tomorrow.`);
+      return;
+    }
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
