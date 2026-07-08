@@ -73,4 +73,5 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
     import("./stereogram/stereogram-tool").then((m) => m.StereogramTool)
   ),
   spectro: dynamic(() => import("./spectro/spectro-tool").then((m) => m.SpectroTool)),
+  dna: dynamic(() => import("./dna/dna-tool").then((m) => m.DnaTool)),
 };

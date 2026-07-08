@@ -179,7 +179,7 @@ export function DuotoneTool() {
             )}
             <p className="text-muted-foreground flex items-start gap-2 text-xs">
               <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-              Recoloring happens entirely on-device — your image is never uploaded.
+              Your photo stays private — it&apos;s never stored.
             </p>
           </CardContent>
         </Card>

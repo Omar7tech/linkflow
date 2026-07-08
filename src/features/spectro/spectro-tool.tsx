@@ -377,8 +377,7 @@ export function SpectroTool() {
                     {decodedName ?? "Drop in any audio file"}
                   </span>
                   <span className="text-muted-foreground text-xs">
-                    WAV, MP3 or OGG — the first {DECODE_CAP_S} seconds are analyzed, entirely
-                    on-device.
+                    WAV, MP3 or OGG — the first {DECODE_CAP_S} seconds are analyzed.
                   </span>
                   <input
                     type="file"

@@ -50,6 +50,7 @@ import {
   GripIcon,
   GlassesIcon,
   AudioLinesIcon,
+  DnaIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -230,7 +231,7 @@ export const TOOLS = [
     name: "Mockup Generator",
     shortName: "Mockup",
     description:
-      "Wrap screenshots, videos and live screen captures in browser, window or phone frames — with gradient backdrops, tilt, shadows and captions. Export social-ready PNGs or WebM video, all composed on-device.",
+      "Wrap screenshots, videos and live screen captures in browser, window or phone frames — with gradient backdrops, tilt, shadows and captions. Export social-ready PNGs or WebM video.",
     keywords: [
       "mockup generator",
       "screenshot mockup",
@@ -276,7 +277,7 @@ export const TOOLS = [
     name: "Image Splitter",
     shortName: "Grid Splitter",
     description:
-      "Split your images into perfect 3x1, 3x3, or custom grids for Instagram. Locally processed, high-quality slices ready for your profile.",
+      "Split your images into perfect 3x1, 3x3, or custom grids for Instagram. High-quality slices ready for your profile.",
     keywords: ["image splitter", "instagram grid", "grid maker", "image slicer"],
     icon: Grid3X3Icon,
     category: "image",
@@ -297,6 +298,24 @@ export const TOOLS = [
     ],
     icon: LayoutGridIcon,
     category: "developer",
+  },
+  {
+    id: "dna",
+    slug: "/tools/design-dna",
+    name: "Design DNA",
+    shortName: "Design DNA",
+    description:
+      "Paste any website's URL and get its design system extracted in seconds — the real color palette, font stacks, type scale, spacing steps, shadows, corner radii and CSS design tokens, ranked by actual usage. Export everything as CSS variables, Tailwind theme or JSON and start your next project from a look you love.",
+    keywords: [
+      "extract website colors",
+      "what font does this website use",
+      "design system extractor",
+      "css design tokens from url",
+      "website style guide generator",
+      "website color palette finder",
+    ],
+    icon: DnaIcon,
+    category: "design",
   },
   {
     id: "glass",
@@ -321,7 +340,7 @@ export const TOOLS = [
     name: "Smooth Shadow Generator",
     shortName: "Shadow",
     description:
-      "Design layered, naturalistic box-shadows — stack up to eight shadows with smooth penumbra falloff, dial in the light direction, distance, blur and color, then export clean CSS or Tailwind. Far softer than a single drop shadow. All on-device.",
+      "Design layered, naturalistic box-shadows — stack up to eight shadows with smooth penumbra falloff, dial in the light direction, distance, blur and color, then export clean CSS or Tailwind. Far softer than a single drop shadow.",
     keywords: [
       "box shadow generator",
       "css smooth shadow",
@@ -338,7 +357,7 @@ export const TOOLS = [
     name: "Mesh Gradient Generator",
     shortName: "Mesh Gradient",
     description:
-      "Paint silky mesh gradients the Stripe way — drag color blobs around the canvas, shuffle harmonious palettes, add film grain, then export pure-CSS radial gradients, a standalone SVG, or a PNG. All on-device.",
+      "Paint silky mesh gradients the Stripe way — drag color blobs around the canvas, shuffle harmonious palettes, add film grain, then export pure-CSS radial gradients, a standalone SVG, or a PNG.",
     keywords: [
       "mesh gradient generator",
       "css mesh gradient",
@@ -355,7 +374,7 @@ export const TOOLS = [
     name: "CSS Pattern Generator",
     shortName: "Patterns",
     description:
-      "Build seamless background patterns from pure CSS — dots, grids, stripes, checks, crosshatch, triangles and zigzag. Tune tile size, weight, angle, opacity and colors, then export CSS, Tailwind or SVG. Razor-sharp at any zoom, zero image weight. All on-device.",
+      "Build seamless background patterns from pure CSS — dots, grids, stripes, checks, crosshatch, triangles and zigzag. Tune tile size, weight, angle, opacity and colors, then export CSS, Tailwind or SVG. Razor-sharp at any zoom, zero image weight.",
     keywords: [
       "css pattern generator",
       "background pattern css",
@@ -372,7 +391,7 @@ export const TOOLS = [
     name: "3D Transform Studio",
     shortName: "3D Transform",
     description:
-      "Orbit any element in 3D — drag to tilt, then tune perspective, rotation, depth and scale with live light glare and a reactive floor shadow. Export the transform as CSS, Tailwind, or a drop-in pointer-tilt JS snippet for hover effects. All on-device.",
+      "Orbit any element in 3D — drag to tilt, then tune perspective, rotation, depth and scale with live light glare and a reactive floor shadow. Export the transform as CSS, Tailwind, or a drop-in pointer-tilt JS snippet for hover effects.",
     keywords: [
       "css 3d transform generator",
       "perspective generator",
@@ -389,7 +408,7 @@ export const TOOLS = [
     name: "Clip-Path Editor",
     shortName: "Clip Path",
     description:
-      "Carve any element into a custom shape — drag polygon handles on a live preview, start from 16 ready-made shapes, add or remove points, and clip your own image. Export the clip-path as CSS or Tailwind. All on-device.",
+      "Carve any element into a custom shape — drag polygon handles on a live preview, start from 16 ready-made shapes, add or remove points, and clip your own image. Export the clip-path as CSS or Tailwind.",
     keywords: [
       "clip-path generator",
       "css clip path polygon",
@@ -406,7 +425,7 @@ export const TOOLS = [
     name: "CSS Filter Lab",
     shortName: "Filter Lab",
     description:
-      "Tune photo filters live and compare with a draggable before/after split — brightness, contrast, saturation, hue, sepia, grayscale, invert, blur and a real drop-shadow. Start from 12 looks, drop in your own photo, then export the filter as CSS or Tailwind. All on-device.",
+      "Tune photo filters live and compare with a draggable before/after split — brightness, contrast, saturation, hue, sepia, grayscale, invert, blur and a real drop-shadow. Start from 12 looks, drop in your own photo, then export the filter as CSS or Tailwind.",
     keywords: [
       "css filter generator",
       "image filter css",
@@ -475,7 +494,7 @@ export const TOOLS = [
     name: "Social Link Preview",
     shortName: "Link Preview",
     description:
-      "See exactly how your link unfurls on Google, X, Facebook, Slack and Discord before you ship it — fill in the title, description and image once, watch every card update live, then copy production-ready Open Graph and Twitter meta tags. All on-device.",
+      "See exactly how your link unfurls on Google, X, Facebook, Slack and Discord before you ship it — fill in the title, description and image once, watch every card update live, then copy production-ready Open Graph and Twitter meta tags.",
     keywords: [
       "open graph preview",
       "og meta tag generator",
@@ -493,7 +512,7 @@ export const TOOLS = [
     name: "Image Secrets",
     shortName: "Image Secrets",
     description:
-      "Hide a secret message inside any image — the pixels carry your text invisibly using LSB steganography, with optional AES-256 encryption so only your passphrase can read it. Decode it back just as easily. Everything runs on-device; nothing is ever uploaded.",
+      "Hide a secret message inside any image — the pixels carry your text invisibly using LSB steganography, with optional AES-256 encryption so only your passphrase can read it. Decode it back just as easily.",
     keywords: [
       "steganography tool",
       "hide message in image",
@@ -511,7 +530,7 @@ export const TOOLS = [
     name: "Duotone Studio",
     shortName: "Duotone",
     description:
-      "Turn any photo into a striking two-tone image — map the shadows to one color and the highlights to another, with curated presets, contrast, midpoint and film-grain controls. Recolor live and export a crisp PNG. All on-device.",
+      "Turn any photo into a striking two-tone image — map the shadows to one color and the highlights to another, with curated presets, contrast, midpoint and film-grain controls. Recolor live and export a crisp PNG.",
     keywords: [
       "duotone generator",
       "duotone image maker",
@@ -529,7 +548,7 @@ export const TOOLS = [
     name: "Halftone Studio",
     shortName: "Halftone",
     description:
-      "Turn any photo into a retro halftone — a rotated screen of dots sized by brightness, the classic newsprint and comic-book look. Choose dot shape, spacing, angle and ink/paper colors, then export a PNG or a crisp, infinitely-scalable SVG for print. All on-device.",
+      "Turn any photo into a retro halftone — a rotated screen of dots sized by brightness, the classic newsprint and comic-book look. Choose dot shape, spacing, angle and ink/paper colors, then export a PNG or a crisp, infinitely-scalable SVG for print.",
     keywords: [
       "halftone generator",
       "halftone image maker",
@@ -547,7 +566,7 @@ export const TOOLS = [
     name: "Magic Eye Maker",
     shortName: "Magic Eye",
     description:
-      "Hide a secret word or shape inside a field of colorful dots — a real autostereogram that pops into 3D when you relax your eyes, just like the 90s Magic Eye posters. Tune the depth, pattern and colors, then download the PNG. Generated entirely on-device.",
+      "Hide a secret word or shape inside a field of colorful dots — a real autostereogram that pops into 3D when you relax your eyes, just like the 90s Magic Eye posters. Tune the depth, pattern and colors, then download the PNG.",
     keywords: [
       "magic eye generator",
       "autostereogram maker",
@@ -565,7 +584,7 @@ export const TOOLS = [
     name: "Audio Secrets",
     shortName: "Audio Secrets",
     description:
-      "Hide a message or logo inside real sound — type it and get an audio file whose spectrogram literally spells it out, the trick Aphex Twin buried in Windowlicker. Play it, download the WAV, then decode any audio file to reveal what's hidden inside. Synthesized entirely on-device.",
+      "Hide a message or logo inside real sound — type it and get an audio file whose spectrogram literally spells it out, the trick Aphex Twin buried in Windowlicker. Play it, download the WAV, then decode any audio file to reveal what's hidden inside.",
     keywords: [
       "spectrogram art generator",
       "hide message in audio",
@@ -600,7 +619,7 @@ export const TOOLS = [
     name: "Background Remover",
     shortName: "BG Remover",
     description:
-      "Remove the background from any image in your browser — AI segmentation for photos and complex art, instant color-matching for flat graphics, with feathered edges and auto-trim. Nothing is ever uploaded.",
+      "Remove the background from any image — AI segmentation for photos and complex art, instant color-matching for flat graphics, with feathered edges and auto-trim.",
     keywords: [
       "background remover",
       "remove background from image",
@@ -617,7 +636,7 @@ export const TOOLS = [
     name: "Image Color Extractor",
     shortName: "Color Extractor",
     description:
-      "Upload an image to extract its dominant colors as a clean palette — copy any swatch as HEX, RGB or HSL, sort by frequency or hue, pick colors from your screen, and export to CSS, SCSS, JSON or Tailwind. All on-device.",
+      "Upload an image to extract its dominant colors as a clean palette — copy any swatch as HEX, RGB or HSL, sort by frequency or hue, pick colors from your screen, and export to CSS, SCSS, JSON or Tailwind.",
     keywords: [
       "color extractor",
       "image color picker",
@@ -634,7 +653,7 @@ export const TOOLS = [
     name: "Image Converter & Resizer",
     shortName: "Converter",
     description:
-      "Convert images between PNG, JPEG and WebP, resize or upscale with high-quality resampling, then polish with sharpening, auto levels and color controls. Live file-size estimate — entirely on-device.",
+      "Convert images between PNG, JPEG and WebP, resize or upscale with high-quality resampling, then polish with sharpening, auto levels and color controls. Live file-size estimate.",
     keywords: [
       "image converter",
       "png to webp",
@@ -653,7 +672,7 @@ export const TOOLS = [
     name: "Color Contrast Checker",
     shortName: "Contrast",
     description:
-      "Check text and background colors against WCAG 2.1 (AA/AAA) and modern APCA contrast — with a live preview, an eyedropper, and a smart fix that nudges any color to the nearest accessible shade. All on-device.",
+      "Check text and background colors against WCAG 2.1 (AA/AAA) and modern APCA contrast — with a live preview, an eyedropper, and a smart fix that nudges any color to the nearest accessible shade.",
     keywords: [
       "contrast checker",
       "wcag contrast",
@@ -671,7 +690,7 @@ export const TOOLS = [
     name: "Fluid Type Scale Generator",
     shortName: "Fluid Type",
     description:
-      "Generate responsive CSS clamp() font sizes that scale smoothly between any two viewports — a full modular type scale with a live resize preview. Export to CSS variables or Tailwind. All on-device.",
+      "Generate responsive CSS clamp() font sizes that scale smoothly between any two viewports — a full modular type scale with a live resize preview. Export to CSS variables or Tailwind.",
     keywords: [
       "fluid typography",
       "css clamp generator",
@@ -689,7 +708,7 @@ export const TOOLS = [
     name: "Brand Personality Mapper",
     shortName: "Brand Mapper",
     description:
-      "Map your brand on Aaker's five personality dimensions — Sincerity, Excitement, Competence, Sophistication and Ruggedness — and get a live radar chart plus a tailored palette, type, and tone-of-voice kit. All on-device.",
+      "Map your brand on Aaker's five personality dimensions — Sincerity, Excitement, Competence, Sophistication and Ruggedness — and get a live radar chart plus a tailored palette, type, and tone-of-voice kit.",
     keywords: [
       "brand personality",
       "aaker brand dimensions",
@@ -707,7 +726,7 @@ export const TOOLS = [
     name: "Attention Heatmap",
     shortName: "Attention",
     description:
-      "Predict where users will look in your designs. Uses local contrast, edge density and color rarity to generate a visual-attention saliency map and find hotspots — all on-device.",
+      "Predict where users will look in your designs. Uses local contrast, edge density and color rarity to generate a visual-attention saliency map and find hotspots.",
     keywords: [
       "attention heatmap",
       "visual attention",
@@ -724,7 +743,7 @@ export const TOOLS = [
     name: "Easing & Motion Studio",
     shortName: "Easing",
     description:
-      "Shape animation timing visually — drag a cubic-bezier curve or tune a real spring, watch it loop on position, scale, rotation and opacity, then export CSS, Tailwind or Framer. Springs bake down to a modern CSS linear() curve. All on-device.",
+      "Shape animation timing visually — drag a cubic-bezier curve or tune a real spring, watch it loop on position, scale, rotation and opacity, then export CSS, Tailwind or Framer. Springs bake down to a modern CSS linear() curve.",
     keywords: [
       "cubic bezier generator",
       "easing function generator",
@@ -742,7 +761,7 @@ export const TOOLS = [
     name: "Barcode Generator",
     shortName: "Barcode",
     description:
-      "Make scannable 1D barcodes — Code 128, EAN-13, UPC-A, EAN-8, ITF-14, Code 39, Codabar and Pharmacode. Smart format auto-detection, live validation, full color and density control, crisp SVG or high-res PNG export, and batch-generate a whole list into a ZIP. All on-device.",
+      "Make scannable 1D barcodes — Code 128, EAN-13, UPC-A, EAN-8, ITF-14, Code 39, Codabar and Pharmacode. Smart format auto-detection, live validation, full color and density control, crisp SVG or high-res PNG export, and batch-generate a whole list into a ZIP.",
     keywords: [
       "barcode generator",
       "code 128 generator",
@@ -760,7 +779,7 @@ export const TOOLS = [
     name: "Border Glow Generator",
     shortName: "Border Glow",
     description:
-      "Design glowing borders for cards and buttons — neon halos, gradient edges, or an animated rotating aurora border with a soft bloom. Tune blur, reach, intensity and speed live on a dark or light stage, then export clean CSS (with a reduced-motion guard) or Tailwind. All on-device.",
+      "Design glowing borders for cards and buttons — neon halos, gradient edges, or an animated rotating aurora border with a soft bloom. Tune blur, reach, intensity and speed live on a dark or light stage, then export clean CSS (with a reduced-motion guard) or Tailwind.",
     keywords: [
       "border glow generator",
       "css glow effect",
@@ -778,7 +797,7 @@ export const TOOLS = [
     name: "Typography Studio",
     shortName: "Typography",
     description:
-      "Ten text effects in one studio — gradient, animated gradient, aurora, split-color, metallic, neon, glow, outline, glass and 3D. Edit your headline live, dial in any font, weight and spacing, shuffle harmonious colors, then export clean CSS (reduced-motion safe) or Tailwind. All on-device.",
+      "Ten text effects in one studio — gradient, animated gradient, aurora, split-color, metallic, neon, glow, outline, glass and 3D. Edit your headline live, dial in any font, weight and spacing, shuffle harmonious colors, then export clean CSS (reduced-motion safe) or Tailwind.",
     keywords: [
       "gradient text generator",
       "neon text generator",
@@ -797,7 +816,7 @@ export const TOOLS = [
     name: "Logo Visibility Tester",
     shortName: "Logo Tester",
     description:
-      "Drop in your logo and see how it really performs — on light, dark, colored and busy backgrounds, shrunk to favicon size, squinted, grayscaled and silhouetted, plus favicon, app-icon and avatar mockups. Get a smart visibility score with graded metrics and plain-English fixes. All analyzed on-device — nothing is uploaded.",
+      "Drop in your logo and see how it really performs — on light, dark, colored and busy backgrounds, shrunk to favicon size, squinted, grayscaled and silhouetted, plus favicon, app-icon and avatar mockups. Get a smart visibility score with graded metrics and plain-English fixes.",
     keywords: [
       "logo visibility tester",
       "logo test tool",
@@ -815,7 +834,7 @@ export const TOOLS = [
     name: "Code Image Generator",
     shortName: "Code Image",
     description:
-      "Turn any code snippet into a beautiful, shareable image — VS Code-grade syntax highlighting for 20+ languages via Shiki, real editor themes, window chrome, gradient backdrops, line numbers and retina PNG export. Perfect for X, slides, docs and READMEs. All on-device.",
+      "Turn any code snippet into a beautiful, shareable image — VS Code-grade syntax highlighting for 20+ languages via Shiki, real editor themes, window chrome, gradient backdrops, line numbers and retina PNG export. Perfect for X, slides, docs and READMEs.",
     keywords: [
       "code image generator",
       "code to image",
@@ -833,7 +852,7 @@ export const TOOLS = [
     name: "Blob & Wave Generator",
     shortName: "Blobs & Waves",
     description:
-      "Generate organic SVG blobs and layered section-divider waves — tune points, randomness, layers and amplitude, shuffle for endless variations, and pour in a gradient. Export crisp SVG, a CSS background snippet, or PNG. All on-device.",
+      "Generate organic SVG blobs and layered section-divider waves — tune points, randomness, layers and amplitude, shuffle for endless variations, and pour in a gradient. Export crisp SVG, a CSS background snippet, or PNG.",
     keywords: [
       "svg blob generator",
       "blob maker",

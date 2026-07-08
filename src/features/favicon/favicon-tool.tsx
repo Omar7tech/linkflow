@@ -231,7 +231,7 @@ export function FaviconTool() {
             <Separator />
             <p className="text-muted-foreground flex items-start gap-2 text-xs">
               <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-              Your image is processed entirely on-device — it is never uploaded or stored anywhere.
+              Your image stays private — it&apos;s never stored anywhere.
             </p>
           </CardContent>
         </Card>

@@ -25,8 +25,8 @@ export default function Error({
         Something broke on our end
       </h1>
       <p className="text-muted-foreground mt-3 max-w-md text-balance leading-relaxed">
-        An unexpected error stopped this page from loading. Your data never leaves the browser, so
-        nothing was lost. Try again, and if it keeps happening, head back home.
+        An unexpected error stopped this page from loading. Try again, and if it keeps happening,
+        head back home.
       </p>
 
       {error.digest ? (

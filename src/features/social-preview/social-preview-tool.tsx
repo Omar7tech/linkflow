@@ -42,7 +42,7 @@ interface Page {
 const DEFAULT_META: SocialMeta = {
   title: "Forma — Free, Private Tools for Devs & Designers",
   description:
-    "A lean studio of on-device generators for links, color, design and images. No sign-up, no uploads, no limits.",
+    "A lean studio of free generators for links, color, design and images. No sign-up, no limits.",
   url: SITE.url,
   image: "",
   favicon: "",
@@ -215,8 +215,7 @@ export function SocialPreviewTool() {
 
             <p className="text-muted-foreground mt-4 flex items-start gap-2 text-xs">
               <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-              Everything renders on-device — pages are saved in this browser only, nothing is sent to
-              us or the platforms.
+              Pages are saved in this browser only — nothing is sent to us or the platforms.
             </p>
           </CardContent>
         </Card>

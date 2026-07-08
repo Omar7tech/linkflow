@@ -38,8 +38,8 @@ const PRINCIPLES = [
     text: "Your input is used only to generate your output. No accounts, no ad pixels, no analytics watching what you type — nothing is logged or sold.",
   },
   {
-    title: "Works offline",
-    text: "Forma installs as a PWA and keeps working with no connection at all. On a plane, in a basement, behind a firewall.",
+    title: "Fast by architecture",
+    text: "Every tool ships as its own tiny bundle and loads only when you open it — pages stay light, first paint stays instant.",
   },
   {
     title: "Free, with no catch",
@@ -207,7 +207,7 @@ export default function HomePage() {
               <Link href="/tools">Browse all tools</Link>
             </Button>
             <p className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase">
-              Free / Private / On-device
+              Free / Private / No sign-up
             </p>
           </div>
         </Reveal>

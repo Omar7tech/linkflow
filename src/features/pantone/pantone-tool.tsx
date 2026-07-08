@@ -236,7 +236,7 @@ export function PantoneTool() {
 
             <p className="text-muted-foreground flex items-start gap-1.5 pt-1 text-[11px] leading-snug">
               <ShieldCheckIcon className="mt-px size-3 shrink-0" aria-hidden />
-              All on-device. Screen colors only approximate physical Pantone standards — confirm
+              Screen colors only approximate physical Pantone standards — confirm
               against a printed swatch book.
             </p>
           </CardContent>

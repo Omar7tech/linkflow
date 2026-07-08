@@ -14,7 +14,7 @@ import { SITE } from "@/constants/site";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Answers about Forma's privacy model, QR code longevity, WhatsApp link formatting, UTM best practices and offline support.",
+    "Answers about Forma's privacy model, QR code longevity, WhatsApp link formatting, UTM best practices and more.",
   alternates: { canonical: `${SITE.url}/faq` },
 };
 

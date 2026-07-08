@@ -152,7 +152,7 @@ export function BgRemoverTool() {
       } catch (err) {
         console.error(err);
         setAi({ phase: "error" });
-        toast.error("AI removal failed — the color-match mode still works offline");
+        toast.error("AI removal failed — try the color-match mode instead");
       }
     },
     []
@@ -284,7 +284,7 @@ export function BgRemoverTool() {
               </label>
               <p className="text-muted-foreground mt-4 max-w-sm text-center text-xs font-medium">
                 PNG or JPG up to 12MB. AI segmentation for photos and complex logos, instant
-                color-matching for flat ones — everything runs on your device, nothing is uploaded.
+                color-matching for flat ones. Your image is never stored.
               </p>
             </div>
           </CardContent>
@@ -394,9 +394,9 @@ export function BgRemoverTool() {
                     <div className="space-y-4">
                       <p className="text-muted-foreground text-xs leading-relaxed">
                         A neural network (RMBG-1.4) finds the subject — photos, gradients, busy
-                        backgrounds, anything. It runs entirely in your browser
+                        backgrounds, anything
                         {typeof navigator !== "undefined" && "gpu" in navigator
-                          ? ", accelerated by your GPU"
+                          ? " — accelerated by your GPU"
                           : ""}
                         . The ~44MB model downloads once and is cached.
                       </p>
@@ -428,7 +428,7 @@ export function BgRemoverTool() {
                   ) : (
                     <div className="space-y-5">
                       <p className="text-muted-foreground text-xs leading-relaxed">
-                        Instant and offline — perfect for logos on a flat color. The background was
+                        Instant — perfect for logos on a flat color. The background was
                         detected automatically; pick from the image if it guessed wrong.
                       </p>
                       <div className="space-y-2">

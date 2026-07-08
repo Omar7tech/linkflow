@@ -132,7 +132,7 @@ export function LogoTool() {
           <div>
             <p className="font-heading text-lg font-bold">Drop your logo to test it</p>
             <p className="text-muted-foreground mt-1 text-sm">
-              PNG, SVG or JPG. Everything is analyzed on your device — nothing is uploaded.
+              PNG, SVG or JPG — analyzed instantly, never stored.
             </p>
           </div>
           <span className="bg-primary text-primary-foreground mt-2 rounded-full px-5 py-2 text-sm font-semibold">

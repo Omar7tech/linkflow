@@ -35,9 +35,9 @@ export const FAQ_ITEMS: FaqItem[] = [
       "Error correction adds redundancy so a code still scans when partially covered or damaged. Low (7%) gives the simplest code; High (30%) survives logos and wear, at the cost of denser modules. If you add a logo overlay, use High.",
   },
   {
-    question: "Does Forma work offline?",
+    question: "Does Forma work on mobile?",
     answer:
-      "Mostly, yes. Forma is an installable PWA — after your first visit, the app shell is cached and most generators keep working without a connection. Add it to your home screen for an app-like experience.",
+      "Yes — every tool is built responsive-first and works on any modern phone or tablet browser. Generators, editors and downloads all behave the same as on desktop.",
   },
   {
     question: "How do UTM parameters help me?",

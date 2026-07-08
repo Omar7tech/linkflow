@@ -2,7 +2,7 @@ export const SITE = {
   name: "Forma",
   tagline: "Form follows function.",
   description:
-    "A free, private studio of everyday tools for developers and designers. Generators, converters and visual editors — everything runs in your browser; nothing is ever uploaded.",
+    "A free studio of everyday tools for developers and designers. Generators, converters and visual editors that take you from idea to finished asset in seconds.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://forma.tools",
   author: "Forma",
   twitter: "@formatools",

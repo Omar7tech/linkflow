@@ -189,8 +189,7 @@ export function HalftoneTool() {
             )}
             <p className="text-muted-foreground flex items-start gap-2 text-xs">
               <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-              Processing happens on-device — your image is never uploaded. SVG export stays crisp at
-              any print size.
+              Your photo stays private — it&apos;s never stored. SVG export stays crisp at any print size.
             </p>
           </CardContent>
         </Card>
