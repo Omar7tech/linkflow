@@ -258,7 +258,7 @@ export const TOOLS = [
       "favicon package",
     ],
     icon: SparkleIcon,
-    category: "image",
+    category: "brand",
   },
   {
     id: "jsoncsv",
@@ -315,7 +315,7 @@ export const TOOLS = [
       "website color palette finder",
     ],
     icon: DnaIcon,
-    category: "design",
+    category: "brand",
   },
   {
     id: "glass",
@@ -332,7 +332,7 @@ export const TOOLS = [
       "glassmorphism tailwind",
     ],
     icon: BlendIcon,
-    category: "design",
+    category: "effects",
   },
   {
     id: "shadow",
@@ -349,7 +349,7 @@ export const TOOLS = [
       "tailwind box shadow",
     ],
     icon: BoxSelectIcon,
-    category: "design",
+    category: "effects",
   },
   {
     id: "mesh",
@@ -366,7 +366,7 @@ export const TOOLS = [
       "svg mesh gradient",
     ],
     icon: DropletsIcon,
-    category: "color",
+    category: "backgrounds",
   },
   {
     id: "pattern",
@@ -383,7 +383,7 @@ export const TOOLS = [
       "hero patterns alternative",
     ],
     icon: WallpaperIcon,
-    category: "design",
+    category: "backgrounds",
   },
   {
     id: "transform3d",
@@ -400,7 +400,7 @@ export const TOOLS = [
       "hover tilt javascript",
     ],
     icon: Rotate3dIcon,
-    category: "design",
+    category: "effects",
   },
   {
     id: "clippath",
@@ -417,7 +417,7 @@ export const TOOLS = [
       "polygon clip path editor",
     ],
     icon: VectorSquareIcon,
-    category: "design",
+    category: "backgrounds",
   },
   {
     id: "filterlab",
@@ -434,7 +434,7 @@ export const TOOLS = [
       "css drop-shadow filter",
     ],
     icon: ApertureIcon,
-    category: "design",
+    category: "effects",
   },
   {
     id: "gradient",
@@ -451,7 +451,7 @@ export const TOOLS = [
       "tailwind gradient",
     ],
     icon: RainbowIcon,
-    category: "color",
+    category: "backgrounds",
   },
   {
     id: "palette",
@@ -504,7 +504,7 @@ export const TOOLS = [
       "meta tags generator",
     ],
     icon: LayoutTemplateIcon,
-    category: "developer",
+    category: "brand",
   },
   {
     id: "steganography",
@@ -522,7 +522,7 @@ export const TOOLS = [
       "secret message image",
     ],
     icon: VenetianMaskIcon,
-    category: "image",
+    category: "secrets",
   },
   {
     id: "duotone",
@@ -576,7 +576,7 @@ export const TOOLS = [
       "hidden message image",
     ],
     icon: GlassesIcon,
-    category: "image",
+    category: "secrets",
   },
   {
     id: "spectro",
@@ -594,7 +594,7 @@ export const TOOLS = [
       "spectrogram viewer online",
     ],
     icon: AudioLinesIcon,
-    category: "image",
+    category: "secrets",
   },
   {
     id: "neumorphism",
@@ -611,7 +611,7 @@ export const TOOLS = [
       "soft ui generator",
     ],
     icon: SquircleIcon,
-    category: "design",
+    category: "effects",
   },
   {
     id: "bgremover",
@@ -718,7 +718,7 @@ export const TOOLS = [
       "brand strategy",
     ],
     icon: FingerprintIcon,
-    category: "design",
+    category: "brand",
   },
   {
     id: "attention",
@@ -753,7 +753,7 @@ export const TOOLS = [
       "animation curve editor",
     ],
     icon: SplineIcon,
-    category: "design",
+    category: "effects",
   },
   {
     id: "barcode",
@@ -789,7 +789,7 @@ export const TOOLS = [
       "glowing card css",
     ],
     icon: SunIcon,
-    category: "design",
+    category: "effects",
   },
   {
     id: "typography",
@@ -808,7 +808,7 @@ export const TOOLS = [
       "css text effects",
     ],
     icon: WandSparklesIcon,
-    category: "design",
+    category: "effects",
   },
   {
     id: "logo",
@@ -826,7 +826,7 @@ export const TOOLS = [
       "logo legibility test",
     ],
     icon: ScanEyeIcon,
-    category: "image",
+    category: "brand",
   },
   {
     id: "codeshot",
@@ -862,7 +862,7 @@ export const TOOLS = [
       "css background shape",
     ],
     icon: ShapesIcon,
-    category: "design",
+    category: "backgrounds",
   },
 ] as const satisfies readonly ToolMeta[];
 
@@ -874,15 +874,59 @@ export const TOOL_BY_ID = Object.fromEntries(
   TOOLS.map((t) => [t.id, t])
 ) as unknown as Record<ToolId, ToolMeta>;
 
-/** Human labels, icons + display order for the tools-page category filter. */
+/** Human labels, icons + display order for the tools-page sections and filter. */
 export const TOOL_CATEGORIES: readonly {
   id: ToolCategory;
   label: string;
   icon: LucideIcon;
+  description: string;
 }[] = [
-  { id: "links", label: "Links & QR", icon: LinkIcon },
-  { id: "design", label: "Design", icon: PaintbrushIcon },
-  { id: "color", label: "Color", icon: PaletteIcon },
-  { id: "image", label: "Image", icon: ImageIcon },
-  { id: "developer", label: "Developer", icon: Code2Icon },
+  {
+    id: "links",
+    label: "Links & QR",
+    icon: LinkIcon,
+    description: "Click-to-chat links, QR codes, share buttons, contact cards and campaign URLs.",
+  },
+  {
+    id: "effects",
+    label: "CSS Effects",
+    icon: PaintbrushIcon,
+    description: "Glass, shadows, glows, tilts and text effects — tuned live, exported as clean CSS.",
+  },
+  {
+    id: "backgrounds",
+    label: "Shapes & Backgrounds",
+    icon: ShapesIcon,
+    description: "Gradients, meshes, seamless patterns, blobs and custom clip shapes.",
+  },
+  {
+    id: "color",
+    label: "Color",
+    icon: PaletteIcon,
+    description: "Palettes, Pantone matching, image color extraction and accessible contrast.",
+  },
+  {
+    id: "image",
+    label: "Image Studio",
+    icon: ImageIcon,
+    description: "Convert, retouch, frame, split and stylize any picture.",
+  },
+  {
+    id: "brand",
+    label: "Brand & Identity",
+    icon: FingerprintIcon,
+    description: "Extract, define and stress-test a visual identity — from any site or your own.",
+  },
+  {
+    id: "secrets",
+    label: "Secrets & Illusions",
+    icon: VenetianMaskIcon,
+    description: "Hide messages inside pixels, 3D dot fields and sound.",
+  },
+  {
+    id: "developer",
+    label: "Developer",
+    icon: Code2Icon,
+    description: "Passwords, hashes, layout math, placeholder text and shareable code shots.",
+  },
 ];

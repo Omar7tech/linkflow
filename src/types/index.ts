@@ -6,7 +6,15 @@ import type { ToolId } from "@/constants/tools";
 export type { ToolId };
 
 /** Top-level grouping used by the tools-page filter. */
-export type ToolCategory = "links" | "design" | "color" | "image" | "developer";
+export type ToolCategory =
+  | "links"
+  | "brand"
+  | "effects"
+  | "backgrounds"
+  | "color"
+  | "image"
+  | "secrets"
+  | "developer";
 
 export interface ToolMeta {
   readonly id: string;
