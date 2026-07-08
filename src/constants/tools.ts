@@ -49,6 +49,7 @@ import {
   Layers2Icon,
   GripIcon,
   GlassesIcon,
+  AudioLinesIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -556,6 +557,24 @@ export const TOOLS = [
       "hidden message image",
     ],
     icon: GlassesIcon,
+    category: "image",
+  },
+  {
+    id: "spectro",
+    slug: "/tools/audio-secrets",
+    name: "Audio Secrets",
+    shortName: "Audio Secrets",
+    description:
+      "Hide a message or logo inside real sound — type it and get an audio file whose spectrogram literally spells it out, the trick Aphex Twin buried in Windowlicker. Play it, download the WAV, then decode any audio file to reveal what's hidden inside. Synthesized entirely on-device.",
+    keywords: [
+      "spectrogram art generator",
+      "hide message in audio",
+      "text to spectrogram",
+      "audio steganography",
+      "aphex twin spectrogram",
+      "spectrogram viewer online",
+    ],
+    icon: AudioLinesIcon,
     category: "image",
   },
   {
