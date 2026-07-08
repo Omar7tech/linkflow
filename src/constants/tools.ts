@@ -52,6 +52,7 @@ import {
   AudioLinesIcon,
   DnaIcon,
   AnvilIcon,
+  SmartphoneIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -229,19 +230,19 @@ export const TOOLS = [
   {
     id: "mockup",
     slug: "/tools/mockup",
-    name: "Mockup Generator",
-    shortName: "Mockup",
+    name: "3D Device Mockups",
+    shortName: "3D Mockup",
     description:
-      "Wrap screenshots, videos and live screen captures in browser, window or phone frames — with gradient backdrops, tilt, shadows and captions. Export social-ready PNGs or WebM video.",
+      "Put your screenshot or video on a real 3D phone, tablet or laptop — grab the device and spin it in true perspective, with lit metal edges, floor shadows, five finishes and studio backdrops. Export a crisp 2× PNG, or a WebM clip of your video playing on the device.",
     keywords: [
-      "mockup generator",
-      "screenshot mockup",
-      "device frame",
-      "browser frame screenshot",
-      "video mockup",
-      "screen recording frame",
+      "3d device mockup",
+      "iphone mockup generator",
+      "ipad mockup",
+      "macbook mockup",
+      "app screenshot mockup",
+      "video mockup generator",
     ],
-    icon: FrameIcon,
+    icon: SmartphoneIcon,
     category: "image",
   },
   {

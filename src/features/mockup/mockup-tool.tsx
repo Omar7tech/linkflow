@@ -2,660 +2,482 @@
 
 import * as React from "react";
 import {
-  ClipboardCopyIcon,
   DownloadIcon,
-  FilmIcon,
   ImageIcon,
-  MonitorUpIcon,
-  ShieldCheckIcon,
-  SparklesIcon,
-  SquareIcon,
-  Trash2Icon,
-  UploadIcon,
+  LaptopIcon,
+  Loader2Icon,
+  RotateCcwIcon,
+  SmartphoneIcon,
+  TabletIcon,
+  VideoIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GeneratorLayout } from "@/components/shared/generator-layout";
 import { TOOL_BY_ID } from "@/constants/tools";
 import {
-  CANVAS_PRESETS,
-  DEFAULT_MOCKUP,
-  GRADIENTS,
-  renderMockup,
-  type FrameKind,
-  type MediaSource,
-  type MockupOptions,
-} from "@/lib/mockup";
+  BACKGROUNDS,
+  buildDevice,
+  computeFit,
+  FINISHES,
+  renderScene,
+  type DeviceId,
+  type Orientation,
+} from "@/lib/mockup3d";
 import { cn } from "@/lib/utils";
 
-type Media =
-  | { kind: "image"; el: HTMLImageElement; url: string; width: number; height: number; name: string }
-  | { kind: "video"; el: HTMLVideoElement; url: string; width: number; height: number; name: string }
-  | { kind: "screen"; el: HTMLVideoElement; stream: MediaStream; width: number; height: number; name: string };
-
-const FRAMES: { id: FrameKind; label: string }[] = [
-  { id: "none", label: "None" },
-  { id: "window", label: "Window" },
-  { id: "browser", label: "Browser" },
-  { id: "phone", label: "Phone" },
+const DEVICES: { id: DeviceId; label: string; icon: typeof SmartphoneIcon }[] = [
+  { id: "iphone", label: "Phone", icon: SmartphoneIcon },
+  { id: "ipad", label: "Tablet", icon: TabletIcon },
+  { id: "macbook", label: "Laptop", icon: LaptopIcon },
 ];
 
-const RECORDER_MIMES = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+const ANGLES: { label: string; rotX: number; rotY: number }[] = [
+  { label: "Front", rotX: 0, rotY: 0 },
+  { label: "Hero left", rotX: 8, rotY: -26 },
+  { label: "Hero right", rotX: 8, rotY: 26 },
+  { label: "Float", rotX: 26, rotY: -14 },
+  { label: "Dramatic", rotX: 12, rotY: 48 },
+];
 
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
+const ASPECTS: { id: string; label: string; w: number; h: number }[] = [
+  { id: "1:1", label: "1:1", w: 1440, h: 1440 },
+  { id: "4:5", label: "4:5", w: 1344, h: 1680 },
+  { id: "16:9", label: "16:9", w: 1920, h: 1080 },
+];
+
+type Source = { kind: "image"; media: ImageBitmap } | { kind: "video"; url: string };
 
 export function MockupTool() {
-  const [opts, setOpts] = React.useState<MockupOptions>({
-    ...DEFAULT_MOCKUP,
-    width: CANVAS_PRESETS[0].width,
-    height: CANVAS_PRESETS[0].height,
-  });
-  const [media, setMedia] = React.useState<Media | null>(null);
+  const [device, setDevice] = React.useState<DeviceId>("iphone");
+  const [orientation, setOrientation] = React.useState<Orientation>("portrait");
+  const [finishId, setFinishId] = React.useState("titanium");
+  const [bgId, setBgId] = React.useState("emerald");
+  const [aspectId, setAspectId] = React.useState("1:1");
+  const [rotX, setRotX] = React.useState(8);
+  const [rotY, setRotY] = React.useState(-26);
+  const [zoom, setZoom] = React.useState(1);
+  const [shadow, setShadow] = React.useState(0.7);
+  const [source, setSource] = React.useState<Source | null>(null);
   const [recording, setRecording] = React.useState(false);
-  const [recordSeconds, setRecordSeconds] = React.useState(0);
 
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const recorderRef = React.useRef<MediaRecorder | null>(null);
-  const mediaRef = React.useRef<Media | null>(null);
-  mediaRef.current = media;
+  const dragRef = React.useRef<{ x: number; y: number; rotX: number; rotY: number } | null>(null);
+  // The playing <video> element lives in a ref — it's imperative media, not render state.
+  const videoRef = React.useRef<HTMLVideoElement | null>(null);
 
-  const set = <K extends keyof MockupOptions>(key: K, value: MockupOptions[K]) =>
-    setOpts((prev) => ({ ...prev, [key]: value }));
+  const finish = FINISHES.find((f) => f.id === finishId) ?? FINISHES[0];
+  const background = BACKGROUNDS.find((b) => b.id === bgId) ?? BACKGROUNDS[0];
+  const aspect = ASPECTS.find((a) => a.id === aspectId) ?? ASPECTS[0];
 
-  const mediaSource: MediaSource | null = media
-    ? { source: media.el, width: media.width, height: media.height }
-    : null;
+  // Device textures need canvases — only build in the browser, never during prerender.
+  const spec = React.useMemo(
+    () => (typeof document === "undefined" ? null : buildDevice(device, orientation, finish)),
+    [device, orientation, finish]
+  );
+  const fit = React.useMemo(
+    () => (spec ? computeFit(spec.plates, aspect.w, aspect.h) : 1),
+    [spec, aspect]
+  );
 
-  const draw = React.useCallback(() => {
+  // Keep the device screen in sync with the uploaded media.
+  React.useEffect(() => {
+    spec?.updateScreen(source?.kind === "image" ? source.media : videoRef.current);
+  }, [spec, source]);
+
+  const sceneOpts = React.useMemo(
+    () => ({
+      rotX: (rotX * Math.PI) / 180,
+      rotY: (rotY * Math.PI) / 180,
+      zoom,
+      shadow,
+      floorY: spec?.floorY ?? 0,
+      background: background.paint,
+    }),
+    [rotX, rotY, zoom, shadow, spec, background]
+  );
+
+  // Static render on any change; continuous loop while a video is playing.
+  React.useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
-    renderMockup(ctx, opts, mediaRef.current ? { source: mediaRef.current.el, width: mediaRef.current.width, height: mediaRef.current.height } : null);
-  }, [opts]);
+    if (!canvas || !spec) return;
+    canvas.width = aspect.w;
+    canvas.height = aspect.h;
+    const ctx = canvas.getContext("2d")!;
 
-  // Static redraw whenever options or media change.
-  React.useEffect(() => {
-    draw();
-  }, [draw, media]);
-
-  // Continuous render loop while a video/screen source is live.
-  React.useEffect(() => {
-    if (!media || media.kind === "image") return;
-    let raf = requestAnimationFrame(function loop() {
-      draw();
+    if (source?.kind === "video") {
+      let raf = 0;
+      const loop = () => {
+        if (videoRef.current) spec.updateScreen(videoRef.current);
+        renderScene(ctx, spec.plates, sceneOpts, fit);
+        raf = requestAnimationFrame(loop);
+      };
       raf = requestAnimationFrame(loop);
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [media, draw]);
+      return () => cancelAnimationFrame(raf);
+    }
+    renderScene(ctx, spec.plates, sceneOpts, fit);
+  }, [spec, sceneOpts, fit, aspect, source]);
 
-  /* ------------------------------- Sources ------------------------------- */
-
-  const clearMedia = React.useCallback(() => {
-    setMedia((current) => {
-      if (current) {
-        if (current.kind === "screen") current.stream.getTracks().forEach((t) => t.stop());
-        if (current.kind === "video") {
-          current.el.pause();
-          URL.revokeObjectURL(current.url);
-        }
-        if (current.kind === "image") URL.revokeObjectURL(current.url);
+  React.useEffect(() => {
+    return () => {
+      if (source?.kind === "video") {
+        videoRef.current?.pause();
+        videoRef.current = null;
+        URL.revokeObjectURL(source.url);
       }
-      return null;
-    });
-  }, []);
+    };
+  }, [source]);
 
-  React.useEffect(() => clearMedia, [clearMedia]);
+  const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = { x: e.clientX, y: e.clientY, rotX, rotY };
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    const scale = 0.35;
+    setRotY(Math.max(-80, Math.min(80, drag.rotY + (e.clientX - drag.x) * scale)));
+    setRotX(Math.max(-45, Math.min(60, drag.rotX + (e.clientY - drag.y) * scale)));
+  };
+  const onPointerUp = () => {
+    dragRef.current = null;
+  };
 
-  const loadFile = React.useCallback(
-    (file: File) => {
-      if (file.type.startsWith("image/")) {
-        const url = URL.createObjectURL(file);
-        const img = new Image();
-        img.onload = () => {
-          clearMedia();
-          setMedia({ kind: "image", el: img, url, width: img.naturalWidth, height: img.naturalHeight, name: file.name });
-        };
-        img.onerror = () => {
-          URL.revokeObjectURL(url);
-          toast.error("Couldn't read that image");
-        };
-        img.src = url;
-      } else if (file.type.startsWith("video/")) {
+  const loadFile = async (file: File) => {
+    try {
+      if (file.type.startsWith("video/")) {
         const url = URL.createObjectURL(file);
         const video = document.createElement("video");
+        video.src = url;
         video.muted = true;
         video.loop = true;
         video.playsInline = true;
-        video.onloadedmetadata = () => {
-          clearMedia();
-          setMedia({ kind: "video", el: video, url, width: video.videoWidth, height: video.videoHeight, name: file.name });
-          video.play().catch(() => undefined);
-        };
-        video.onerror = () => {
-          URL.revokeObjectURL(url);
-          toast.error("Couldn't read that video");
-        };
-        video.src = url;
+        await video.play();
+        videoRef.current = video;
+        setSource({ kind: "video", url });
       } else {
-        toast.error("Drop an image or a video file");
+        setSource({ kind: "image", media: await createImageBitmap(file) });
       }
-    },
-    [clearMedia]
-  );
-
-  const captureScreen = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-      const video = document.createElement("video");
-      video.muted = true;
-      video.playsInline = true;
-      video.srcObject = stream;
-      video.onloadedmetadata = () => {
-        clearMedia();
-        setMedia({ kind: "screen", el: video, stream, width: video.videoWidth, height: video.videoHeight, name: "Screen capture" });
-        video.play().catch(() => undefined);
-      };
-      stream.getVideoTracks()[0].addEventListener("ended", () => {
-        toast.info("Screen sharing ended");
-        clearMedia();
-      });
     } catch {
-      // Permission denied or dismissed — nothing to do.
+      toast.error("Couldn't load that file — try a PNG, JPG, MP4 or WebM.");
     }
   };
 
-  // Paste an image/video from the clipboard, anywhere on the page.
-  React.useEffect(() => {
-    const onPaste = (e: ClipboardEvent) => {
-      const file = Array.from(e.clipboardData?.items ?? [])
-        .find((item) => item.type.startsWith("image/") || item.type.startsWith("video/"))
-        ?.getAsFile();
-      if (file) {
-        e.preventDefault();
-        loadFile(file);
-        toast.success("Pasted from clipboard");
-      }
-    };
-    window.addEventListener("paste", onPaste);
-    return () => window.removeEventListener("paste", onPaste);
-  }, [loadFile]);
-
-  /* ------------------------------- Exports ------------------------------- */
-
-  const exportPng = (multiplier: number) => {
-    const off = document.createElement("canvas");
-    off.width = opts.width * multiplier;
-    off.height = opts.height * multiplier;
-    const ctx = off.getContext("2d");
-    if (!ctx) return;
-    ctx.scale(multiplier, multiplier);
-    renderMockup(ctx, opts, mediaSource);
-    off.toBlob((blob) => {
-      if (!blob) return toast.error("Export failed — try a smaller canvas");
-      downloadBlob(blob, `forma-mockup${multiplier > 1 ? `@${multiplier}x` : ""}.png`);
-      toast.success(`PNG exported at ${opts.width * multiplier}×${opts.height * multiplier}`);
-    }, "image/png");
-  };
-
-  const copyPng = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    canvas.toBlob(async (blob) => {
+  const downloadPng = () => {
+    if (!spec) return;
+    const out = document.createElement("canvas");
+    out.width = aspect.w * 2;
+    out.height = aspect.h * 2;
+    const ctx = out.getContext("2d")!;
+    renderScene(ctx, spec.plates, sceneOpts, computeFit(spec.plates, out.width, out.height));
+    out.toBlob((blob) => {
       if (!blob) return;
-      try {
-        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-        toast.success("Mockup copied as image");
-      } catch {
-        toast.error("Clipboard blocked image copy — download instead");
-      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${device}-mockup.png`;
+      a.click();
+      URL.revokeObjectURL(url);
     }, "image/png");
   };
 
-  const stopRecording = React.useCallback(() => {
-    recorderRef.current?.stop();
-    recorderRef.current = null;
-    setRecording(false);
-    const current = mediaRef.current;
-    if (current?.kind === "video") {
-      current.el.loop = true;
-      current.el.play().catch(() => undefined);
-    }
-  }, []);
-
-  const startRecording = () => {
+  const recordWebm = () => {
     const canvas = canvasRef.current;
-    if (!canvas || !media || media.kind === "image") return;
+    const video = videoRef.current;
+    if (!canvas || !video || source?.kind !== "video" || recording) return;
     const stream = canvas.captureStream(30);
-    const mime = RECORDER_MIMES.find((m) => MediaRecorder.isTypeSupported(m));
-    const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+    const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+      ? "video/webm;codecs=vp9"
+      : "video/webm";
+    const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
     const chunks: Blob[] = [];
-    recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunks.push(e.data);
-    };
+    recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
     recorder.onstop = () => {
-      stream.getTracks().forEach((t) => t.stop());
-      const blob = new Blob(chunks, { type: mime ?? "video/webm" });
-      downloadBlob(blob, "forma-mockup.webm");
-      toast.success("WebM video exported");
+      const url = URL.createObjectURL(new Blob(chunks, { type: "video/webm" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${device}-mockup.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setRecording(false);
     };
-
-    if (media.kind === "video") {
-      // One clean pass: restart, disable looping and stop when the clip ends.
-      media.el.loop = false;
-      media.el.currentTime = 0;
-      media.el.onended = () => {
-        media.el.onended = null;
-        stopRecording();
-      };
-      media.el.play().catch(() => undefined);
-    }
-
-    recorderRef.current = recorder;
-    recorder.start();
     setRecording(true);
-    setRecordSeconds(0);
+    video.currentTime = 0;
+    recorder.start();
+    const duration = Math.min((video.duration || 8) * 1000, 15_000);
+    setTimeout(() => recorder.stop(), duration);
   };
-
-  React.useEffect(() => {
-    if (!recording) return;
-    const id = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [recording]);
-
-  /* ------------------------------ Randomizer ----------------------------- */
-
-  const surpriseMe = () => {
-    const g = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
-    const frame = FRAMES[Math.floor(Math.random() * FRAMES.length)].id;
-    setOpts((prev) => ({
-      ...prev,
-      transparent: false,
-      from: g.from,
-      to: g.to,
-      angle: g.angle,
-      frame,
-      dark: Math.random() < 0.4,
-      tilt: Math.round((Math.random() * 12 - 6) * 10) / 10,
-      scale: 62 + Math.round(Math.random() * 24),
-      shadow: 40 + Math.round(Math.random() * 45),
-    }));
-  };
-
-  const presetId = CANVAS_PRESETS.find((p) => p.width === opts.width && p.height === opts.height)?.id ?? "custom";
-  const canRecord = media !== null && media.kind !== "image";
 
   return (
     <GeneratorLayout
       tool={TOOL_BY_ID.mockup}
       output={
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Live preview</CardTitle>
-            <CardDescription>
-              {opts.width}×{opts.height}
-              {media ? ` · ${media.name}` : " · waiting for media"}
-            </CardDescription>
-          </CardHeader>
           <CardContent className="space-y-4">
             <div
-              className="border-border overflow-hidden rounded-lg border"
+              className="border-border relative overflow-hidden rounded-xl border"
               style={
-                opts.transparent
+                bgId === "transparent"
                   ? {
                       backgroundImage:
-                        "repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%)",
+                        "repeating-conic-gradient(#d4d4d833 0% 25%, transparent 0% 50%)",
                       backgroundSize: "16px 16px",
                     }
                   : undefined
               }
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                const file = e.dataTransfer.files?.[0];
-                if (file) loadFile(file);
-              }}
             >
               <canvas
                 ref={canvasRef}
-                width={opts.width}
-                height={opts.height}
-                className="block h-auto w-full"
-                aria-label="Mockup preview"
+                className="block w-full cursor-grab touch-none active:cursor-grabbing"
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+                onPointerCancel={onPointerUp}
               />
+              <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/35 px-3 py-1 text-[11px] text-white/70 backdrop-blur-sm">
+                Drag the device to spin it
+              </span>
             </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" onClick={() => exportPng(1)}>
-                <DownloadIcon /> PNG
+            <div className="flex gap-2">
+              <Button onClick={downloadPng} className="flex-1">
+                <DownloadIcon /> PNG · 2×
               </Button>
-              <Button type="button" variant="outline" onClick={() => exportPng(2)}>
-                @2x
-              </Button>
-              <Button type="button" variant="outline" onClick={copyPng}>
-                <ClipboardCopyIcon /> Copy
-              </Button>
-              {canRecord &&
-                (recording ? (
-                  <Button type="button" variant="destructive" onClick={stopRecording}>
-                    <SquareIcon /> Stop · {recordSeconds}s
-                  </Button>
-                ) : (
-                  <Button type="button" variant="outline" onClick={startRecording}>
-                    <FilmIcon /> Export WebM
-                  </Button>
-                ))}
+              {source?.kind === "video" && (
+                <Button
+                  variant="outline"
+                  onClick={recordWebm}
+                  disabled={recording}
+                  className="flex-1"
+                >
+                  {recording ? <Loader2Icon className="animate-spin" /> : <VideoIcon />}
+                  {recording ? "Recording…" : "WebM"}
+                </Button>
+              )}
             </div>
-            {recording && (
-              <p className="text-destructive flex items-center gap-1.5 text-xs">
-                <span className="bg-destructive size-2 animate-pulse rounded-full" aria-hidden />
-                Recording the canvas{media?.kind === "video" ? " — stops when the clip ends" : ""}…
-              </p>
-            )}
-            {canRecord && !recording && (
-              <p className="text-muted-foreground text-xs">
-                Video exports as WebM without audio, at canvas resolution.
-              </p>
-            )}
-
-            <Separator />
-            <p className="text-muted-foreground flex items-start gap-2 text-xs">
-              <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-              Your images, videos and screen captures stay private — they&apos;re never stored anywhere.
-            </p>
           </CardContent>
         </Card>
       }
     >
       <div className="space-y-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Source</CardTitle>
-            <CardDescription>Upload, drag onto the preview, paste, or capture your screen.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) loadFile(file);
-                e.target.value = "";
-              }}
-            />
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" onClick={() => fileInputRef.current?.click()}>
-                <UploadIcon /> Upload image or video
-              </Button>
-              <Button type="button" variant="outline" onClick={captureScreen}>
-                <MonitorUpIcon /> Capture screen
-              </Button>
-              {media && (
-                <Button type="button" variant="ghost" onClick={clearMedia}>
-                  <Trash2Icon /> Remove
-                </Button>
-              )}
-            </div>
-            {media ? (
-              <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-                {media.kind === "image" ? (
-                  <ImageIcon className="size-3.5" aria-hidden />
-                ) : (
-                  <FilmIcon className="size-3.5" aria-hidden />
-                )}
-                {media.name} · {media.width}×{media.height}
-                {media.kind !== "image" && " · live"}
-              </p>
-            ) : (
-              <p className="text-muted-foreground text-xs">
-                Tip: hit <kbd className="bg-muted rounded border px-1 font-mono text-[10px]">Ctrl</kbd>
-                +<kbd className="bg-muted rounded border px-1 font-mono text-[10px]">V</kbd> to paste
-                a screenshot straight from your clipboard.
-              </p>
+          <CardContent className="space-y-5">
+            <Tabs value={device} onValueChange={(v) => setDevice(v as DeviceId)}>
+              <TabsList className="w-full">
+                {DEVICES.map((d) => (
+                  <TabsTrigger key={d.id} value={d.id} className="flex-1">
+                    <d.icon className="size-4" /> {d.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
+            {device !== "macbook" && (
+              <div className="flex items-center justify-between">
+                <Label>Orientation</Label>
+                <Tabs value={orientation} onValueChange={(v) => setOrientation(v as Orientation)}>
+                  <TabsList>
+                    <TabsTrigger value="portrait">Portrait</TabsTrigger>
+                    <TabsTrigger value="landscape">Landscape</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
             )}
+
+            <label className="border-border hover:bg-muted/50 flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-dashed px-4 py-6 text-center transition-colors">
+              <ImageIcon className="text-muted-foreground size-5" />
+              <span className="text-sm font-medium">
+                {source ? "Replace screen content" : "Drop a screenshot or video"}
+              </span>
+              <span className="text-muted-foreground text-xs">PNG, JPG, MP4 or WebM</span>
+              <input
+                type="file"
+                accept="image/*,video/mp4,video/webm,video/quicktime"
+                className="sr-only"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void loadFile(file);
+                  e.target.value = "";
+                }}
+              />
+            </label>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-[1fr_auto_auto]">
-              <div className="space-y-1.5">
-                <Label htmlFor="mk-size">Canvas</Label>
-                <Select
-                  value={presetId}
-                  onValueChange={(id) => {
-                    const preset = CANVAS_PRESETS.find((p) => p.id === id);
-                    if (preset) setOpts((prev) => ({ ...prev, width: preset.width, height: preset.height }));
-                  }}
-                >
-                  <SelectTrigger id="mk-size" className="w-full">
-                    <SelectValue placeholder={`Custom · ${opts.width}×${opts.height}`} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CANVAS_PRESETS.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                    {presetId === "custom" && (
-                      <SelectItem value="custom" disabled>
-                        Custom · {opts.width}×{opts.height}
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="mk-w">W</Label>
-                <Input
-                  id="mk-w"
-                  type="number"
-                  min={320}
-                  max={4096}
-                  className="w-24"
-                  value={opts.width}
-                  onChange={(e) => set("width", Math.max(320, Math.min(4096, Number(e.target.value) || 320)))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="mk-h">H</Label>
-                <Input
-                  id="mk-h"
-                  type="number"
-                  min={320}
-                  max={4096}
-                  className="w-24"
-                  value={opts.height}
-                  onChange={(e) => set("height", Math.max(320, Math.min(4096, Number(e.target.value) || 320)))}
-                />
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-2">
-              <Label>Frame</Label>
+          <CardContent className="space-y-5">
+            <div className="space-y-1.5">
+              <Label>Camera angle</Label>
               <div className="flex flex-wrap gap-1.5">
-                {FRAMES.map((frame) => (
-                  <Badge
-                    key={frame.id}
-                    asChild
-                    variant={opts.frame === frame.id ? "default" : "outline"}
-                    className="cursor-pointer"
+                {ANGLES.map((a) => (
+                  <button
+                    key={a.label}
+                    type="button"
+                    onClick={() => {
+                      setRotX(a.rotX);
+                      setRotY(a.rotY);
+                    }}
+                    className={cn(
+                      "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                      rotX === a.rotX && rotY === a.rotY
+                        ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : "border-border text-muted-foreground hover:text-foreground"
+                    )}
                   >
-                    <button type="button" onClick={() => set("frame", frame.id)}>
-                      {frame.label}
-                    </button>
-                  </Badge>
+                    {a.label}
+                  </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRotX(8);
+                    setRotY(-26);
+                    setZoom(1);
+                  }}
+                  className="border-border text-muted-foreground hover:text-foreground rounded-full border px-2.5 py-1 text-xs transition-colors"
+                  aria-label="Reset view"
+                >
+                  <RotateCcwIcon className="size-3" />
+                </button>
               </div>
-              {(opts.frame === "browser" || opts.frame === "window") && (
-                <label className="flex items-center gap-2 pt-1 text-sm">
-                  <Switch checked={opts.dark} onCheckedChange={(v) => set("dark", v)} aria-label="Dark frame" />
-                  Dark chrome
-                </label>
-              )}
-              {opts.frame === "browser" && (
-                <Input
-                  aria-label="Address bar text"
-                  placeholder="yourdomain.com"
-                  value={opts.url}
-                  onChange={(e) => set("url", e.target.value)}
-                />
-              )}
             </div>
 
-            <Separator />
+            <SliderRow
+              label="Tilt"
+              value={rotX}
+              min={-45}
+              max={60}
+              step={1}
+              display={`${Math.round(rotX)}°`}
+              onChange={setRotX}
+            />
+            <SliderRow
+              label="Turn"
+              value={rotY}
+              min={-80}
+              max={80}
+              step={1}
+              display={`${Math.round(rotY)}°`}
+              onChange={setRotY}
+            />
+            <SliderRow
+              label="Zoom"
+              value={zoom}
+              min={0.55}
+              max={1.6}
+              step={0.01}
+              display={`${Math.round(zoom * 100)}%`}
+              onChange={setZoom}
+            />
+            <SliderRow
+              label="Shadow"
+              value={shadow}
+              min={0}
+              max={1}
+              step={0.05}
+              display={`${Math.round(shadow * 100)}%`}
+              onChange={setShadow}
+            />
+          </CardContent>
+        </Card>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Background</Label>
-                <label className="text-muted-foreground flex items-center gap-2 text-xs">
-                  <Switch
-                    checked={opts.transparent}
-                    onCheckedChange={(v) => set("transparent", v)}
-                    aria-label="Transparent background"
-                  />
-                  Transparent
-                </label>
-              </div>
-              <div className={cn("flex flex-wrap gap-2", opts.transparent && "pointer-events-none opacity-40")}>
-                {GRADIENTS.map((g) => (
+        <Card>
+          <CardContent className="space-y-5">
+            <div className="space-y-1.5">
+              <Label>Finish</Label>
+              <div className="flex flex-wrap gap-2">
+                {FINISHES.map((f) => (
                   <button
-                    key={g.id}
+                    key={f.id}
                     type="button"
-                    title={g.name}
-                    aria-label={`${g.name} background`}
-                    onClick={() => setOpts((prev) => ({ ...prev, from: g.from, to: g.to, angle: g.angle, transparent: false }))}
+                    onClick={() => setFinishId(f.id)}
+                    title={f.label}
                     className={cn(
                       "size-8 rounded-full border-2 transition-transform hover:scale-110",
-                      opts.from === g.from && opts.to === g.to ? "border-foreground" : "border-transparent"
+                      finishId === f.id ? "border-emerald-500" : "border-border"
                     )}
-                    style={{ background: `linear-gradient(${g.angle}deg, ${g.from}, ${g.to})` }}
+                    style={{ background: `linear-gradient(135deg, ${f.light}, ${f.dark})` }}
+                    aria-label={`${f.label} finish`}
                   />
                 ))}
               </div>
-              <div className={cn("flex items-center gap-3 pt-1", opts.transparent && "pointer-events-none opacity-40")}>
-                <input
-                  type="color"
-                  value={opts.from}
-                  onChange={(e) => set("from", e.target.value)}
-                  aria-label="Gradient start color"
-                  className="border-border size-8 cursor-pointer rounded border bg-transparent"
-                />
-                <input
-                  type="color"
-                  value={opts.to}
-                  onChange={(e) => set("to", e.target.value)}
-                  aria-label="Gradient end color"
-                  className="border-border size-8 cursor-pointer rounded border bg-transparent"
-                />
-                <Slider
-                  value={[opts.angle]}
-                  min={0}
-                  max={360}
-                  step={5}
-                  onValueChange={([v]) => set("angle", v)}
-                  aria-label="Gradient angle"
-                  className="flex-1"
-                />
-                <span className="text-muted-foreground w-10 text-right font-mono text-xs tabular-nums">
-                  {opts.angle}°
-                </span>
-              </div>
             </div>
 
-            <Separator />
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              {(
-                [
-                  { key: "scale", label: "Size", min: 40, max: 95, suffix: "%" },
-                  { key: "radius", label: "Corners", min: 0, max: 48, suffix: "px" },
-                  { key: "tilt", label: "Tilt", min: -15, max: 15, suffix: "°" },
-                  { key: "shadow", label: "Shadow", min: 0, max: 100, suffix: "%" },
-                ] as const
-              ).map((slider) => (
-                <div key={slider.key} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>{slider.label}</Label>
-                    <span className="bg-muted rounded px-2 py-0.5 font-mono text-xs tabular-nums">
-                      {opts[slider.key]}
-                      {slider.suffix}
-                    </span>
-                  </div>
-                  <Slider
-                    value={[opts[slider.key]]}
-                    min={slider.min}
-                    max={slider.max}
-                    step={1}
-                    onValueChange={([v]) => set(slider.key, v)}
-                    aria-label={slider.label}
+            <div className="space-y-1.5">
+              <Label>Backdrop</Label>
+              <div className="grid grid-cols-7 gap-2">
+                {BACKGROUNDS.map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => setBgId(b.id)}
+                    title={b.label}
+                    className={cn(
+                      "aspect-square rounded-lg border-2 transition-transform hover:scale-105",
+                      bgId === b.id ? "border-emerald-500" : "border-border"
+                    )}
+                    style={{ background: b.css }}
+                    aria-label={`${b.label} backdrop`}
                   />
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
-            <Separator />
-
-            <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-              <div className="space-y-1.5">
-                <Label htmlFor="mk-caption">Caption</Label>
-                <Input
-                  id="mk-caption"
-                  placeholder="Introducing the new dashboard ✦"
-                  value={opts.caption}
-                  onChange={(e) => set("caption", e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Position</Label>
-                <div className="flex gap-1.5">
-                  {(["Top", "Bottom"] as const).map((pos) => (
-                    <Badge
-                      key={pos}
-                      asChild
-                      variant={opts.captionTop === (pos === "Top") ? "default" : "outline"}
-                      className="cursor-pointer"
-                    >
-                      <button type="button" onClick={() => set("captionTop", pos === "Top")}>
-                        {pos}
-                      </button>
-                    </Badge>
+            <div className="flex items-center justify-between">
+              <Label>Canvas</Label>
+              <Tabs value={aspectId} onValueChange={setAspectId}>
+                <TabsList>
+                  {ASPECTS.map((a) => (
+                    <TabsTrigger key={a.id} value={a.id}>
+                      {a.label}
+                    </TabsTrigger>
                   ))}
-                </div>
-              </div>
+                </TabsList>
+              </Tabs>
             </div>
-
-            <Button type="button" variant="secondary" onClick={surpriseMe}>
-              <SparklesIcon /> Surprise me
-            </Button>
           </CardContent>
         </Card>
       </div>
     </GeneratorLayout>
+  );
+}
+
+function SliderRow({
+  label,
+  value,
+  min,
+  max,
+  step,
+  display,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  display: string;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label>{label}</Label>
+        <span className="bg-muted rounded px-2 py-0.5 font-mono text-xs tabular-nums">
+          {display}
+        </span>
+      </div>
+      <Slider
+        value={[value]}
+        min={min}
+        max={max}
+        step={step}
+        onValueChange={([v]) => onChange(v)}
+        aria-label={label}
+      />
+    </div>
   );
 }
