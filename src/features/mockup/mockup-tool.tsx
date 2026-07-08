@@ -238,10 +238,10 @@ export function MockupTool() {
                 onPointerUp={onPointerUp}
                 onPointerCancel={onPointerUp}
               />
-              <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/35 px-3 py-1 text-[11px] text-white/70 backdrop-blur-sm">
-                Drag the device to spin it
-              </span>
             </div>
+            <p className="text-muted-foreground text-center text-xs">
+              Drag the device to spin it
+            </p>
             <div className="flex gap-2">
               <Button onClick={downloadPng} className="flex-1">
                 <DownloadIcon /> PNG · 2×
