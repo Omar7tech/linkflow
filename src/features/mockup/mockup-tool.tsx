@@ -9,6 +9,7 @@ import {
   SmartphoneIcon,
   TabletIcon,
   VideoIcon,
+  XIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,9 @@ const ASPECTS: { id: string; label: string; w: number; h: number }[] = [
   { id: "16:9", label: "16:9", w: 1920, h: 1080 },
 ];
 
-type Source = { kind: "image"; media: ImageBitmap } | { kind: "video"; url: string };
+type Source =
+  | { kind: "image"; media: ImageBitmap; url: string; name: string }
+  | { kind: "video"; url: string; name: string };
 
 export function MockupTool() {
   const [device, setDevice] = React.useState<DeviceId>("iphone");
@@ -62,6 +65,7 @@ export function MockupTool() {
   const [shadow, setShadow] = React.useState(0.7);
   const [source, setSource] = React.useState<Source | null>(null);
   const [recording, setRecording] = React.useState(false);
+  const [dragOver, setDragOver] = React.useState(false);
 
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const dragRef = React.useRef<{ x: number; y: number; rotX: number; rotY: number } | null>(null);
@@ -122,11 +126,12 @@ export function MockupTool() {
 
   React.useEffect(() => {
     return () => {
-      if (source?.kind === "video") {
+      if (!source) return;
+      if (source.kind === "video") {
         videoRef.current?.pause();
         videoRef.current = null;
-        URL.revokeObjectURL(source.url);
       }
+      URL.revokeObjectURL(source.url);
     };
   }, [source]);
 
@@ -156,9 +161,14 @@ export function MockupTool() {
         video.playsInline = true;
         await video.play();
         videoRef.current = video;
-        setSource({ kind: "video", url });
+        setSource({ kind: "video", url, name: file.name });
       } else {
-        setSource({ kind: "image", media: await createImageBitmap(file) });
+        setSource({
+          kind: "image",
+          media: await createImageBitmap(file),
+          url: URL.createObjectURL(file),
+          name: file.name,
+        });
       }
     } catch {
       toast.error("Couldn't load that file — try a PNG, JPG, MP4 or WebM.");
@@ -213,11 +223,15 @@ export function MockupTool() {
   return (
     <GeneratorLayout
       tool={TOOL_BY_ID.mockup}
+      wideOutput
       output={
         <Card>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             <div
-              className="border-border relative overflow-hidden rounded-xl border"
+              className={cn(
+                "relative overflow-hidden rounded-xl border transition-colors",
+                dragOver ? "border-emerald-500 ring-2 ring-emerald-500/30" : "border-border"
+              )}
               style={
                 bgId === "transparent"
                   ? {
@@ -227,34 +241,54 @@ export function MockupTool() {
                     }
                   : undefined
               }
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOver(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                const file = e.dataTransfer.files?.[0];
+                if (file) void loadFile(file);
+              }}
             >
               <canvas
                 ref={canvasRef}
-                className="block w-full cursor-grab touch-none active:cursor-grabbing"
+                className="mx-auto block h-auto max-h-[72vh] w-auto max-w-full cursor-grab touch-none active:cursor-grabbing"
                 onPointerDown={onPointerDown}
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
                 onPointerCancel={onPointerUp}
               />
+              {!source && !dragOver && (
+                <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
+                  <span className="rounded-full bg-black/55 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
+                    Drop a screenshot or video anywhere on the canvas
+                  </span>
+                </div>
+              )}
+              {dragOver && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-emerald-500/15">
+                  <span className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
+                    Release to place it on the screen
+                  </span>
+                </div>
+              )}
             </div>
-            <p className="text-muted-foreground text-center text-xs">
-              Drag the device to spin it
-            </p>
-            <div className="flex gap-2">
-              <Button onClick={downloadPng} className="flex-1">
-                <DownloadIcon /> PNG · 2×
-              </Button>
+            <div className="flex items-center gap-2">
+              <p className="text-muted-foreground flex-1 text-xs">Drag the device to spin it</p>
               {source?.kind === "video" && (
-                <Button
-                  variant="outline"
-                  onClick={recordWebm}
-                  disabled={recording}
-                  className="flex-1"
-                >
+                <Button variant="outline" size="sm" onClick={recordWebm} disabled={recording}>
                   {recording ? <Loader2Icon className="animate-spin" /> : <VideoIcon />}
                   {recording ? "Recording…" : "WebM"}
                 </Button>
               )}
+              <Button size="sm" onClick={downloadPng}>
+                <DownloadIcon /> PNG · 2×
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -283,12 +317,58 @@ export function MockupTool() {
               </Tabs>
             </div>
 
-            <label className="border-border hover:bg-muted/50 flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-dashed px-4 py-6 text-center transition-colors">
-              <ImageIcon className="text-muted-foreground size-5" />
-              <span className="text-sm font-medium">
-                {source ? "Replace screen content" : "Drop a screenshot or video"}
-              </span>
-              <span className="text-muted-foreground text-xs">PNG, JPG, MP4 or WebM</span>
+            <label
+              className={cn(
+                "border-border hover:bg-muted/50 cursor-pointer rounded-xl border transition-colors",
+                source
+                  ? "flex items-center gap-3 p-2.5"
+                  : "flex flex-col items-center gap-1.5 border-dashed px-4 py-6 text-center"
+              )}
+            >
+              {source ? (
+                <>
+                  {source.kind === "image" ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={source.url}
+                      alt="Uploaded screen content"
+                      className="bg-muted size-12 shrink-0 rounded-lg border object-cover"
+                    />
+                  ) : (
+                    <video
+                      src={source.url}
+                      muted
+                      playsInline
+                      preload="metadata"
+                      className="bg-muted size-12 shrink-0 rounded-lg border object-cover"
+                    />
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{source.name}</span>
+                    <span className="text-muted-foreground block text-xs">
+                      {source.kind === "video" ? "Video" : "Image"} · click to replace
+                    </span>
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    aria-label="Remove screen content"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setSource(null);
+                    }}
+                  >
+                    <XIcon />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="text-muted-foreground size-5" />
+                  <span className="text-sm font-medium">Drop a screenshot or video</span>
+                  <span className="text-muted-foreground text-xs">PNG, JPG, MP4 or WebM</span>
+                </>
+              )}
               <input
                 type="file"
                 accept="image/*,video/mp4,video/webm,video/quicktime"
