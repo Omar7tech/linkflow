@@ -2,6 +2,7 @@ import {
   ALargeSmallIcon,
   BarChart3Icon,
   BlendIcon,
+  BoxIcon,
   ContrastIcon,
   EraserIcon,
   FingerprintIcon,
@@ -882,6 +883,24 @@ export const TOOLS = [
     ],
     icon: ShapesIcon,
     category: "backgrounds",
+  },
+  {
+    id: "logo3d",
+    slug: "/tools/3d-logo",
+    name: "3D Logo Studio",
+    shortName: "3D Logo",
+    description:
+      "Turn any SVG logo into real 3D — extrude it with bevelled depth, dress it in chrome, gold, glass or neon, grab it and spin it in true perspective over studio backdrops. Export a transparent PNG at up to 4×, or record a WebM of it rotating.",
+    keywords: [
+      "3d logo maker",
+      "svg to 3d",
+      "logo 3d effect",
+      "chrome logo",
+      "3d logo animation",
+      "logo mockup 3d",
+    ],
+    icon: BoxIcon,
+    category: "brand",
   },
 ] as const satisfies readonly ToolMeta[];
 
