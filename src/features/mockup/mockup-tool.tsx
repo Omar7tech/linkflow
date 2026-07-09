@@ -663,13 +663,6 @@ export function MockupTool() {
                 onPointerUp={onPointerUp}
                 onPointerCancel={onPointerUp}
               />
-              {!source && !dragOver && (
-                <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
-                  <span className="rounded-full bg-black/55 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
-                    Drop a screenshot or video anywhere on the canvas
-                  </span>
-                </div>
-              )}
               {dragOver && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-emerald-500/15">
                   <span className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
@@ -702,7 +695,9 @@ export function MockupTool() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-muted-foreground min-w-28 flex-1 text-xs">
-                Drag the device to spin it
+                {source
+                  ? "Drag the device to spin it"
+                  : "Drop a screenshot or video on the canvas · drag the device to spin it"}
               </p>
               <Tabs
                 value={String(exportScale)}
