@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import {
   HeartIcon,
   ShieldCheckIcon,
@@ -69,7 +70,16 @@ export default function AboutPage() {
 
           <div className="sticky top-24">
 
-            <div className="h-20 w-20 rounded-full bg-muted" />
+            {/* Replaced empty gray circle with the Image component */}
+            <div className="relative h-20 w-20 overflow-hidden rounded-full border bg-muted">
+              <Image 
+                src="https://avatars.githubusercontent.com/u/130991308?v=4" 
+                alt="Omar Abi Farraj" 
+                fill 
+                className="object-cover"
+                priority
+              />
+            </div>
 
             <h2 className="mt-6 text-2xl font-semibold">
               Omar Abi Farraj
@@ -167,7 +177,9 @@ export default function AboutPage() {
 
         </div>
 
-      </section>      {/* Closing */}
+      </section>
+
+      {/* Closing */}
 
       <section className="mt-32 border-y py-20">
 
