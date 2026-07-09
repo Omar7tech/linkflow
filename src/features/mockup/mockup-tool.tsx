@@ -23,6 +23,7 @@ import { TOOL_BY_ID } from "@/constants/tools";
 import {
   BACKGROUNDS,
   buildDevice,
+  composeScene,
   computeFit,
   customBackground,
   FINISHES,
@@ -30,6 +31,7 @@ import {
   type DeviceId,
   type Orientation,
 } from "@/lib/mockup3d";
+import type { GLMockupRenderer } from "@/lib/mockup3d-gl";
 import { cn } from "@/lib/utils";
 
 const DEVICES: { id: DeviceId; label: string; icon: typeof SmartphoneIcon }[] = [
@@ -59,6 +61,8 @@ type Source =
 export function MockupTool() {
   const [device, setDevice] = React.useState<DeviceId>("iphone");
   const [orientation, setOrientation] = React.useState<Orientation>("portrait");
+  const [engine, setEngine] = React.useState<"webgl" | "classic">("webgl");
+  const [glReady, setGlReady] = React.useState(false);
   const [finishId, setFinishId] = React.useState("titanium");
   const [bgId, setBgId] = React.useState("emerald");
   const [aspectId, setAspectId] = React.useState("1:1");
@@ -84,6 +88,26 @@ export function MockupTool() {
   const moveRaf = React.useRef(0);
   // The playing <video> element lives in a ref — it's imperative media, not render state.
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
+  // WebGL engine instance, loaded on demand (three.js stays out of the initial bundle).
+  const glRef = React.useRef<GLMockupRenderer | null>(null);
+
+  React.useEffect(() => {
+    if (engine !== "webgl" || glRef.current) return;
+    let cancelled = false;
+    void import("@/lib/mockup3d-gl").then((m) => {
+      if (cancelled) return;
+      try {
+        glRef.current = new m.GLMockupRenderer();
+      } catch {
+        // WebGL unavailable — the classic engine keeps rendering.
+      }
+      setGlReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [engine]);
+  React.useEffect(() => () => glRef.current?.dispose(), []);
 
   const finish = FINISHES.find((f) => f.id === finishId) ?? FINISHES[0];
   const background = React.useMemo(
@@ -135,20 +159,35 @@ export function MockupTool() {
     canvas.width = aspect.w;
     canvas.height = aspect.h;
     const ctx = canvas.getContext("2d")!;
+    // glReady gates the first GL frame; if the context failed, gl stays null → classic.
+    const gl = engine === "webgl" && glReady ? glRef.current : null;
     spec.setView(sceneOpts.rotX, sceneOpts.rotY, glare);
+    if (gl) gl.prepare(device, orientation, finish);
+
+    const draw = () => {
+      if (gl) {
+        gl.setSize(aspect.w, aspect.h);
+        gl.setScreen(source?.kind === "image" ? source.media : videoRef.current);
+        gl.setView(sceneOpts.rotX, sceneOpts.rotY, sceneOpts.camera, sceneOpts.zoom, glare);
+        gl.render();
+        composeScene(ctx, gl.domElement, sceneOpts, gl.floorScreenY());
+      } else {
+        if (source?.kind === "video" && videoRef.current) spec.updateScreen(videoRef.current);
+        renderScene(ctx, spec.plates, sceneOpts, fit);
+      }
+    };
 
     if (source?.kind === "video") {
       let raf = 0;
       const loop = () => {
-        if (videoRef.current) spec.updateScreen(videoRef.current);
-        renderScene(ctx, spec.plates, sceneOpts, fit);
+        draw();
         raf = requestAnimationFrame(loop);
       };
       raf = requestAnimationFrame(loop);
       return () => cancelAnimationFrame(raf);
     }
-    renderScene(ctx, spec.plates, sceneOpts, fit);
-  }, [spec, sceneOpts, fit, aspect, source, glare]);
+    draw();
+  }, [spec, sceneOpts, fit, aspect, source, glare, engine, glReady, device, orientation, finish]);
 
   React.useEffect(() => {
     return () => {
@@ -262,7 +301,18 @@ export function MockupTool() {
     out.width = aspect.w * 2;
     out.height = aspect.h * 2;
     const ctx = out.getContext("2d")!;
-    renderScene(ctx, spec.plates, sceneOpts, computeFit(spec.plates, out.width, out.height));
+    const gl = engine === "webgl" && glReady ? glRef.current : null;
+    if (gl) {
+      // Render at 2× — the preview loop's next setSize snaps the GL canvas back.
+      gl.setSize(out.width, out.height);
+      gl.prepare(device, orientation, finish);
+      gl.setScreen(source?.kind === "image" ? source.media : videoRef.current);
+      gl.setView(sceneOpts.rotX, sceneOpts.rotY, sceneOpts.camera, sceneOpts.zoom, glare);
+      gl.render();
+      composeScene(ctx, gl.domElement, sceneOpts, gl.floorScreenY());
+    } else {
+      renderScene(ctx, spec.plates, sceneOpts, computeFit(spec.plates, out.width, out.height));
+    }
     out.toBlob((blob) => {
       if (!blob) return;
       const url = URL.createObjectURL(blob);
@@ -399,6 +449,16 @@ export function MockupTool() {
                 <TabsList>
                   <TabsTrigger value="portrait">Portrait</TabsTrigger>
                   <TabsTrigger value="landscape">Landscape</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label>Renderer</Label>
+              <Tabs value={engine} onValueChange={(v) => setEngine(v as "webgl" | "classic")}>
+                <TabsList>
+                  <TabsTrigger value="webgl">Realistic</TabsTrigger>
+                  <TabsTrigger value="classic">Classic</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>

@@ -96,7 +96,7 @@ function hexRgb(hex: string): [number, number, number] {
   ];
 }
 
-function shade(hex: string, k: number): string {
+export function shade(hex: string, k: number): string {
   const [r, g, b] = hexRgb(hex);
   return `rgb(${Math.round(r * k)}, ${Math.round(g * k)}, ${Math.round(b * k)})`;
 }
@@ -329,18 +329,22 @@ export function computeFit(
   return Math.min((canvasW * 0.62) / spanX, (canvasH * 0.62) / spanY);
 }
 
-export function renderScene(
+/**
+ * Composite a rendered device (any engine — 2D faces or WebGL) onto the scene:
+ * backdrop, screen glow, floor-line reflection, the device itself, grain.
+ * `sy` is the floor line in canvas pixels.
+ */
+export function composeScene(
   ctx: CanvasRenderingContext2D,
-  plates: Plate[],
+  device: HTMLCanvasElement,
   opts: SceneOptions,
-  fit: number
+  sy: number
 ) {
   const { width: w, height: h } = ctx.canvas;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, w, h);
   opts.background(ctx, w, h);
 
-  const scale = fit * opts.zoom;
   const cx = w / 2;
   const cy = h / 2 - h * 0.015;
 
@@ -355,6 +359,55 @@ export function renderScene(
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, w, h);
   }
+
+  // Mirror-floor reflection — flip the device render about the floor line,
+  // fade it out, and blur only that fixed-height band.
+  if (opts.reflection > 0 && sy < h) {
+    const band = getScratch(1, w, Math.ceil(h * 0.34));
+    const bctx = band.getContext("2d")!;
+    bctx.globalCompositeOperation = "source-over";
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.clearRect(0, 0, band.width, band.height);
+    bctx.setTransform(1, 0, 0, -1, 0, sy); // band row 0 = floor line, flipped
+    bctx.drawImage(device, 0, 0);
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.globalCompositeOperation = "destination-in";
+    const fade = bctx.createLinearGradient(0, 0, 0, band.height * 0.94);
+    fade.addColorStop(0, `rgba(0,0,0,${0.42 * opts.reflection})`);
+    fade.addColorStop(0.6, `rgba(0,0,0,${0.1 * opts.reflection})`);
+    fade.addColorStop(1, "rgba(0,0,0,0)");
+    bctx.fillStyle = fade;
+    bctx.fillRect(0, 0, w, band.height);
+
+    ctx.save();
+    ctx.filter = `blur(${Math.max(1, w * 0.0012)}px)`;
+    ctx.drawImage(band, 0, sy);
+    ctx.restore();
+  }
+
+  ctx.drawImage(device, 0, 0);
+
+  // Photographic grain — over existing pixels only, so transparent exports stay clean.
+  if (opts.grain > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.globalAlpha = 0.1 * opts.grain;
+    ctx.fillStyle = ctx.createPattern(getNoiseTile(), "repeat")!;
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+  }
+}
+
+export function renderScene(
+  ctx: CanvasRenderingContext2D,
+  plates: Plate[],
+  opts: SceneOptions,
+  fit: number
+) {
+  const { width: w, height: h } = ctx.canvas;
+  const scale = fit * opts.zoom;
+  const cx = w / 2;
+  const cy = h / 2 - h * 0.015;
 
   const faces = plates.flatMap((plate) =>
     collectPlateFaces(plate, opts.rotX, opts.rotY, opts.camera)
@@ -398,51 +451,14 @@ export function renderScene(
   const floor = project(rotXY({ x: 0, y: opts.floorY, z: 0 }, opts.rotX, opts.rotY), opts.camera);
   const sy = cy + floor.y * scale;
 
-  // Mirror-floor reflection — geometry is rendered ONCE into an offscreen,
-  // which serves both the reflection and the final device blit. The flip,
-  // fade and blur touch only a fixed-height band below the floor line.
-  let off: HTMLCanvasElement | null = null;
-  if (opts.reflection > 0 && sy < h) {
-    off = getScratch(0, w, h);
-    const octx = off.getContext("2d")!;
-    octx.setTransform(1, 0, 0, 1, 0, 0);
-    octx.clearRect(0, 0, w, h);
-    drawDeviceFaces(octx);
+  // Render the device once into an offscreen, then hand off to the compositor.
+  const off = getScratch(0, w, h);
+  const octx = off.getContext("2d")!;
+  octx.setTransform(1, 0, 0, 1, 0, 0);
+  octx.clearRect(0, 0, w, h);
+  drawDeviceFaces(octx);
 
-    const band = getScratch(1, w, Math.ceil(h * 0.34));
-    const bctx = band.getContext("2d")!;
-    bctx.globalCompositeOperation = "source-over";
-    bctx.setTransform(1, 0, 0, 1, 0, 0);
-    bctx.clearRect(0, 0, band.width, band.height);
-    bctx.setTransform(1, 0, 0, -1, 0, sy); // band row 0 = floor line, flipped
-    bctx.drawImage(off, 0, 0);
-    bctx.setTransform(1, 0, 0, 1, 0, 0);
-    bctx.globalCompositeOperation = "destination-in";
-    const fade = bctx.createLinearGradient(0, 0, 0, band.height * 0.94);
-    fade.addColorStop(0, `rgba(0,0,0,${0.42 * opts.reflection})`);
-    fade.addColorStop(0.6, `rgba(0,0,0,${0.1 * opts.reflection})`);
-    fade.addColorStop(1, "rgba(0,0,0,0)");
-    bctx.fillStyle = fade;
-    bctx.fillRect(0, 0, w, band.height);
-
-    ctx.save();
-    ctx.filter = `blur(${Math.max(1, w * 0.0012)}px)`;
-    ctx.drawImage(band, 0, sy);
-    ctx.restore();
-  }
-
-  if (off) ctx.drawImage(off, 0, 0);
-  else drawDeviceFaces(ctx);
-
-  // Photographic grain — over existing pixels only, so transparent exports stay clean.
-  if (opts.grain > 0) {
-    ctx.save();
-    ctx.globalCompositeOperation = "source-atop";
-    ctx.globalAlpha = 0.1 * opts.grain;
-    ctx.fillStyle = ctx.createPattern(getNoiseTile(), "repeat")!;
-    ctx.fillRect(0, 0, w, h);
-    ctx.restore();
-  }
+  composeScene(ctx, off, opts, sy);
 }
 
 /* --------------------------------------------------------------- devices */
@@ -470,7 +486,7 @@ export const FINISHES: readonly FrameFinish[] = [
   { id: "skyblue", label: "Sky Blue", light: "#b9d4e7", dark: "#6d92ac" },
 ];
 
-function roundRectPath(
+export function roundRectPath(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -486,7 +502,7 @@ function roundRectPath(
 export type ScreenSource = ImageBitmap | HTMLVideoElement;
 
 /** Cover-fit a source image/video into a rect. */
-function drawCover(
+export function drawCover(
   ctx: CanvasRenderingContext2D,
   src: ScreenSource,
   x: number,
@@ -502,7 +518,7 @@ function drawCover(
   ctx.drawImage(src, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
 }
 
-function paintPlaceholder(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+export function paintPlaceholder(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
   const g = ctx.createLinearGradient(x, y, x + w, y + h);
   g.addColorStop(0, "#022c22");
   g.addColorStop(0.5, "#065f46");
@@ -537,7 +553,7 @@ function paintPlaceholder(ctx: CanvasRenderingContext2D, x: number, y: number, w
 }
 
 /** View-dependent glass reflections: an ambient sheen plus a light band that sweeps as the device turns. */
-function paintGlare(
+export function paintGlare(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -576,7 +592,7 @@ function paintGlare(
 }
 
 /** Slight darkening toward the corners — makes the panel read as glass, not a sticker. */
-function paintVignette(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+export function paintVignette(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
   const r = Math.hypot(w, h) / 2;
   const g = ctx.createRadialGradient(x + w / 2, y + h / 2, r * 0.55, x + w / 2, y + h / 2, r * 1.05);
   g.addColorStop(0, "rgba(0,0,0,0)");
