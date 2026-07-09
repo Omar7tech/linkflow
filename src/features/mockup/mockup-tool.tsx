@@ -4,7 +4,6 @@ import * as React from "react";
 import {
   DownloadIcon,
   ImageIcon,
-  LaptopIcon,
   Loader2Icon,
   RotateCcwIcon,
   SmartphoneIcon,
@@ -33,7 +32,6 @@ import { cn } from "@/lib/utils";
 const DEVICES: { id: DeviceId; label: string; icon: typeof SmartphoneIcon }[] = [
   { id: "iphone", label: "Phone", icon: SmartphoneIcon },
   { id: "ipad", label: "Tablet", icon: TabletIcon },
-  { id: "macbook", label: "Laptop", icon: LaptopIcon },
 ];
 
 const ANGLES: { label: string; rotX: number; rotY: number }[] = [
@@ -275,17 +273,15 @@ export function MockupTool() {
               </TabsList>
             </Tabs>
 
-            {device !== "macbook" && (
-              <div className="flex items-center justify-between">
-                <Label>Orientation</Label>
-                <Tabs value={orientation} onValueChange={(v) => setOrientation(v as Orientation)}>
-                  <TabsList>
-                    <TabsTrigger value="portrait">Portrait</TabsTrigger>
-                    <TabsTrigger value="landscape">Landscape</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            )}
+            <div className="flex items-center justify-between">
+              <Label>Orientation</Label>
+              <Tabs value={orientation} onValueChange={(v) => setOrientation(v as Orientation)}>
+                <TabsList>
+                  <TabsTrigger value="portrait">Portrait</TabsTrigger>
+                  <TabsTrigger value="landscape">Landscape</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
 
             <label className="border-border hover:bg-muted/50 flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-dashed px-4 py-6 text-center transition-colors">
               <ImageIcon className="text-muted-foreground size-5" />

@@ -331,7 +331,7 @@ export function renderScene(
 
 /* --------------------------------------------------------------- devices */
 
-export type DeviceId = "iphone" | "ipad" | "macbook";
+export type DeviceId = "iphone" | "ipad";
 export type Orientation = "portrait" | "landscape";
 
 export interface FrameFinish {
@@ -516,140 +516,12 @@ function buildSlabDevice(
   };
 }
 
-function buildMacbook(finish: FrameFinish): DeviceSpec {
-  const lidW = 208;
-  const lidH = 136;
-  const baseD = 142;
-  const lidTilt = (-14 * Math.PI) / 180;
-
-  const TEX = 7;
-  const lidTex = document.createElement("canvas");
-  lidTex.width = Math.round(lidW * TEX);
-  lidTex.height = Math.round(lidH * TEX);
-  const lctx = lidTex.getContext("2d")!;
-
-  const baseTex = document.createElement("canvas");
-  baseTex.width = Math.round(lidW * TEX);
-  baseTex.height = Math.round(baseD * TEX);
-  const bctx = baseTex.getContext("2d")!;
-
-  const bezel = 4 * TEX;
-
-  const paintLid = (src: ScreenSource | null) => {
-    const tw = lidTex.width;
-    const th = lidTex.height;
-    lctx.clearRect(0, 0, tw, th);
-    const frame = lctx.createLinearGradient(0, 0, 0, th);
-    frame.addColorStop(0, finish.light);
-    frame.addColorStop(1, finish.dark);
-    lctx.fillStyle = frame;
-    roundRectPath(lctx, 0, 0, tw, th, 9 * TEX);
-    lctx.fill();
-    lctx.fillStyle = "#050506";
-    roundRectPath(lctx, TEX, TEX, tw - TEX * 2, th - TEX * 2, 8 * TEX);
-    lctx.fill();
-    lctx.save();
-    roundRectPath(lctx, bezel, bezel, tw - bezel * 2, th - bezel * 2, 3 * TEX);
-    lctx.clip();
-    if (src) drawCover(lctx, src, bezel, bezel, tw - bezel * 2, th - bezel * 2);
-    else paintPlaceholder(lctx, bezel, bezel, tw - bezel * 2, th - bezel * 2);
-    paintGlare(lctx, bezel, bezel, tw - bezel * 2, th - bezel * 2);
-    lctx.restore();
-    // Notch
-    const nw = tw * 0.11;
-    lctx.fillStyle = "#050506";
-    roundRectPath(lctx, (tw - nw) / 2, bezel, nw, TEX * 2.4, [0, 0, TEX * 1.2, TEX * 1.2]);
-    lctx.fill();
-  };
-
-  const paintBase = () => {
-    const tw = baseTex.width;
-    const th = baseTex.height;
-    const alu = bctx.createLinearGradient(0, 0, 0, th);
-    alu.addColorStop(0, finish.light);
-    alu.addColorStop(1, shade(finish.light, 0.82));
-    bctx.fillStyle = alu;
-    roundRectPath(bctx, 0, 0, tw, th, 6 * TEX);
-    bctx.fill();
-    // Keyboard well
-    bctx.fillStyle = "rgba(0,0,0,0.16)";
-    roundRectPath(bctx, tw * 0.14, th * 0.05, tw * 0.72, th * 0.5, 3 * TEX);
-    bctx.fill();
-    // Keys
-    const cols = 14;
-    const rows = 5;
-    const kx = tw * 0.155;
-    const ky = th * 0.075;
-    const kw = (tw * 0.69) / cols;
-    const kh = (th * 0.45) / rows;
-    bctx.fillStyle = "#26262a";
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        roundRectPath(bctx, kx + c * kw + kw * 0.08, ky + r * kh + kh * 0.08, kw * 0.84, kh * 0.78, TEX);
-        bctx.fill();
-      }
-    }
-    // Trackpad
-    bctx.fillStyle = "rgba(0,0,0,0.10)";
-    roundRectPath(bctx, tw * 0.36, th * 0.62, tw * 0.28, th * 0.3, 2.5 * TEX);
-    bctx.fill();
-  };
-
-  paintLid(null);
-  paintBase();
-
-  const lidTransform = (p: Vec3): Vec3 => {
-    const y = p.y + lidH / 2;
-    return {
-      x: p.x,
-      y: y * Math.cos(lidTilt) - p.z * Math.sin(lidTilt) - 34,
-      z: y * Math.sin(lidTilt) + p.z * Math.cos(lidTilt) - baseD * 0.28,
-    };
-  };
-  const baseTransform = (p: Vec3): Vec3 => ({
-    x: p.x,
-    y: p.z - 34,
-    z: -p.y + baseD / 2 - baseD * 0.28,
-  });
-
-  return {
-    plates: [
-      {
-        w: lidW,
-        h: lidH,
-        thickness: 3.4,
-        radius: 9,
-        texture: lidTex,
-        transform: lidTransform,
-        edgeLight: finish.light,
-        edgeDark: finish.dark,
-        gridX: 14,
-        gridY: 9,
-      },
-      {
-        w: lidW,
-        h: baseD,
-        thickness: 4.6,
-        radius: 6,
-        texture: baseTex,
-        transform: baseTransform,
-        edgeLight: finish.light,
-        edgeDark: finish.dark,
-        gridX: 12,
-        gridY: 8,
-      },
-    ],
-    floorY: -40,
-    updateScreen: paintLid,
-  };
-}
-
 export function buildDevice(
   device: DeviceId,
   orientation: Orientation,
   finish: FrameFinish
 ): DeviceSpec {
-  return device === "macbook" ? buildMacbook(finish) : buildSlabDevice(device, orientation, finish);
+  return buildSlabDevice(device, orientation, finish);
 }
 
 /* ----------------------------------------------------------- backgrounds */
