@@ -14,6 +14,7 @@
 
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import {
   drawCover,
   paintGlare,
@@ -145,7 +146,9 @@ export class GLMockupRenderer {
     const metal = new THREE.MeshPhysicalMaterial({
       color: finish.light,
       metalness: 0.85,
-      roughness: 0.34,
+      roughness: 0.3,
+      clearcoat: 0.55,
+      clearcoatRoughness: 0.28,
       envMapIntensity: 1.15,
     });
     const darkMetal = new THREE.MeshPhysicalMaterial({
@@ -190,8 +193,10 @@ export class GLMockupRenderer {
       roundedPlane(gw, gh, gr),
       new THREE.MeshPhysicalMaterial({
         color: finish.dark,
-        metalness: 0.55,
-        roughness: 0.45,
+        metalness: 0.4,
+        roughness: 0.25,
+        clearcoat: 1,
+        clearcoatRoughness: 0.12,
         envMapIntensity: 0.9,
       })
     );
@@ -238,19 +243,23 @@ export class GLMockupRenderer {
       g.add(ring);
     }
 
-    // Side buttons — capsules half-sunk into the rails (portrait layout).
+    // Side buttons — soft pills barely proud of the rail: corner radius is
+    // nearly half the bar width, so ends and edges read fully rounded like
+    // real iPhone buttons, not sharp machined blocks.
     const btn = (x: number, y: number, len: number, topEdge = false) => {
-      const cap = new THREE.Mesh(new THREE.CapsuleGeometry(1.45, len - 2.9, 3, 12), metal);
-      if (topEdge) cap.rotation.z = Math.PI / 2;
-      cap.position.set(x, y, 0);
-      cap.scale.set(1, 1, Math.min(1, (t * 0.42) / 2.9)); // slimmer than round across thickness
-      g.add(cap);
+      const bar = new THREE.Mesh(
+        new RoundedBoxGeometry(topEdge ? len : 1.7, topEdge ? 1.7 : len, 2.7, 6, 0.8),
+        metal
+      );
+      bar.position.set(x, y, 0);
+      g.add(bar);
     };
     if (phone) {
-      btn(-pw / 2, 42, 6.5);
-      btn(-pw / 2, 25, 11);
-      btn(-pw / 2, 12, 11);
-      btn(pw / 2, 25, 14);
+      btn(-pw / 2, 44, 6); // Action button
+      btn(-pw / 2, 30, 11.5); // volume up
+      btn(-pw / 2, 16.5, 11.5); // volume down
+      btn(pw / 2, 30, 15); // power
+      btn(pw / 2, -12, 9); // Camera Control
     } else {
       btn(pw / 2 - 13, ph / 2, 10, true);
       btn(pw / 2, ph / 2 - 14, 8.5);
@@ -342,41 +351,43 @@ export class GLMockupRenderer {
         c.lineWidth = TEX * 0.22;
         roundRectPath(c, bz + TEX * 0.12, bz + TEX * 0.12, upW - bz * 2 - TEX * 0.24, upH - bz * 2 - TEX * 0.24, sr);
         c.stroke();
-        if (phone) {
-          const len = upW * 0.29;
-          const thin = TEX * 5.6;
-          const ix = (upW - len) / 2;
-          const iy = bz + TEX * 1.4;
-          c.fillStyle = "#000";
-          roundRectPath(c, ix, iy, len, thin, thin / 2);
-          c.fill();
-          const lr = thin * 0.3;
-          const lx = ix + len - thin / 2;
-          const ly = iy + thin / 2;
-          const lens = c.createRadialGradient(lx - lr * 0.35, ly - lr * 0.35, lr * 0.1, lx, ly, lr);
-          lens.addColorStop(0, "#3d4a63");
-          lens.addColorStop(0.55, "#141b2c");
-          lens.addColorStop(1, "#03050a");
-          c.fillStyle = lens;
-          c.beginPath();
-          c.arc(lx, ly, lr, 0, Math.PI * 2);
-          c.fill();
-          c.fillStyle = "rgba(160,190,255,0.5)";
-          c.beginPath();
-          c.arc(lx - lr * 0.35, ly - lr * 0.42, lr * 0.2, 0, Math.PI * 2);
-          c.fill();
-        } else {
-          const lr = TEX * 0.9;
-          const lens = c.createRadialGradient(upW / 2 - lr * 0.3, bz / 2 - lr * 0.3, lr * 0.1, upW / 2, bz / 2, lr);
-          lens.addColorStop(0, "#2c3850");
-          lens.addColorStop(0.6, "#10151f");
-          lens.addColorStop(1, "#030407");
-          c.fillStyle = lens;
-          c.beginPath();
-          c.arc(upW / 2, bz / 2 + TEX * 0.3, lr, 0, Math.PI * 2);
-          c.fill();
-        }
       });
+      // Island / front camera is HARDWARE — painted in device (texture) space,
+      // so in landscape it sits on the short edge like a real rotated phone.
+      if (phone) {
+        const len = tw * 0.29;
+        const thin = TEX * 5.6;
+        const ix = (tw - len) / 2;
+        const iy = bz + TEX * 1.4;
+        c.fillStyle = "#000";
+        roundRectPath(c, ix, iy, len, thin, thin / 2);
+        c.fill();
+        const lr = thin * 0.3;
+        const lx = ix + len - thin / 2;
+        const ly = iy + thin / 2;
+        const lens = c.createRadialGradient(lx - lr * 0.35, ly - lr * 0.35, lr * 0.1, lx, ly, lr);
+        lens.addColorStop(0, "#3d4a63");
+        lens.addColorStop(0.55, "#141b2c");
+        lens.addColorStop(1, "#03050a");
+        c.fillStyle = lens;
+        c.beginPath();
+        c.arc(lx, ly, lr, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = "rgba(160,190,255,0.5)";
+        c.beginPath();
+        c.arc(lx - lr * 0.35, ly - lr * 0.42, lr * 0.2, 0, Math.PI * 2);
+        c.fill();
+      } else {
+        const lr = TEX * 0.9;
+        const lens = c.createRadialGradient(tw / 2 - lr * 0.3, bz / 2 - lr * 0.3, lr * 0.1, tw / 2, bz / 2, lr);
+        lens.addColorStop(0, "#2c3850");
+        lens.addColorStop(0.6, "#10151f");
+        lens.addColorStop(1, "#030407");
+        c.fillStyle = lens;
+        c.beginPath();
+        c.arc(tw / 2, bz / 2 + TEX * 0.3, lr, 0, Math.PI * 2);
+        c.fill();
+      }
     }
 
     const texture = new THREE.CanvasTexture(canvas);
