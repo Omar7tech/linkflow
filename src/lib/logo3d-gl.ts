@@ -21,6 +21,10 @@ export interface LogoFinish {
   roughness: number;
   clearcoat?: number;
   iridescence?: number;
+  /** Glass-only optics. */
+  ior?: number;
+  dispersion?: number;
+  thickness?: number;
 }
 
 export const LOGO_FINISHES: readonly LogoFinish[] = [
@@ -30,7 +34,8 @@ export const LOGO_FINISHES: readonly LogoFinish[] = [
   { id: "onyx", label: "Onyx", css: "linear-gradient(135deg,#3a3a40,#101014)", kind: "metal", color: "#232327", metalness: 0.9, roughness: 0.32, clearcoat: 0.6 },
   { id: "emerald", label: "Emerald", css: "linear-gradient(135deg,#34d399,#065f46)", kind: "metal", color: "#10b981", metalness: 0.7, roughness: 0.24, clearcoat: 0.5 },
   { id: "pearl", label: "Pearl", css: "linear-gradient(135deg,#ffffff,#cfc8d8)", kind: "metal", color: "#f2efec", metalness: 0.15, roughness: 0.22, clearcoat: 1, iridescence: 0.85 },
-  { id: "glass", label: "Glass", css: "linear-gradient(135deg,#e0f2fe88,#7dd3fc44)", kind: "glass", color: "#dff3f6", metalness: 0, roughness: 0.06 },
+  { id: "glass", label: "Frosted", css: "linear-gradient(135deg,#e0f2fe88,#7dd3fc44)", kind: "glass", color: "#dff3f6", metalness: 0, roughness: 0.18 },
+  { id: "optical", label: "Optical", css: "linear-gradient(135deg,#ffffff,#a5f3fc)", kind: "glass", color: "#ffffff", metalness: 0, roughness: 0.02, ior: 1.52, dispersion: 0.12, thickness: 12, clearcoat: 1 },
   { id: "neon", label: "Neon", css: "linear-gradient(135deg,#34d399,#0ea5e9)", kind: "neon", color: "#34d399", metalness: 0.2, roughness: 0.4 },
   { id: "custom", label: "Custom", css: "conic-gradient(#f87171,#fbbf24,#34d399,#38bdf8,#a78bfa,#f87171)", kind: "custom", color: "#10b981", metalness: 0.8, roughness: 0.3 },
 ];
@@ -115,8 +120,11 @@ export class GLLogoRenderer {
         metalness: 0,
         roughness: surface?.roughness ?? f.roughness,
         transmission: 1,
-        thickness: 6,
-        ior: 1.45,
+        thickness: f.thickness ?? 6,
+        ior: f.ior ?? 1.45,
+        dispersion: f.dispersion ?? 0, // chromatic fringing — real optical glass
+        clearcoat: f.clearcoat ?? 0,
+        clearcoatRoughness: 0.06,
         side: THREE.DoubleSide,
       });
     }

@@ -752,20 +752,34 @@ export function Logo3DTool() {
           <CardContent className="space-y-5">
             <div className="space-y-1.5">
               <Label>Material</Label>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
                 {LOGO_FINISHES.map((f) => (
                   <button
                     key={f.id}
                     type="button"
                     onClick={() => pickFinish(f)}
-                    title={f.label}
                     className={cn(
-                      "size-8 rounded-full border-2 transition-transform hover:scale-110",
-                      finishId === f.id ? "border-emerald-500" : "border-border"
+                      "flex items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition-colors",
+                      finishId === f.id
+                        ? "border-emerald-500/70 bg-emerald-500/10"
+                        : "border-border hover:bg-muted/50"
                     )}
-                    style={{ background: f.css }}
-                    aria-label={`${f.label} material`}
-                  />
+                  >
+                    <span
+                      className="size-4 shrink-0 rounded-full border border-black/10 dark:border-white/10"
+                      style={{ background: f.css }}
+                    />
+                    <span
+                      className={cn(
+                        "truncate text-xs",
+                        finishId === f.id
+                          ? "font-medium text-emerald-600 dark:text-emerald-400"
+                          : "text-muted-foreground"
+                      )}
+                    >
+                      {f.label}
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>
@@ -784,32 +798,42 @@ export function Logo3DTool() {
             )}
             <div className="space-y-1.5">
               <Label>Edge sides</Label>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEdgeFinishId("match")}
-                  className={cn(
-                    "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                    edgeFinishId === "match"
-                      ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : "border-border text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  Match
-                </button>
-                {LOGO_FINISHES.filter((f) => f.id !== "custom").map((f) => (
+              <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                {[
+                  { id: "match", label: "Match face", css: "transparent" },
+                  ...LOGO_FINISHES.filter((f) => f.id !== "custom"),
+                ].map((f) => (
                   <button
                     key={f.id}
                     type="button"
                     onClick={() => setEdgeFinishId(f.id)}
-                    title={`${f.label} edges`}
                     className={cn(
-                      "size-6 rounded-full border-2 transition-transform hover:scale-110",
-                      edgeFinishId === f.id ? "border-emerald-500" : "border-border"
+                      "flex items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition-colors",
+                      edgeFinishId === f.id
+                        ? "border-emerald-500/70 bg-emerald-500/10"
+                        : "border-border hover:bg-muted/50"
                     )}
-                    style={{ background: f.css }}
-                    aria-label={`${f.label} edge material`}
-                  />
+                  >
+                    <span
+                      className={cn(
+                        "size-4 shrink-0 rounded-full",
+                        f.id === "match"
+                          ? "border-muted-foreground/50 border border-dashed"
+                          : "border border-black/10 dark:border-white/10"
+                      )}
+                      style={f.id === "match" ? undefined : { background: f.css }}
+                    />
+                    <span
+                      className={cn(
+                        "truncate text-xs",
+                        edgeFinishId === f.id
+                          ? "font-medium text-emerald-600 dark:text-emerald-400"
+                          : "text-muted-foreground"
+                      )}
+                    >
+                      {f.label}
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>
