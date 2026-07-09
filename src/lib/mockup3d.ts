@@ -135,12 +135,21 @@ function collectPlateFaces(plate: Plate, rx: number, ry: number): Face[] {
       z: u.x * v.y - u.y * v.x,
     });
     const diffuse = Math.max(0, n.x * LIGHT.x + n.y * LIGHT.y + n.z * LIGHT.z);
-    const k = (0.38 + 0.62 * diffuse) * (plate.dim ?? 1);
+    // Continuous dark→light metal blend instead of a hard two-tone split,
+    // with a specular kick when the wall faces the key light head-on.
+    const k =
+      (0.38 + 0.62 * diffuse) *
+      (plate.dim ?? 1) *
+      (diffuse > 0.88 ? 1 + (diffuse - 0.88) * 1.8 : 1);
+    const t = Math.min(1, Math.max(0, (diffuse - 0.22) / 0.55));
+    const [dr, dg, db] = hexRgb(plate.edgeDark);
+    const [lr, lg, lb] = hexRgb(plate.edgeLight);
+    const ch = (d: number, l: number) => Math.min(255, Math.round((d + (l - d) * t) * k));
     faces.push({
       kind: "fill",
       pts: [front[i], front[j], back[j], back[i]],
       z: (a.z + b.z + c.z + d.z) / 4,
-      color: shade(diffuse > 0.55 ? plate.edgeLight : plate.edgeDark, k),
+      color: `rgb(${ch(dr, lr)}, ${ch(dg, lg)}, ${ch(db, lb)})`,
     });
   }
 
@@ -245,12 +254,28 @@ export interface SceneOptions {
   rotX: number; // radians
   rotY: number;
   zoom: number;
-  /** 0..1 floor-shadow strength. */
-  shadow: number;
+  /** 0..1 mirror-floor reflection strength. */
+  reflection: number;
   /** World-space y of the floor (device-dependent). */
   floorY: number;
   background: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 }
+
+// Reusable offscreen canvases (device render, reflection band, shadow silhouette).
+const scratchCanvases: HTMLCanvasElement[] = [];
+function getScratch(i: number, w: number, h: number): HTMLCanvasElement {
+  let c = scratchCanvases[i];
+  if (!c) {
+    c = document.createElement("canvas");
+    scratchCanvases[i] = c;
+  }
+  if (c.width !== w || c.height !== h) {
+    c.width = w;
+    c.height = h;
+  }
+  return c;
+}
+
 
 /** Fit scale computed from the front view so zoom stays steady while spinning. */
 export function computeFit(plates: Plate[], canvasW: number, canvasH: number): number {
@@ -284,29 +309,9 @@ export function renderScene(
   ctx.clearRect(0, 0, w, h);
   opts.background(ctx, w, h);
 
-  const scale = fit * opts.zoom * Math.min(w, h) / Math.min(w, h); // fit already canvas-relative
+  const scale = fit * opts.zoom;
   const cx = w / 2;
   const cy = h / 2 - h * 0.015;
-
-  // Floor shadow — a soft ellipse under the device, elongated by the fit width.
-  if (opts.shadow > 0) {
-    const floor = project(rotXY({ x: 0, y: opts.floorY, z: 0 }, opts.rotX, opts.rotY));
-    const sx = cx + floor.x * scale;
-    const sy = cy + floor.y * scale;
-    const rxE = w * 0.23 * opts.zoom;
-    const ryE = rxE * 0.16;
-    const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, rxE);
-    grad.addColorStop(0, `rgba(8, 12, 10, ${0.42 * opts.shadow})`);
-    grad.addColorStop(0.65, `rgba(8, 12, 10, ${0.16 * opts.shadow})`);
-    grad.addColorStop(1, "rgba(8, 12, 10, 0)");
-    ctx.save();
-    ctx.translate(sx, sy);
-    ctx.scale(1, ryE / rxE);
-    ctx.translate(-sx, -sy);
-    ctx.fillStyle = grad;
-    ctx.fillRect(sx - rxE, sy - rxE, rxE * 2, rxE * 2);
-    ctx.restore();
-  }
 
   const faces = plates.flatMap((plate) => collectPlateFaces(plate, opts.rotX, opts.rotY));
   const fillFaces = faces.filter((face) => face.kind === "fill");
@@ -316,33 +321,73 @@ export function renderScene(
 
   const toCanvas = (p: { x: number; y: number }) => ({ x: cx + p.x * scale, y: cy + p.y * scale });
 
-  for (const face of fillFaces) {
-    const pts = face.pts.map(toCanvas);
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x, pts[0].y);
-    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-    ctx.closePath();
-    ctx.fillStyle = face.color;
-    ctx.strokeStyle = face.color;
-    ctx.lineWidth = 0.8;
-    ctx.fill();
-    ctx.stroke();
+  const drawDeviceFaces = (g: CanvasRenderingContext2D) => {
+    for (const face of fillFaces) {
+      const pts = face.pts.map(toCanvas);
+      g.beginPath();
+      g.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
+      g.closePath();
+      g.fillStyle = face.color;
+      g.strokeStyle = face.color;
+      g.lineWidth = 0.8;
+      g.fill();
+      g.stroke();
+    }
+    for (const face of texFaces) {
+      const q = face.quad.map(toCanvas);
+      const [u0, v0, u1, v1] = face.uv;
+      drawTexturedTriangle(g, face.texture, [q[0], q[1], q[2]], [
+        { x: u0, y: v0 },
+        { x: u1, y: v0 },
+        { x: u1, y: v1 },
+      ]);
+      drawTexturedTriangle(g, face.texture, [q[0], q[2], q[3]], [
+        { x: u0, y: v0 },
+        { x: u1, y: v1 },
+        { x: u0, y: v1 },
+      ]);
+    }
+  };
+
+  const floor = project(rotXY({ x: 0, y: opts.floorY, z: 0 }, opts.rotX, opts.rotY));
+  const sy = cy + floor.y * scale;
+
+  // Mirror-floor reflection — geometry is rendered ONCE into an offscreen,
+  // which serves both the reflection and the final device blit. The flip,
+  // fade and blur touch only a fixed-height band below the floor line.
+  let off: HTMLCanvasElement | null = null;
+  if (opts.reflection > 0 && sy < h) {
+    off = getScratch(0, w, h);
+    const octx = off.getContext("2d")!;
+    octx.setTransform(1, 0, 0, 1, 0, 0);
+    octx.clearRect(0, 0, w, h);
+    drawDeviceFaces(octx);
+
+    const band = getScratch(1, w, Math.ceil(h * 0.34));
+    const bctx = band.getContext("2d")!;
+    bctx.globalCompositeOperation = "source-over";
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.clearRect(0, 0, band.width, band.height);
+    bctx.setTransform(1, 0, 0, -1, 0, sy); // band row 0 = floor line, flipped
+    bctx.drawImage(off, 0, 0);
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.globalCompositeOperation = "destination-in";
+    const fade = bctx.createLinearGradient(0, 0, 0, band.height * 0.94);
+    fade.addColorStop(0, `rgba(0,0,0,${0.42 * opts.reflection})`);
+    fade.addColorStop(0.6, `rgba(0,0,0,${0.1 * opts.reflection})`);
+    fade.addColorStop(1, "rgba(0,0,0,0)");
+    bctx.fillStyle = fade;
+    bctx.fillRect(0, 0, w, band.height);
+
+    ctx.save();
+    ctx.filter = `blur(${Math.max(1, w * 0.0012)}px)`;
+    ctx.drawImage(band, 0, sy);
+    ctx.restore();
   }
 
-  for (const face of texFaces) {
-    const q = face.quad.map(toCanvas);
-    const [u0, v0, u1, v1] = face.uv;
-    drawTexturedTriangle(ctx, face.texture, [q[0], q[1], q[2]], [
-      { x: u0, y: v0 },
-      { x: u1, y: v0 },
-      { x: u1, y: v1 },
-    ]);
-    drawTexturedTriangle(ctx, face.texture, [q[0], q[2], q[3]], [
-      { x: u0, y: v0 },
-      { x: u1, y: v1 },
-      { x: u0, y: v1 },
-    ]);
-  }
+  if (off) ctx.drawImage(off, 0, 0);
+  else drawDeviceFaces(ctx);
 }
 
 /* --------------------------------------------------------------- devices */
@@ -359,10 +404,15 @@ export interface FrameFinish {
 
 export const FINISHES: readonly FrameFinish[] = [
   { id: "titanium", label: "Titanium", light: "#98989f", dark: "#4e4e54" },
-  { id: "black", label: "Black", light: "#3c3c3f", dark: "#151517" },
+  { id: "black", label: "Space Black", light: "#3c3c3f", dark: "#151517" },
   { id: "silver", label: "Silver", light: "#e2e3e6", dark: "#a2a4a9" },
-  { id: "gold", label: "Gold", light: "#eddcbd", dark: "#b39469" },
+  { id: "gold", label: "Light Gold", light: "#eddcbd", dark: "#b39469" },
   { id: "navy", label: "Navy", light: "#46536f", dark: "#1f2740" },
+  { id: "orange", label: "Cosmic Orange", light: "#e8873e", dark: "#9a4a18" },
+  { id: "deepblue", label: "Deep Blue", light: "#41567e", dark: "#141f3a" },
+  { id: "sage", label: "Sage", light: "#a7b89d", dark: "#5a6a52" },
+  { id: "lavender", label: "Lavender", light: "#cfc4e6", dark: "#8b7fae" },
+  { id: "skyblue", label: "Sky Blue", light: "#b9d4e7", dark: "#6d92ac" },
 ];
 
 function roundRectPath(
@@ -431,11 +481,51 @@ function paintPlaceholder(ctx: CanvasRenderingContext2D, x: number, y: number, w
   }
 }
 
-function paintGlare(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  const g = ctx.createLinearGradient(x, y, x + w * 0.9, y + h);
-  g.addColorStop(0, "rgba(255,255,255,0.10)");
-  g.addColorStop(0.28, "rgba(255,255,255,0.035)");
-  g.addColorStop(0.45, "rgba(255,255,255,0)");
+/** View-dependent glass reflections: an ambient sheen plus a light band that sweeps as the device turns. */
+function paintGlare(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  rx: number, // radians
+  ry: number,
+  k: number // 0..1 intensity
+) {
+  if (k <= 0) return;
+  // Ambient sheen from the key light (upper left)
+  const amb = ctx.createLinearGradient(x, y, x + w * 0.9, y + h);
+  amb.addColorStop(0, `rgba(255,255,255,${0.09 * k})`);
+  amb.addColorStop(0.3, `rgba(255,255,255,${0.03 * k})`);
+  amb.addColorStop(0.55, "rgba(255,255,255,0)");
+  ctx.fillStyle = amb;
+  ctx.fillRect(x, y, w, h);
+  // Main reflection band — slides across the glass with the turn, drifts with tilt.
+  const t = Math.min(1, Math.max(0, (ry / 1.4 + 1) / 2)); // ±80° → 0..1
+  const bx = x + w * (1.15 - 1.3 * t) + rx * w * 0.12;
+  const bw = w * 0.5;
+  const band = ctx.createLinearGradient(bx - bw / 2, y + h * 0.08, bx + bw / 2, y + h * 0.4);
+  band.addColorStop(0, "rgba(255,255,255,0)");
+  band.addColorStop(0.45, `rgba(255,255,255,${0.1 * k})`);
+  band.addColorStop(0.55, `rgba(255,255,255,${0.1 * k})`);
+  band.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = band;
+  ctx.fillRect(x, y, w, h);
+  // Thin trailing streak
+  const streak = ctx.createLinearGradient(bx + bw * 0.5, y, bx + bw * 0.82, y + h * 0.3);
+  streak.addColorStop(0, "rgba(255,255,255,0)");
+  streak.addColorStop(0.5, `rgba(255,255,255,${0.055 * k})`);
+  streak.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = streak;
+  ctx.fillRect(x, y, w, h);
+}
+
+/** Slight darkening toward the corners — makes the panel read as glass, not a sticker. */
+function paintVignette(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  const r = Math.hypot(w, h) / 2;
+  const g = ctx.createRadialGradient(x + w / 2, y + h / 2, r * 0.55, x + w / 2, y + h / 2, r * 1.05);
+  g.addColorStop(0, "rgba(0,0,0,0)");
+  g.addColorStop(1, "rgba(0,0,0,0.15)");
   ctx.fillStyle = g;
   ctx.fillRect(x, y, w, h);
 }
@@ -445,6 +535,8 @@ export interface DeviceSpec {
   floorY: number;
   /** Repaint the screen area(s) with the current source (video frames). */
   updateScreen: (src: ScreenSource | null) => void;
+  /** Update view-dependent screen effects (moving glare). Angles in radians. */
+  setView: (rotX: number, rotY: number, glare: number) => void;
 }
 
 /** Build an iPhone or iPad plate + texture painter. */
@@ -476,76 +568,121 @@ function buildSlabDevice(
   const bezel = (phone ? 2.6 : 4.6) * TEX;
   const screenR = radius * TEX - bezel * 0.55;
 
-  const paint = (src: ScreenSource | null) => {
-    const tw = tex.width;
-    const th = tex.height;
-    tctx.clearRect(0, 0, tw, th);
-    // Frame
-    const frame = tctx.createLinearGradient(0, 0, tw, th);
+  // Last-known screen source and view state — repainted on either change.
+  let lastSrc: ScreenSource | null = null;
+  let vRx = 8 * (Math.PI / 180);
+  let vRy = -26 * (Math.PI / 180);
+  let vGlare = 0.6;
+
+  /* The texture is composed from two cached layers so the per-frame cost
+   * (video frames, glare tracking the view) is just two blits, the screen
+   * draw and a few gradients — not a full device repaint:
+   *  - chrome:  frame, rim light, bezel, placeholder screen (static, below content)
+   *  - overlay: vignette, fresnel rim, island/camera (static, above content) */
+  const tw = tex.width;
+  const th = tex.height;
+  const sb = bezel; // screen rect: (sb, sb, sw0, sh0)
+  const sw0 = tw - bezel * 2;
+  const sh0 = th - bezel * 2;
+  const sr = Math.max(screenR, 8);
+
+  const chrome = document.createElement("canvas");
+  chrome.width = tw;
+  chrome.height = th;
+  {
+    const c = chrome.getContext("2d")!;
+    const frame = c.createLinearGradient(0, 0, tw, th);
     frame.addColorStop(0, finish.light);
     frame.addColorStop(1, finish.dark);
-    tctx.fillStyle = frame;
-    roundRectPath(tctx, 0, 0, tw, th, radius * TEX);
-    tctx.fill();
+    c.fillStyle = frame;
+    roundRectPath(c, 0, 0, tw, th, radius * TEX);
+    c.fill();
     // Polished rim catch-light where the frame meets the glass
-    tctx.strokeStyle = "rgba(255,255,255,0.32)";
-    tctx.lineWidth = TEX * 0.22;
-    roundRectPath(tctx, TEX * 0.34, TEX * 0.34, tw - TEX * 0.68, th - TEX * 0.68, radius * TEX - TEX * 0.3);
-    tctx.stroke();
+    c.strokeStyle = "rgba(255,255,255,0.32)";
+    c.lineWidth = TEX * 0.22;
+    roundRectPath(c, TEX * 0.34, TEX * 0.34, tw - TEX * 0.68, th - TEX * 0.68, radius * TEX - TEX * 0.3);
+    c.stroke();
     // Bezel
-    tctx.fillStyle = "#050506";
-    roundRectPath(tctx, TEX * 0.9, TEX * 0.9, tw - TEX * 1.8, th - TEX * 1.8, radius * TEX - TEX * 0.7);
-    tctx.fill();
-    // Screen
-    tctx.save();
-    roundRectPath(tctx, bezel, bezel, tw - bezel * 2, th - bezel * 2, Math.max(screenR, 8));
-    tctx.clip();
-    if (src) drawCover(tctx, src, bezel, bezel, tw - bezel * 2, th - bezel * 2);
-    else paintPlaceholder(tctx, bezel, bezel, tw - bezel * 2, th - bezel * 2);
-    paintGlare(tctx, bezel, bezel, tw - bezel * 2, th - bezel * 2);
-    tctx.restore();
+    c.fillStyle = "#050506";
+    roundRectPath(c, TEX * 0.9, TEX * 0.9, tw - TEX * 1.8, th - TEX * 1.8, radius * TEX - TEX * 0.7);
+    c.fill();
+    // Placeholder screen — covered by drawCover once a source is loaded.
+    c.save();
+    roundRectPath(c, sb, sb, sw0, sh0, sr);
+    c.clip();
+    paintPlaceholder(c, sb, sb, sw0, sh0);
+    c.restore();
+  }
+
+  const overlay = document.createElement("canvas");
+  overlay.width = tw;
+  overlay.height = th;
+  {
+    const c = overlay.getContext("2d")!;
+    c.save();
+    roundRectPath(c, sb, sb, sw0, sh0, sr);
+    c.clip();
+    paintVignette(c, sb, sb, sw0, sh0);
+    // Fresnel rim — faint bright line where the glass meets the bezel.
+    c.strokeStyle = "rgba(255,255,255,0.09)";
+    c.lineWidth = TEX * 0.22;
+    roundRectPath(c, sb + TEX * 0.12, sb + TEX * 0.12, sw0 - TEX * 0.24, sh0 - TEX * 0.24, sr);
+    c.stroke();
+    c.restore();
     // Dynamic island / camera
     if (phone) {
       const len = (orientation === "portrait" ? tw : th) * 0.29;
       const thin = TEX * 5.6;
-      const ix = orientation === "portrait" ? (tw - len) / 2 : bezel + TEX * 1.5;
-      const iy = orientation === "portrait" ? bezel + TEX * 1.5 : (th - len) / 2;
+      const ix = orientation === "portrait" ? (tw - len) / 2 : sb + TEX * 1.5;
+      const iy = orientation === "portrait" ? sb + TEX * 1.5 : (th - len) / 2;
       const iw = orientation === "portrait" ? len : thin;
       const ih = orientation === "portrait" ? thin : len;
-      tctx.fillStyle = "#000";
-      roundRectPath(tctx, ix, iy, iw, ih, thin / 2);
-      tctx.fill();
+      c.fillStyle = "#000";
+      roundRectPath(c, ix, iy, iw, ih, thin / 2);
+      c.fill();
       // Front camera lens at the trailing end of the island
       const lr = thin * 0.3;
       const lx = orientation === "portrait" ? ix + iw - thin / 2 : ix + iw / 2;
       const ly = orientation === "portrait" ? iy + ih / 2 : iy + ih - thin / 2;
-      const lens = tctx.createRadialGradient(lx - lr * 0.35, ly - lr * 0.35, lr * 0.1, lx, ly, lr);
+      const lens = c.createRadialGradient(lx - lr * 0.35, ly - lr * 0.35, lr * 0.1, lx, ly, lr);
       lens.addColorStop(0, "#3d4a63");
       lens.addColorStop(0.55, "#141b2c");
       lens.addColorStop(1, "#03050a");
-      tctx.fillStyle = lens;
-      tctx.beginPath();
-      tctx.arc(lx, ly, lr, 0, Math.PI * 2);
-      tctx.fill();
-      tctx.fillStyle = "rgba(160,190,255,0.5)";
-      tctx.beginPath();
-      tctx.arc(lx - lr * 0.35, ly - lr * 0.42, lr * 0.2, 0, Math.PI * 2);
-      tctx.fill();
+      c.fillStyle = lens;
+      c.beginPath();
+      c.arc(lx, ly, lr, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = "rgba(160,190,255,0.5)";
+      c.beginPath();
+      c.arc(lx - lr * 0.35, ly - lr * 0.42, lr * 0.2, 0, Math.PI * 2);
+      c.fill();
     } else {
-      const cx0 = orientation === "portrait" ? tw / 2 : bezel / 2 + TEX * 0.45;
-      const cy0 = orientation === "portrait" ? bezel / 2 + TEX * 0.45 : th / 2;
+      const cx0 = orientation === "portrait" ? tw / 2 : sb / 2 + TEX * 0.45;
+      const cy0 = orientation === "portrait" ? sb / 2 + TEX * 0.45 : th / 2;
       const lr = TEX * 0.9;
-      const lens = tctx.createRadialGradient(cx0 - lr * 0.3, cy0 - lr * 0.3, lr * 0.1, cx0, cy0, lr);
+      const lens = c.createRadialGradient(cx0 - lr * 0.3, cy0 - lr * 0.3, lr * 0.1, cx0, cy0, lr);
       lens.addColorStop(0, "#2c3850");
       lens.addColorStop(0.6, "#10151f");
       lens.addColorStop(1, "#030407");
-      tctx.fillStyle = lens;
-      tctx.beginPath();
-      tctx.arc(cx0, cy0, lr, 0, Math.PI * 2);
-      tctx.fill();
+      c.fillStyle = lens;
+      c.beginPath();
+      c.arc(cx0, cy0, lr, 0, Math.PI * 2);
+      c.fill();
     }
+  }
+
+  const paint = () => {
+    tctx.clearRect(0, 0, tw, th);
+    tctx.drawImage(chrome, 0, 0);
+    tctx.save();
+    roundRectPath(tctx, sb, sb, sw0, sh0, sr);
+    tctx.clip();
+    if (lastSrc) drawCover(tctx, lastSrc, sb, sb, sw0, sh0);
+    paintGlare(tctx, sb, sb, sw0, sh0, vRx, vRy, vGlare);
+    tctx.restore();
+    tctx.drawImage(overlay, 0, 0);
   };
-  paint(null);
+  paint();
 
   /* --- physical side buttons ---
    * Each button is a small capsule plate rotated so its face points OUT of the
@@ -688,7 +825,17 @@ function buildSlabDevice(
       ...buttonPlates,
     ],
     floorY: -h / 2 - 6,
-    updateScreen: paint,
+    updateScreen: (src) => {
+      lastSrc = src;
+      paint();
+    },
+    setView: (rotX, rotY, glare) => {
+      if (rotX === vRx && rotY === vRy && glare === vGlare) return;
+      vRx = rotX;
+      vRy = rotY;
+      vGlare = glare;
+      paint();
+    },
   };
 }
 
@@ -787,6 +934,45 @@ export const BACKGROUNDS: readonly BackgroundPreset[] = [
     paint: linear([[0, "#fafafa"], [1, "#e8ebee"]]),
   },
   {
+    id: "sunset",
+    label: "Sunset",
+    css: "linear-gradient(135deg,#431407,#c2410c 55%,#fbbf24)",
+    paint: withGlow(linear([[0, "#431407"], [0.55, "#c2410c"], [1, "#fbbf24"]]), [
+      [0.75, 0.2, "rgba(251,191,36,0.35)"],
+    ]),
+  },
+  {
+    id: "rose",
+    label: "Rose",
+    css: "linear-gradient(135deg,#4c0519,#be123c 55%,#fda4af)",
+    paint: withGlow(linear([[0, "#4c0519"], [0.55, "#be123c"], [1, "#fda4af"]]), [
+      [0.2, 0.2, "rgba(253,164,175,0.28)"],
+    ]),
+  },
+  {
+    id: "midnight",
+    label: "Midnight",
+    css: "linear-gradient(135deg,#020617,#1e293b 60%,#334155)",
+    paint: withGlow(linear([[0, "#020617"], [0.6, "#1e293b"], [1, "#334155"]]), [
+      [0.5, 0.0, "rgba(148,163,184,0.14)"],
+    ]),
+  },
+  {
+    id: "aurora",
+    label: "Aurora",
+    css: "linear-gradient(135deg,#042f2e,#0f766e 45%,#a21caf)",
+    paint: withGlow(linear([[0, "#042f2e"], [0.45, "#0f766e"], [1, "#a21caf"]]), [
+      [0.85, 0.15, "rgba(217,70,239,0.3)"],
+      [0.15, 0.85, "rgba(45,212,191,0.25)"],
+    ]),
+  },
+  {
+    id: "cream",
+    label: "Cream",
+    css: "linear-gradient(135deg,#fffbeb,#fef3c7 60%,#fde68a)",
+    paint: linear([[0, "#fffbeb"], [0.6, "#fef3c7"], [1, "#fde68a"]]),
+  },
+  {
     id: "transparent",
     label: "None",
     css: "repeating-conic-gradient(#d4d4d8 0% 25%, #fafafa 0% 50%) 0 0 / 14px 14px",
@@ -795,3 +981,15 @@ export const BACKGROUNDS: readonly BackgroundPreset[] = [
     },
   },
 ];
+
+/** Build a backdrop from a single user-picked color — dark→light sweep with a soft glow. */
+export function customBackground(hex: string): BackgroundPreset {
+  return {
+    id: "custom",
+    label: "Custom",
+    css: `linear-gradient(135deg, ${shade(hex, 0.3)}, ${shade(hex, 0.68)} 55%, ${shade(hex, 1.08)})`,
+    paint: withGlow(linear([[0, shade(hex, 0.3)], [0.55, shade(hex, 0.68)], [1, shade(hex, 1.08)]]), [
+      [0.8, 0.15, "rgba(255,255,255,0.16)"],
+    ]),
+  };
+}

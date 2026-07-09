@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GeneratorLayout } from "@/components/shared/generator-layout";
 import { TOOL_BY_ID } from "@/constants/tools";
@@ -23,6 +24,7 @@ import {
   BACKGROUNDS,
   buildDevice,
   computeFit,
+  customBackground,
   FINISHES,
   renderScene,
   type DeviceId,
@@ -46,6 +48,7 @@ const ANGLES: { label: string; rotX: number; rotY: number }[] = [
 const ASPECTS: { id: string; label: string; w: number; h: number }[] = [
   { id: "1:1", label: "1:1", w: 1440, h: 1440 },
   { id: "4:5", label: "4:5", w: 1344, h: 1680 },
+  { id: "9:16", label: "9:16", w: 1080, h: 1920 },
   { id: "16:9", label: "16:9", w: 1920, h: 1080 },
 ];
 
@@ -62,18 +65,30 @@ export function MockupTool() {
   const [rotX, setRotX] = React.useState(8);
   const [rotY, setRotY] = React.useState(-26);
   const [zoom, setZoom] = React.useState(1);
-  const [shadow, setShadow] = React.useState(0.7);
+  const [reflection, setReflection] = React.useState(0.45);
+  const [glare, setGlare] = React.useState(0.6);
+  const [customBg, setCustomBg] = React.useState("#10b981");
+  const [spinning, setSpinning] = React.useState(false);
   const [source, setSource] = React.useState<Source | null>(null);
   const [recording, setRecording] = React.useState(false);
   const [dragOver, setDragOver] = React.useState(false);
 
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const dragRef = React.useRef<{ x: number; y: number; rotX: number; rotY: number } | null>(null);
+  // Coalesce high-frequency pointermove events into one state update per frame.
+  const pendingMove = React.useRef<{ x: number; y: number } | null>(null);
+  const moveRaf = React.useRef(0);
   // The playing <video> element lives in a ref — it's imperative media, not render state.
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
 
   const finish = FINISHES.find((f) => f.id === finishId) ?? FINISHES[0];
-  const background = BACKGROUNDS.find((b) => b.id === bgId) ?? BACKGROUNDS[0];
+  const background = React.useMemo(
+    () =>
+      bgId === "custom"
+        ? customBackground(customBg)
+        : (BACKGROUNDS.find((b) => b.id === bgId) ?? BACKGROUNDS[0]),
+    [bgId, customBg]
+  );
   const aspect = ASPECTS.find((a) => a.id === aspectId) ?? ASPECTS[0];
 
   // Device textures need canvases — only build in the browser, never during prerender.
@@ -96,11 +111,11 @@ export function MockupTool() {
       rotX: (rotX * Math.PI) / 180,
       rotY: (rotY * Math.PI) / 180,
       zoom,
-      shadow,
+      reflection,
       floorY: spec?.floorY ?? 0,
       background: background.paint,
     }),
-    [rotX, rotY, zoom, shadow, spec, background]
+    [rotX, rotY, zoom, reflection, spec, background]
   );
 
   // Static render on any change; continuous loop while a video is playing.
@@ -110,6 +125,7 @@ export function MockupTool() {
     canvas.width = aspect.w;
     canvas.height = aspect.h;
     const ctx = canvas.getContext("2d")!;
+    spec.setView(sceneOpts.rotX, sceneOpts.rotY, glare);
 
     if (source?.kind === "video") {
       let raf = 0;
@@ -122,7 +138,7 @@ export function MockupTool() {
       return () => cancelAnimationFrame(raf);
     }
     renderScene(ctx, spec.plates, sceneOpts, fit);
-  }, [spec, sceneOpts, fit, aspect, source]);
+  }, [spec, sceneOpts, fit, aspect, source, glare]);
 
   React.useEffect(() => {
     return () => {
@@ -135,19 +151,55 @@ export function MockupTool() {
     };
   }, [source]);
 
+  // Turntable — gentle ping-pong sweep; grabbing the device pauses it.
+  const spinDir = React.useRef(1);
+  React.useEffect(() => {
+    if (!spinning) return;
+    let raf = 0;
+    let last = performance.now();
+    const loop = (now: number) => {
+      const dt = Math.min(0.1, (now - last) / 1000);
+      last = now;
+      if (!dragRef.current) {
+        setRotY((prev) => {
+          let next = prev + spinDir.current * 26 * dt;
+          if (next > 55) {
+            next = 55;
+            spinDir.current = -1;
+          } else if (next < -55) {
+            next = -55;
+            spinDir.current = 1;
+          }
+          return next;
+        });
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [spinning]);
+
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
     dragRef.current = { x: e.clientX, y: e.clientY, rotX, rotY };
   };
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const drag = dragRef.current;
-    if (!drag) return;
-    const scale = 0.35;
-    setRotY(Math.max(-80, Math.min(80, drag.rotY + (e.clientX - drag.x) * scale)));
-    setRotX(Math.max(-45, Math.min(60, drag.rotX + (e.clientY - drag.y) * scale)));
+    if (!dragRef.current) return;
+    pendingMove.current = { x: e.clientX, y: e.clientY };
+    if (moveRaf.current) return;
+    moveRaf.current = requestAnimationFrame(() => {
+      moveRaf.current = 0;
+      const drag = dragRef.current;
+      const p = pendingMove.current;
+      if (!drag || !p) return;
+      const scale = 0.35;
+      setRotY(Math.max(-80, Math.min(80, drag.rotY + (p.x - drag.x) * scale)));
+      setRotX(Math.max(-45, Math.min(60, drag.rotX + (p.y - drag.y) * scale)));
+    });
   };
   const onPointerUp = () => {
     dragRef.current = null;
+    pendingMove.current = null;
   };
 
   const loadFile = async (file: File) => {
@@ -193,10 +245,12 @@ export function MockupTool() {
     }, "image/png");
   };
 
+  // Records the canvas — either a playing screen video or the turntable spin.
+  const canRecord = source?.kind === "video" || spinning;
   const recordWebm = () => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
-    if (!canvas || !video || source?.kind !== "video" || recording) return;
+    if (!canvas || !canRecord || recording) return;
     const stream = canvas.captureStream(30);
     const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
       ? "video/webm;codecs=vp9"
@@ -214,9 +268,12 @@ export function MockupTool() {
       setRecording(false);
     };
     setRecording(true);
-    video.currentTime = 0;
+    if (source?.kind === "video" && video) video.currentTime = 0;
     recorder.start();
-    const duration = Math.min((video.duration || 8) * 1000, 15_000);
+    const duration =
+      source?.kind === "video" && video
+        ? Math.min((video.duration || 8) * 1000, 15_000)
+        : 9_000; // ~one full turntable sweep
     setTimeout(() => recorder.stop(), duration);
   };
 
@@ -280,7 +337,7 @@ export function MockupTool() {
             </div>
             <div className="flex items-center gap-2">
               <p className="text-muted-foreground flex-1 text-xs">Drag the device to spin it</p>
-              {source?.kind === "video" && (
+              {canRecord && (
                 <Button variant="outline" size="sm" onClick={recordWebm} disabled={recording}>
                   {recording ? <Loader2Icon className="animate-spin" /> : <VideoIcon />}
                   {recording ? "Recording…" : "WebM"}
@@ -449,14 +506,28 @@ export function MockupTool() {
               onChange={setZoom}
             />
             <SliderRow
-              label="Shadow"
-              value={shadow}
+              label="Reflection"
+              value={reflection}
               min={0}
               max={1}
               step={0.05}
-              display={`${Math.round(shadow * 100)}%`}
-              onChange={setShadow}
+              display={reflection === 0 ? "Off" : `${Math.round(reflection * 100)}%`}
+              onChange={setReflection}
             />
+            <SliderRow
+              label="Screen glare"
+              value={glare}
+              min={0}
+              max={1}
+              step={0.05}
+              display={glare === 0 ? "Off" : `${Math.round(glare * 100)}%`}
+              onChange={setGlare}
+            />
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="turntable">Turntable spin</Label>
+              <Switch id="turntable" checked={spinning} onCheckedChange={setSpinning} />
+            </div>
           </CardContent>
         </Card>
 
@@ -484,7 +555,7 @@ export function MockupTool() {
 
             <div className="space-y-1.5">
               <Label>Backdrop</Label>
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-6 gap-2">
                 {BACKGROUNDS.map((b) => (
                   <button
                     key={b.id}
@@ -499,6 +570,30 @@ export function MockupTool() {
                     aria-label={`${b.label} backdrop`}
                   />
                 ))}
+                <label
+                  title="Custom color"
+                  className={cn(
+                    "relative aspect-square cursor-pointer rounded-lg border-2 transition-transform hover:scale-105",
+                    bgId === "custom" ? "border-emerald-500" : "border-border"
+                  )}
+                  style={{
+                    background:
+                      bgId === "custom"
+                        ? background.css
+                        : "conic-gradient(#f87171,#fbbf24,#34d399,#38bdf8,#a78bfa,#f87171)",
+                  }}
+                >
+                  <input
+                    type="color"
+                    value={customBg}
+                    className="absolute inset-0 size-full cursor-pointer opacity-0"
+                    aria-label="Pick a custom backdrop color"
+                    onChange={(e) => {
+                      setCustomBg(e.target.value);
+                      setBgId("custom");
+                    }}
+                  />
+                </label>
               </div>
             </div>
 
