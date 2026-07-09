@@ -72,6 +72,8 @@ export interface Plate {
   /** Grid density for the textured front face. */
   gridX: number;
   gridY: number;
+  /** Flat inlays on the side walls (ports, speaker holes, mics) — drawn only when their face is toward the camera. */
+  details?: { pts: Vec3[]; normal: Vec3; color: string }[];
 }
 
 type Face =
@@ -143,6 +145,21 @@ function collectPlateFaces(plate: Plate, rx: number, ry: number): Face[] {
   // Back face — plain body color (visible at steep angles).
   const backZ = backW.reduce((s, p) => s + p.z, 0) / backW.length;
   faces.push({ kind: "fill", pts: back, z: backZ - 0.01, color: shade(plate.edgeDark, 0.72) });
+
+  // Side-wall inlays (ports, speaker holes) — only when their wall faces the camera.
+  if (plate.details) {
+    for (const det of plate.details) {
+      const n = rotXY(det.normal, rx, ry);
+      if (n.z <= 0.05) continue;
+      const pts = det.pts.map((p) => project(rotXY(model(p), rx, ry)));
+      faces.push({
+        kind: "fill",
+        pts,
+        z: pts.reduce((s, p) => s + p.z, 0) / pts.length + 0.5,
+        color: det.color,
+      });
+    }
+  }
 
   // Front face — textured grid.
   const { gridX, gridY } = plate;
@@ -438,12 +455,18 @@ function buildSlabDevice(
   finish: FrameFinish
 ): DeviceSpec {
   const phone = device === "iphone";
-  let w = phone ? 72 : 136;
-  let h = phone ? 148 : 190;
+  const pw = phone ? 72 : 136; // portrait dims — details are laid out in this frame
+  const ph = phone ? 148 : 190;
   const thickness = phone ? 7.6 : 6.4;
+  const w = orientation === "portrait" ? pw : ph;
+  const h = orientation === "portrait" ? ph : pw;
   let radius = phone ? 11.4 : 9;
-  if (orientation === "landscape") [w, h] = [h, w];
   radius = Math.min(radius, Math.min(w, h) / 2 - 1);
+
+  // Landscape = portrait rotated 90° CCW (top edge lands on the left, like the island).
+  const map = (u: number, v: number) =>
+    orientation === "portrait" ? { x: u, y: v } : { x: -v, y: u };
+  const mapP = (u: number, v: number, z: number): Vec3 => ({ ...map(u, v), z });
 
   const TEX = 12; // texture pixels per world unit
   const tex = document.createElement("canvas");
@@ -465,6 +488,11 @@ function buildSlabDevice(
     tctx.fillStyle = frame;
     roundRectPath(tctx, 0, 0, tw, th, radius * TEX);
     tctx.fill();
+    // Polished rim catch-light where the frame meets the glass
+    tctx.strokeStyle = "rgba(255,255,255,0.32)";
+    tctx.lineWidth = TEX * 0.22;
+    roundRectPath(tctx, TEX * 0.34, TEX * 0.34, tw - TEX * 0.68, th - TEX * 0.68, radius * TEX - TEX * 0.3);
+    tctx.stroke();
     // Bezel
     tctx.fillStyle = "#050506";
     roundRectPath(tctx, TEX * 0.9, TEX * 0.9, tw - TEX * 1.8, th - TEX * 1.8, radius * TEX - TEX * 0.7);
@@ -477,25 +505,149 @@ function buildSlabDevice(
     else paintPlaceholder(tctx, bezel, bezel, tw - bezel * 2, th - bezel * 2);
     paintGlare(tctx, bezel, bezel, tw - bezel * 2, th - bezel * 2);
     tctx.restore();
-    // Dynamic island / camera dot
-    tctx.fillStyle = "#000";
+    // Dynamic island / camera
     if (phone) {
-      const iw = orientation === "portrait" ? tw * 0.3 : th * 0.3;
-      const ih = TEX * 5.4;
-      if (orientation === "portrait") {
-        roundRectPath(tctx, (tw - iw) / 2, bezel + TEX * 1.6, iw, ih, ih / 2);
-      } else {
-        roundRectPath(tctx, bezel + TEX * 1.6, (th - iw) / 2, ih, iw, ih / 2);
-      }
+      const len = (orientation === "portrait" ? tw : th) * 0.29;
+      const thin = TEX * 5.6;
+      const ix = orientation === "portrait" ? (tw - len) / 2 : bezel + TEX * 1.5;
+      const iy = orientation === "portrait" ? bezel + TEX * 1.5 : (th - len) / 2;
+      const iw = orientation === "portrait" ? len : thin;
+      const ih = orientation === "portrait" ? thin : len;
+      tctx.fillStyle = "#000";
+      roundRectPath(tctx, ix, iy, iw, ih, thin / 2);
+      tctx.fill();
+      // Front camera lens at the trailing end of the island
+      const lr = thin * 0.3;
+      const lx = orientation === "portrait" ? ix + iw - thin / 2 : ix + iw / 2;
+      const ly = orientation === "portrait" ? iy + ih / 2 : iy + ih - thin / 2;
+      const lens = tctx.createRadialGradient(lx - lr * 0.35, ly - lr * 0.35, lr * 0.1, lx, ly, lr);
+      lens.addColorStop(0, "#3d4a63");
+      lens.addColorStop(0.55, "#141b2c");
+      lens.addColorStop(1, "#03050a");
+      tctx.fillStyle = lens;
+      tctx.beginPath();
+      tctx.arc(lx, ly, lr, 0, Math.PI * 2);
+      tctx.fill();
+      tctx.fillStyle = "rgba(160,190,255,0.5)";
+      tctx.beginPath();
+      tctx.arc(lx - lr * 0.35, ly - lr * 0.42, lr * 0.2, 0, Math.PI * 2);
       tctx.fill();
     } else {
+      const cx0 = orientation === "portrait" ? tw / 2 : bezel / 2 + TEX * 0.45;
+      const cy0 = orientation === "portrait" ? bezel / 2 + TEX * 0.45 : th / 2;
+      const lr = TEX * 0.9;
+      const lens = tctx.createRadialGradient(cx0 - lr * 0.3, cy0 - lr * 0.3, lr * 0.1, cx0, cy0, lr);
+      lens.addColorStop(0, "#2c3850");
+      lens.addColorStop(0.6, "#10151f");
+      lens.addColorStop(1, "#030407");
+      tctx.fillStyle = lens;
       tctx.beginPath();
-      if (orientation === "portrait") tctx.arc(tw / 2, bezel / 2 + TEX * 0.45, TEX * 0.85, 0, Math.PI * 2);
-      else tctx.arc(bezel / 2 + TEX * 0.45, th / 2, TEX * 0.85, 0, Math.PI * 2);
+      tctx.arc(cx0, cy0, lr, 0, Math.PI * 2);
       tctx.fill();
     }
   };
   paint(null);
+
+  /* --- physical side buttons: thin capsule plates half-sunk into the frame --- */
+  const BTN_OUT = 1.5; // how far a button protrudes past the frame
+  const BTN_DEPTH = 3; // in-out size perpendicular to the edge
+  // Laid out in the portrait frame: `at` is the offset along the edge from center.
+  const buttonRects: { side: "left" | "right" | "top"; at: number; len: number }[] = phone
+    ? [
+        { side: "left", at: 42, len: 6.5 }, // action button
+        { side: "left", at: 25, len: 11 }, // volume up
+        { side: "left", at: 12, len: 11 }, // volume down
+        { side: "right", at: 22, len: 14 }, // power
+      ]
+    : [
+        { side: "top", at: pw / 2 - 13, len: 10 }, // power
+        { side: "right", at: ph / 2 - 14, len: 8.5 }, // volume up
+        { side: "right", at: ph / 2 - 25, len: 8.5 }, // volume down
+      ];
+
+  const buttonPlates: Plate[] = buttonRects.map((b) => {
+    let cu: number, cv: number, du: number, dv: number;
+    if (b.side === "top") {
+      cu = b.at;
+      cv = ph / 2 - BTN_DEPTH / 2 + BTN_OUT;
+      du = b.len;
+      dv = BTN_DEPTH;
+    } else {
+      cu = (b.side === "left" ? -1 : 1) * (pw / 2 - BTN_DEPTH / 2 + BTN_OUT);
+      cv = b.at;
+      du = BTN_DEPTH;
+      dv = b.len;
+    }
+    const c = map(cu, cv);
+    const bw = orientation === "portrait" ? du : dv;
+    const bh = orientation === "portrait" ? dv : du;
+    const r = Math.min(bw, bh) / 2 - 0.25;
+
+    const btnTex = document.createElement("canvas");
+    btnTex.width = Math.max(2, Math.round(bw * TEX));
+    btnTex.height = Math.max(2, Math.round(bh * TEX));
+    const bctx = btnTex.getContext("2d")!;
+    const g = bctx.createLinearGradient(0, 0, btnTex.width, btnTex.height);
+    g.addColorStop(0, finish.light);
+    g.addColorStop(1, finish.dark);
+    bctx.fillStyle = g;
+    roundRectPath(bctx, 0, 0, btnTex.width, btnTex.height, r * TEX);
+    bctx.fill();
+
+    return {
+      w: bw,
+      h: bh,
+      thickness: thickness * 0.42,
+      radius: Math.max(0.6, r),
+      texture: btnTex,
+      transform: (p: Vec3) => ({ x: p.x + c.x, y: p.y + c.y, z: p.z }),
+      edgeLight: finish.light,
+      edgeDark: finish.dark,
+      gridX: 2,
+      gridY: 2,
+    };
+  });
+
+  /* --- edge inlays: port, speaker/mic holes, screws (portrait frame) --- */
+  const details: NonNullable<Plate["details"]> = [];
+  const edgeInlay = (edge: 1 | -1, mk: (push: (u: number, z: number) => void) => void, color: string) => {
+    const pts: Vec3[] = [];
+    mk((u, z) => pts.push(mapP(u, edge * (ph / 2 + 0.08), z)));
+    details.push({ pts, color, normal: mapP(0, edge, 0) });
+  };
+  const slot = (edge: 1 | -1, cu: number, lenU: number, lenZ: number, color = "#0b0b0d") =>
+    edgeInlay(
+      edge,
+      (push) => {
+        for (const o of roundedOutline(lenU, lenZ, Math.min(lenU, lenZ) / 2 - 0.05, 3)) push(cu + o.x, o.y);
+      },
+      color
+    );
+  const dot = (edge: 1 | -1, cu: number, r: number, color = "#0b0b0d") =>
+    edgeInlay(
+      edge,
+      (push) => {
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2;
+          push(cu + r * Math.cos(a), r * Math.sin(a));
+        }
+      },
+      color
+    );
+
+  if (phone) {
+    slot(-1, 0, 9.4, 3.4); // USB-C
+    dot(-1, -7.8, 0.5, "rgba(8,8,10,0.7)"); // pentalobe screws
+    dot(-1, 7.8, 0.5, "rgba(8,8,10,0.7)");
+    for (let i = 0; i < 6; i++) dot(-1, 12 + i * 2.7, 0.62); // speaker grille
+    for (let i = 0; i < 3; i++) dot(-1, -12 - i * 2.7, 0.62); // mic
+    dot(1, 6, 0.6); // top mic
+  } else {
+    slot(-1, 0, 8.8, 3); // USB-C
+    slot(-1, -17, 11, 1.8, "rgba(8,8,10,0.75)"); // speaker slots
+    slot(-1, 17, 11, 1.8, "rgba(8,8,10,0.75)");
+    dot(1, -pw / 2 + 13, 0.6); // top mic
+  }
 
   return {
     plates: [
@@ -509,7 +661,9 @@ function buildSlabDevice(
         edgeDark: finish.dark,
         gridX: orientation === "portrait" ? 10 : 16,
         gridY: orientation === "portrait" ? 16 : 10,
+        details,
       },
+      ...buttonPlates,
     ],
     floorY: -h / 2 - 6,
     updateScreen: paint,
