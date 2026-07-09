@@ -65,8 +65,12 @@ export function MockupTool() {
   const [rotX, setRotX] = React.useState(8);
   const [rotY, setRotY] = React.useState(-26);
   const [zoom, setZoom] = React.useState(1);
+  const [lens, setLens] = React.useState(0.38); // 0 = wide angle, 1 = telephoto
   const [reflection, setReflection] = React.useState(0.45);
   const [glare, setGlare] = React.useState(0.6);
+  const [glow, setGlow] = React.useState(0.3);
+  const [grain, setGrain] = React.useState(0);
+  const [glowRgb, setGlowRgb] = React.useState<[number, number, number]>([16, 185, 129]);
   const [customBg, setCustomBg] = React.useState("#10b981");
   const [spinning, setSpinning] = React.useState(false);
   const [source, setSource] = React.useState<Source | null>(null);
@@ -96,9 +100,11 @@ export function MockupTool() {
     () => (typeof document === "undefined" ? null : buildDevice(device, orientation, finish)),
     [device, orientation, finish]
   );
+  // Camera distance from the lens slider — log scale, ~24mm wide to ~150mm tele.
+  const camera = Math.round(320 * Math.pow(6.25, lens));
   const fit = React.useMemo(
-    () => (spec ? computeFit(spec.plates, aspect.w, aspect.h) : 1),
-    [spec, aspect]
+    () => (spec ? computeFit(spec.plates, aspect.w, aspect.h, camera) : 1),
+    [spec, aspect, camera]
   );
 
   // Keep the device screen in sync with the uploaded media.
@@ -111,11 +117,15 @@ export function MockupTool() {
       rotX: (rotX * Math.PI) / 180,
       rotY: (rotY * Math.PI) / 180,
       zoom,
+      camera,
       reflection,
+      glow,
+      glowRgb,
+      grain,
       floorY: spec?.floorY ?? 0,
       background: background.paint,
     }),
-    [rotX, rotY, zoom, reflection, spec, background]
+    [rotX, rotY, zoom, camera, reflection, glow, glowRgb, grain, spec, background]
   );
 
   // Static render on any change; continuous loop while a video is playing.
@@ -202,6 +212,22 @@ export function MockupTool() {
     pendingMove.current = null;
   };
 
+  // Average color of the screen content — drives the bloom glow tint.
+  const sampleTint = (el: ImageBitmap | HTMLVideoElement) => {
+    const c = document.createElement("canvas");
+    c.width = c.height = 1;
+    const g = c.getContext("2d", { willReadFrequently: true })!;
+    g.drawImage(el, 0, 0, 1, 1);
+    const d = g.getImageData(0, 0, 1, 1).data;
+    const m = Math.max(d[0], d[1], d[2], 1);
+    // Normalize brightness so even dark screenshots produce a vivid glow.
+    setGlowRgb([
+      Math.round((d[0] * 235) / m),
+      Math.round((d[1] * 235) / m),
+      Math.round((d[2] * 235) / m),
+    ]);
+  };
+
   const loadFile = async (file: File) => {
     try {
       if (file.type.startsWith("video/")) {
@@ -213,11 +239,14 @@ export function MockupTool() {
         video.playsInline = true;
         await video.play();
         videoRef.current = video;
+        sampleTint(video);
         setSource({ kind: "video", url, name: file.name });
       } else {
+        const media = await createImageBitmap(file);
+        sampleTint(media);
         setSource({
           kind: "image",
-          media: await createImageBitmap(file),
+          media,
           url: URL.createObjectURL(file),
           name: file.name,
         });
@@ -414,6 +443,7 @@ export function MockupTool() {
                     onClick={(e) => {
                       e.preventDefault();
                       setSource(null);
+                      setGlowRgb([16, 185, 129]); // back to the placeholder's emerald
                     }}
                   >
                     <XIcon />
@@ -506,6 +536,15 @@ export function MockupTool() {
               onChange={setZoom}
             />
             <SliderRow
+              label="Lens"
+              value={lens}
+              min={0}
+              max={1}
+              step={0.01}
+              display={`${Math.round(camera / 13.3)}mm`}
+              onChange={setLens}
+            />
+            <SliderRow
               label="Reflection"
               value={reflection}
               min={0}
@@ -522,6 +561,24 @@ export function MockupTool() {
               step={0.05}
               display={glare === 0 ? "Off" : `${Math.round(glare * 100)}%`}
               onChange={setGlare}
+            />
+            <SliderRow
+              label="Screen glow"
+              value={glow}
+              min={0}
+              max={1}
+              step={0.05}
+              display={glow === 0 ? "Off" : `${Math.round(glow * 100)}%`}
+              onChange={setGlow}
+            />
+            <SliderRow
+              label="Grain"
+              value={grain}
+              min={0}
+              max={1}
+              step={0.05}
+              display={grain === 0 ? "Off" : `${Math.round(grain * 100)}%`}
+              onChange={setGrain}
             />
 
             <div className="flex items-center justify-between">

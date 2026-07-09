@@ -30,9 +30,9 @@ function rotXY(p: Vec3, rx: number, ry: number): Vec3 {
 
 const CAMERA_DIST = 640;
 
-/** Perspective divide; world y is up, canvas y is down. */
-function project(p: Vec3): { x: number; y: number; z: number } {
-  const k = CAMERA_DIST / (CAMERA_DIST - p.z);
+/** Perspective divide; world y is up, canvas y is down. `cam` = camera distance (lens). */
+function project(p: Vec3, cam = CAMERA_DIST): { x: number; y: number; z: number } {
+  const k = cam / (cam - p.z);
   return { x: p.x * k, y: -p.y * k, z: p.z };
 }
 
@@ -108,7 +108,7 @@ function normalize(v: Vec3): Vec3 {
   return { x: v.x / m, y: v.y / m, z: v.z / m };
 }
 
-function collectPlateFaces(plate: Plate, rx: number, ry: number): Face[] {
+function collectPlateFaces(plate: Plate, rx: number, ry: number, cam: number): Face[] {
   const faces: Face[] = [];
   const t2 = plate.thickness / 2;
   const model = plate.transform ?? ((p: Vec3) => p);
@@ -117,8 +117,8 @@ function collectPlateFaces(plate: Plate, rx: number, ry: number): Face[] {
   const outline = roundedOutline(plate.w, plate.h, plate.radius);
   const frontW = outline.map((p) => world(p.x, p.y, t2));
   const backW = outline.map((p) => world(p.x, p.y, -t2));
-  const front = frontW.map(project);
-  const back = backW.map(project);
+  const front = frontW.map((p) => project(p, cam));
+  const back = backW.map((p) => project(p, cam));
 
   // Side walls — one quad per outline segment, lit by its world normal.
   for (let i = 0; i < outline.length; i++) {
@@ -162,7 +162,7 @@ function collectPlateFaces(plate: Plate, rx: number, ry: number): Face[] {
     for (const det of plate.details) {
       const n = rotXY(det.normal, rx, ry);
       if (n.z <= 0.05) continue;
-      const pts = det.pts.map((p) => project(rotXY(model(p), rx, ry)));
+      const pts = det.pts.map((p) => project(rotXY(model(p), rx, ry), cam));
       // Way past any wall's z so the sort never buries a visible inlay — they only
       // draw when their wall faces the camera, i.e. when nothing else covers them.
       faces.push({ kind: "fill", pts, z: 1e4, color: det.color });
@@ -177,7 +177,7 @@ function collectPlateFaces(plate: Plate, rx: number, ry: number): Face[] {
     for (let gx = 0; gx <= gridX; gx++) {
       const x = -plate.w / 2 + (gx / gridX) * plate.w;
       const y = plate.h / 2 - (gy / gridY) * plate.h;
-      row.push(project(world(x, y, t2)));
+      row.push(project(world(x, y, t2), cam));
     }
     grid.push(row);
   }
@@ -254,11 +254,37 @@ export interface SceneOptions {
   rotX: number; // radians
   rotY: number;
   zoom: number;
+  /** Camera distance — small = dramatic wide-angle, large = flat telephoto. */
+  camera: number;
   /** 0..1 mirror-floor reflection strength. */
   reflection: number;
+  /** 0..1 screen-glow (bloom) strength behind the device. */
+  glow: number;
+  /** Glow color, sampled from the screen content. */
+  glowRgb: [number, number, number];
+  /** 0..1 photographic grain over the final image. */
+  grain: number;
   /** World-space y of the floor (device-dependent). */
   floorY: number;
   background: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
+}
+
+// Tileable monochrome noise for the grain pass, generated once.
+let noiseTile: HTMLCanvasElement | null = null;
+function getNoiseTile(): HTMLCanvasElement {
+  if (noiseTile) return noiseTile;
+  const c = document.createElement("canvas");
+  c.width = c.height = 128;
+  const g = c.getContext("2d")!;
+  const img = g.createImageData(128, 128);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = Math.random() * 255;
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+    img.data[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  noiseTile = c;
+  return c;
 }
 
 // Reusable offscreen canvases (device render, reflection band, shadow silhouette).
@@ -278,7 +304,12 @@ function getScratch(i: number, w: number, h: number): HTMLCanvasElement {
 
 
 /** Fit scale computed from the front view so zoom stays steady while spinning. */
-export function computeFit(plates: Plate[], canvasW: number, canvasH: number): number {
+export function computeFit(
+  plates: Plate[],
+  canvasW: number,
+  canvasH: number,
+  camera = CAMERA_DIST
+): number {
   let minX = Infinity;
   let maxX = -Infinity;
   let minY = Infinity;
@@ -286,7 +317,7 @@ export function computeFit(plates: Plate[], canvasW: number, canvasH: number): n
   for (const plate of plates) {
     const model = plate.transform ?? ((p: Vec3) => p);
     for (const o of roundedOutline(plate.w, plate.h, plate.radius, 3)) {
-      const p = project(model({ x: o.x, y: o.y, z: plate.thickness / 2 }));
+      const p = project(model({ x: o.x, y: o.y, z: plate.thickness / 2 }), camera);
       minX = Math.min(minX, p.x);
       maxX = Math.max(maxX, p.x);
       minY = Math.min(minY, p.y);
@@ -313,7 +344,21 @@ export function renderScene(
   const cx = w / 2;
   const cy = h / 2 - h * 0.015;
 
-  const faces = plates.flatMap((plate) => collectPlateFaces(plate, opts.rotX, opts.rotY));
+  // Screen glow — soft bloom behind the device, tinted by the screen content.
+  if (opts.glow > 0) {
+    const [gr, gg, gb] = opts.glowRgb;
+    const rad = Math.min(w, h) * (0.42 + 0.22 * opts.zoom);
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+    glow.addColorStop(0, `rgba(${gr},${gg},${gb},${0.5 * opts.glow})`);
+    glow.addColorStop(0.65, `rgba(${gr},${gg},${gb},${0.14 * opts.glow})`);
+    glow.addColorStop(1, `rgba(${gr},${gg},${gb},0)`);
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  const faces = plates.flatMap((plate) =>
+    collectPlateFaces(plate, opts.rotX, opts.rotY, opts.camera)
+  );
   const fillFaces = faces.filter((face) => face.kind === "fill");
   const texFaces = faces.filter((face) => face.kind === "tex");
   fillFaces.sort((a, b) => a.z - b.z);
@@ -350,7 +395,7 @@ export function renderScene(
     }
   };
 
-  const floor = project(rotXY({ x: 0, y: opts.floorY, z: 0 }, opts.rotX, opts.rotY));
+  const floor = project(rotXY({ x: 0, y: opts.floorY, z: 0 }, opts.rotX, opts.rotY), opts.camera);
   const sy = cy + floor.y * scale;
 
   // Mirror-floor reflection — geometry is rendered ONCE into an offscreen,
@@ -388,6 +433,16 @@ export function renderScene(
 
   if (off) ctx.drawImage(off, 0, 0);
   else drawDeviceFaces(ctx);
+
+  // Photographic grain — over existing pixels only, so transparent exports stay clean.
+  if (opts.grain > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.globalAlpha = 0.1 * opts.grain;
+    ctx.fillStyle = ctx.createPattern(getNoiseTile(), "repeat")!;
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+  }
 }
 
 /* --------------------------------------------------------------- devices */
@@ -681,6 +736,15 @@ function buildSlabDevice(
     paintGlare(tctx, sb, sb, sw0, sh0, vRx, vRy, vGlare);
     tctx.restore();
     tctx.drawImage(overlay, 0, 0);
+    // Off-axis dimming — panels lose apparent brightness as they turn away.
+    const nz = Math.cos(vRx) * Math.cos(vRy);
+    const dim = (1 - Math.max(0, nz)) * 0.16;
+    if (dim > 0.01) {
+      tctx.globalCompositeOperation = "source-atop";
+      tctx.fillStyle = `rgba(6,9,14,${dim.toFixed(3)})`;
+      tctx.fillRect(0, 0, tw, th);
+      tctx.globalCompositeOperation = "source-over";
+    }
   };
   paint();
 
@@ -801,6 +865,12 @@ function buildSlabDevice(
     for (let i = 0; i < 6; i++) dot(-1, 12 + i * 2.7, 0.62); // speaker grille
     for (let i = 0; i < 3; i++) dot(-1, -12 - i * 2.7, 0.62); // mic
     dot(1, 6, 0.6); // top mic
+    // Antenna bands near the corners
+    const ant = "rgba(228,229,234,0.32)";
+    slot(-1, -(pw / 2 - 10), 1.2, thickness - 2.2, ant);
+    slot(-1, pw / 2 - 10, 1.2, thickness - 2.2, ant);
+    slot(1, -(pw / 2 - 12), 1.2, thickness - 2.2, ant);
+    slot(1, pw / 2 - 12, 1.2, thickness - 2.2, ant);
   } else {
     slot(-1, 0, 8.8, 3); // USB-C
     slot(-1, -17, 11, 1.8, "rgba(8,8,10,0.75)"); // speaker slots
