@@ -9,7 +9,6 @@ import {
   BookOpenIcon,
   ContactIcon,
   FileSpreadsheetIcon,
-  FrameIcon,
   Grid3X3Icon,
   HashIcon,
   ImageUpscaleIcon,
@@ -175,7 +174,7 @@ export const TOOLS = [
       "pin generator",
     ],
     icon: KeyRoundIcon,
-    category: "developer",
+    category: "utilities",
   },
   {
     id: "hash",
@@ -193,7 +192,7 @@ export const TOOLS = [
       "file hash",
     ],
     icon: HashIcon,
-    category: "developer",
+    category: "utilities",
   },
   {
     id: "lorem",
@@ -210,7 +209,7 @@ export const TOOLS = [
       "lorem ipsum html",
     ],
     icon: TypeIcon,
-    category: "developer",
+    category: "type",
   },
   {
     id: "readtime",
@@ -227,7 +226,7 @@ export const TOOLS = [
       "readability score",
     ],
     icon: BookOpenIcon,
-    category: "developer",
+    category: "type",
   },
   {
     id: "mockup",
@@ -244,7 +243,7 @@ export const TOOLS = [
       "video mockup generator",
     ],
     icon: SmartphoneIcon,
-    category: "image",
+    category: "studio",
   },
   {
     id: "favicon",
@@ -261,7 +260,7 @@ export const TOOLS = [
       "favicon package",
     ],
     icon: SparkleIcon,
-    category: "brand",
+    category: "studio",
   },
   {
     id: "jsoncsv",
@@ -272,7 +271,7 @@ export const TOOLS = [
       "Transform nested JSON objects or arrays into flat, clean CSV files for Excel or Google Sheets. Features smart object flattening and instant preview.",
     keywords: ["json to csv", "json flattener", "json converter", "data transform"],
     icon: FileSpreadsheetIcon,
-    category: "developer",
+    category: "utilities",
   },
   {
     id: "imagesplitter",
@@ -300,7 +299,7 @@ export const TOOLS = [
       "tailwind grid",
     ],
     icon: LayoutGridIcon,
-    category: "developer",
+    category: "css",
   },
   {
     id: "foundry",
@@ -318,7 +317,7 @@ export const TOOLS = [
       "brand color scale",
     ],
     icon: AnvilIcon,
-    category: "brand",
+    category: "brandlab",
   },
   {
     id: "dna",
@@ -336,7 +335,7 @@ export const TOOLS = [
       "website color palette finder",
     ],
     icon: DnaIcon,
-    category: "brand",
+    category: "brandlab",
   },
   {
     id: "glass",
@@ -353,7 +352,7 @@ export const TOOLS = [
       "glassmorphism tailwind",
     ],
     icon: BlendIcon,
-    category: "effects",
+    category: "css",
   },
   {
     id: "shadow",
@@ -370,7 +369,7 @@ export const TOOLS = [
       "tailwind box shadow",
     ],
     icon: BoxSelectIcon,
-    category: "effects",
+    category: "css",
   },
   {
     id: "mesh",
@@ -421,7 +420,7 @@ export const TOOLS = [
       "hover tilt javascript",
     ],
     icon: Rotate3dIcon,
-    category: "effects",
+    category: "css",
   },
   {
     id: "clippath",
@@ -455,7 +454,7 @@ export const TOOLS = [
       "css drop-shadow filter",
     ],
     icon: ApertureIcon,
-    category: "effects",
+    category: "css",
   },
   {
     id: "gradient",
@@ -525,7 +524,7 @@ export const TOOLS = [
       "meta tags generator",
     ],
     icon: LayoutTemplateIcon,
-    category: "brand",
+    category: "studio",
   },
   {
     id: "steganography",
@@ -543,7 +542,7 @@ export const TOOLS = [
       "secret message image",
     ],
     icon: VenetianMaskIcon,
-    category: "secrets",
+    category: "playground",
   },
   {
     id: "duotone",
@@ -597,7 +596,7 @@ export const TOOLS = [
       "hidden message image",
     ],
     icon: GlassesIcon,
-    category: "secrets",
+    category: "playground",
   },
   {
     id: "spectro",
@@ -615,7 +614,7 @@ export const TOOLS = [
       "spectrogram viewer online",
     ],
     icon: AudioLinesIcon,
-    category: "secrets",
+    category: "playground",
   },
   {
     id: "neumorphism",
@@ -632,7 +631,7 @@ export const TOOLS = [
       "soft ui generator",
     ],
     icon: SquircleIcon,
-    category: "effects",
+    category: "css",
   },
   {
     id: "bgremover",
@@ -721,7 +720,7 @@ export const TOOLS = [
       "fluid type scale",
     ],
     icon: ALargeSmallIcon,
-    category: "developer",
+    category: "type",
   },
   {
     id: "brand",
@@ -739,7 +738,7 @@ export const TOOLS = [
       "brand strategy",
     ],
     icon: FingerprintIcon,
-    category: "brand",
+    category: "brandlab",
   },
   {
     id: "attention",
@@ -774,7 +773,7 @@ export const TOOLS = [
       "animation curve editor",
     ],
     icon: SplineIcon,
-    category: "effects",
+    category: "css",
   },
   {
     id: "barcode",
@@ -810,7 +809,7 @@ export const TOOLS = [
       "glowing card css",
     ],
     icon: SunIcon,
-    category: "effects",
+    category: "css",
   },
   {
     id: "typography",
@@ -829,7 +828,7 @@ export const TOOLS = [
       "css text effects",
     ],
     icon: WandSparklesIcon,
-    category: "effects",
+    category: "type",
   },
   {
     id: "logo",
@@ -847,7 +846,7 @@ export const TOOLS = [
       "logo legibility test",
     ],
     icon: ScanEyeIcon,
-    category: "brand",
+    category: "studio",
   },
   {
     id: "codeshot",
@@ -865,7 +864,7 @@ export const TOOLS = [
       "syntax highlight image",
     ],
     icon: Code2Icon,
-    category: "developer",
+    category: "studio",
   },
   {
     id: "blob",
@@ -901,7 +900,7 @@ export const TOOLS = [
       "logo mockup 3d",
     ],
     icon: BoxIcon,
-    category: "brand",
+    category: "studio",
   },
   {
     id: "invoice",
@@ -919,7 +918,7 @@ export const TOOLS = [
       "freelance invoice",
     ],
     icon: ReceiptTextIcon,
-    category: "developer",
+    category: "utilities",
   },
 ] as const satisfies readonly ToolMeta[];
 
@@ -939,22 +938,23 @@ export const TOOL_CATEGORIES: readonly {
   description: string;
 }[] = [
   {
+    id: "studio",
+    label: "Design Studio",
+    icon: WandSparklesIcon,
+    description:
+      "The showpieces — 3D device mockups, 3D logos, code shots, favicons and social cards, exported ready to ship.",
+  },
+  {
     id: "links",
     label: "Links & QR",
     icon: LinkIcon,
     description: "Click-to-chat links, QR codes, share buttons, contact cards and campaign URLs.",
   },
   {
-    id: "effects",
-    label: "CSS Effects",
-    icon: PaintbrushIcon,
-    description: "Glass, shadows, glows, tilts and text effects — tuned live, exported as clean CSS.",
-  },
-  {
-    id: "backgrounds",
-    label: "Shapes & Backgrounds",
-    icon: ShapesIcon,
-    description: "Gradients, meshes, seamless patterns, blobs and custom clip shapes.",
+    id: "image",
+    label: "Image Lab",
+    icon: ImageIcon,
+    description: "Remove backgrounds, upscale, split, stylize — retouch any picture in place.",
   },
   {
     id: "color",
@@ -963,27 +963,39 @@ export const TOOL_CATEGORIES: readonly {
     description: "Palettes, Pantone matching, image color extraction and accessible contrast.",
   },
   {
-    id: "image",
-    label: "Image Studio",
-    icon: ImageIcon,
-    description: "Convert, retouch, frame, split and stylize any picture.",
+    id: "backgrounds",
+    label: "Backgrounds & Shapes",
+    icon: ShapesIcon,
+    description: "Gradients, meshes, seamless patterns, blobs and custom clip shapes.",
   },
   {
-    id: "brand",
-    label: "Brand & Identity",
+    id: "css",
+    label: "CSS Effects",
+    icon: PaintbrushIcon,
+    description: "Glass, shadows, glows, grids and 3D tilts — tuned live, exported as clean CSS.",
+  },
+  {
+    id: "type",
+    label: "Type & Text",
+    icon: TypeIcon,
+    description: "Type scales, fluid sizing, placeholder text and reading-time stats.",
+  },
+  {
+    id: "brandlab",
+    label: "Brand Lab",
     icon: FingerprintIcon,
     description: "Extract, define and stress-test a visual identity — from any site or your own.",
   },
   {
-    id: "secrets",
-    label: "Secrets & Illusions",
-    icon: VenetianMaskIcon,
-    description: "Hide messages inside pixels, 3D dot fields and sound.",
+    id: "utilities",
+    label: "Utilities",
+    icon: Code2Icon,
+    description: "Passwords, hashes, data converters and a professional invoice maker.",
   },
   {
-    id: "developer",
-    label: "Developer",
-    icon: Code2Icon,
-    description: "Passwords, hashes, layout math, placeholder text and shareable code shots.",
+    id: "playground",
+    label: "Playground",
+    icon: VenetianMaskIcon,
+    description: "Hide messages inside pixels, 3D dot fields and sound.",
   },
 ];

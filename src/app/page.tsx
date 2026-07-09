@@ -11,9 +11,9 @@ import { FavoritesSection } from "@/components/home/favorites-section";
 import { Hero } from "@/components/home/hero";
 import { Reveal } from "@/components/home/reveal";
 import { JsonLd, faqJsonLd, webAppJsonLd } from "@/components/shared/json-ld";
-import { ToolGrid } from "@/components/shared/tool-grid";
 import { FAQ_ITEMS } from "@/constants/faq";
 import { SITE } from "@/constants/site";
+import { TOOLS, TOOL_CATEGORIES } from "@/constants/tools";
 
 const HOME_FAQ = FAQ_ITEMS.slice(0, 5);
 
@@ -35,7 +35,7 @@ const STEPS = [
 const PRINCIPLES = [
   {
     title: "Private by design",
-    text: "Your input is used only to generate your output. No accounts, no ad pixels, no analytics watching what you type — nothing is logged or sold.",
+    text: "Your input is used only to generate your output. No accounts, no ad pixels, no analytics watching what you type.",
   },
   {
     title: "Fast by architecture",
@@ -84,18 +84,65 @@ export default function HomePage() {
 
       <FavoritesSection />
 
-      {/* Tools */}
+      {/* Tools — browse by craft */}
       <section className="mx-auto w-full max-w-7xl px-4 py-24" aria-labelledby="tools-heading">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-          <SectionHeader label="The toolkit" title="One workflow, every tool" id="tools-heading" />
+          <SectionHeader label="The toolkit" title="Find it by craft" id="tools-heading" />
           <Reveal>
             <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">
-              Every tool shares the same instant workflow — input on one side, results on the
-              other, nothing uploaded anywhere.
+              Ten small studios, one instant workflow — input on one side, results on the other,
+              live with every keystroke.
             </p>
           </Reveal>
         </div>
-        <ToolGrid limit={9} />
+        <Reveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {TOOL_CATEGORIES.map((category) => {
+            const Icon = category.icon;
+            const featured = ["mockup", "logo3d", "codeshot", "invoice", "qr", "bgremover"];
+            const picks = TOOLS.filter((t) => t.category === category.id)
+              .slice()
+              .sort((a, b) => {
+                const ai = featured.indexOf(a.id);
+                const bi = featured.indexOf(b.id);
+                return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+              })
+              .slice(0, 4);
+            return (
+              <div
+                key={category.id}
+                className="group border-border/60 bg-card hover:border-primary/40 relative flex flex-col rounded-2xl border p-6 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="border-border bg-background flex size-9 shrink-0 items-center justify-center rounded-lg border transition-colors group-hover:border-emerald-500/40">
+                    <Icon className="size-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                  </span>
+                  <h3 className="font-heading text-lg font-semibold tracking-tight">
+                    <Link href={`/tools#cat-${category.id}`} className="after:absolute after:inset-0">
+                      {category.label}
+                    </Link>
+                  </h3>
+                </div>
+                <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
+                  {category.description}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-1.5 pt-1">
+                  {picks.map((tool) => (
+                    <Link
+                      key={tool.id}
+                      href={tool.slug}
+                      className="border-border/60 text-muted-foreground hover:border-emerald-500/50 hover:text-foreground relative z-10 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
+                    >
+                      {tool.shortName}
+                    </Link>
+                  ))}
+                </div>
+                <span className="text-muted-foreground/50 group-hover:text-primary mt-auto flex items-center gap-1 pt-4 text-xs font-medium transition-colors">
+                  Explore <ArrowRightIcon className="size-3" aria-hidden />
+                </span>
+              </div>
+            );
+          })}
+        </Reveal>
         <Reveal className="mt-12 flex justify-center">
           <Button asChild size="lg" variant="outline" className="h-11 rounded-full px-7 font-semibold">
             <Link href="/tools">
