@@ -48,14 +48,14 @@ export default function AboutPage() {
           About Forma
         </p>
 
-        <h1 className="text-5xl font-bold tracking-tight leading-[1.05] md:text-7xl">
+        <h1 className="font-heading text-5xl font-bold tracking-tight leading-[1.05] md:text-7xl">
           Built because I remember what it felt like to need
           <span className="text-primary"> simple tools</span>
           <br />
           and not be able to afford them.
         </h1>
 
-        <p className="mt-8 max-w-2xl text-xl leading-8 text-muted-foreground">
+        <p className="mt-8 max-w-2xl text-xl leading-relaxed text-muted-foreground">
           Forma started as tools I built for myself.
           Today they're free for everyone.
         </p>
@@ -70,10 +70,10 @@ export default function AboutPage() {
 
           <div className="sticky top-24">
 
-            {/* Replaced empty gray circle with the Image component */}
-            <div className="relative h-20 w-20 overflow-hidden rounded-full border bg-muted">
+            {/* Local Profile Image Wrapper */}
+            <div className="relative h-32 w-32 overflow-hidden rounded-full border bg-muted">
               <Image 
-                src="https://avatars.githubusercontent.com/u/130991308?v=4" 
+                src="/omarimage.jpeg" 
                 alt="Omar Abi Farraj" 
                 fill 
                 className="object-cover"
@@ -81,11 +81,11 @@ export default function AboutPage() {
               />
             </div>
 
-            <h2 className="mt-6 text-2xl font-semibold">
+            <h2 className="font-heading mt-6 text-2xl font-semibold">
               Omar Abi Farraj
             </h2>
 
-            <p className="mt-2 text-muted-foreground">
+            <p className="mt-2 text-muted-foreground leading-relaxed">
               Full-Stack Engineer
               <br />
               Freelancer
@@ -99,11 +99,11 @@ export default function AboutPage() {
 
         <div>
 
-          <h2 className="text-4xl font-bold tracking-tight">
+          <h2 className="font-heading text-4xl font-bold tracking-tight">
             Why is everything free?
           </h2>
 
-          <div className="mt-8 space-y-8 text-lg leading-9 text-muted-foreground">
+          <div className="mt-8 space-y-5 text-lg leading-relaxed text-muted-foreground">
 
             <p>
               When I started freelancing, I spent hours looking for small online
@@ -150,7 +150,7 @@ export default function AboutPage() {
       <section className="mt-28">
 
         <div className="mb-10">
-          <h2 className="text-4xl font-bold tracking-tight">
+          <h2 className="font-heading text-4xl font-bold tracking-tight">
             What Forma stands for
           </h2>
         </div>
@@ -164,11 +164,11 @@ export default function AboutPage() {
             >
               <item.icon className="mb-6 h-6 w-6 text-primary" />
 
-              <h3 className="text-xl font-semibold">
+              <h3 className="font-heading text-xl font-semibold">
                 {item.title}
               </h3>
 
-              <p className="mt-4 leading-8 text-muted-foreground">
+              <p className="mt-4 leading-relaxed text-muted-foreground">
                 {item.text}
               </p>
 
@@ -189,13 +189,13 @@ export default function AboutPage() {
             One simple promise
           </p>
 
-          <h2 className="mt-5 text-5xl font-bold tracking-tight leading-tight md:text-6xl">
+          <h2 className="font-heading mt-5 text-5xl font-bold tracking-tight leading-tight md:text-6xl">
             If I build something useful,
             <br />
             everyone should be able to use it.
           </h2>
 
-          <p className="mt-8 max-w-2xl text-lg leading-8 text-muted-foreground">
+          <p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground">
             That's the philosophy behind every tool on Forma.
             No subscriptions. No unnecessary barriers.
             Just useful software, built with care and shared with everyone.
@@ -209,11 +209,11 @@ export default function AboutPage() {
 
       <section className="mt-28 text-center">
 
-        <h2 className="text-5xl font-bold tracking-tight md:text-6xl">
+        <h2 className="font-heading text-5xl font-bold tracking-tight md:text-6xl">
           Thanks for being here.
         </h2>
 
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
           Whether you're a developer, designer, freelancer,
           student or business owner, I hope Forma makes your work
           just a little easier.
