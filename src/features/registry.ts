@@ -76,4 +76,5 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   dna: dynamic(() => import("./dna/dna-tool").then((m) => m.DnaTool)),
   foundry: dynamic(() => import("./foundry/foundry-tool").then((m) => m.FoundryTool)),
   logo3d: dynamic(() => import("./logo3d/logo3d-tool").then((m) => m.Logo3DTool)),
+  invoice: dynamic(() => import("./invoice/invoice-tool").then((m) => m.InvoiceTool)),
 };

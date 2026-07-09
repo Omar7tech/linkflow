@@ -21,6 +21,7 @@ import {
   PhoneIcon,
   QrCodeIcon,
   RainbowIcon,
+  ReceiptTextIcon,
   Share2Icon,
   SwatchBookIcon,
   SparkleIcon,
@@ -901,6 +902,24 @@ export const TOOLS = [
     ],
     icon: BoxIcon,
     category: "brand",
+  },
+  {
+    id: "invoice",
+    slug: "/tools/invoice",
+    name: "Invoice Generator",
+    shortName: "Invoice",
+    description:
+      "Create a clean, professional invoice in minutes — your logo and business details, line items with quantities, tax and discounts in any currency, automatic numbering and totals. Everything stays saved in your browser; print it or save it as a PDF with one click.",
+    keywords: [
+      "invoice generator",
+      "free invoice maker",
+      "invoice template",
+      "invoice pdf",
+      "billing tool",
+      "freelance invoice",
+    ],
+    icon: ReceiptTextIcon,
+    category: "developer",
   },
 ] as const satisfies readonly ToolMeta[];
 
