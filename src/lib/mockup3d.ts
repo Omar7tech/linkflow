@@ -72,6 +72,8 @@ export interface Plate {
   /** Grid density for the textured front face. */
   gridX: number;
   gridY: number;
+  /** Multiplier on wall lighting — below 1 mutes specular pop (small parts like buttons). */
+  dim?: number;
   /** Flat inlays on the side walls (ports, speaker holes, mics) — drawn only when their face is toward the camera. */
   details?: { pts: Vec3[]; normal: Vec3; color: string }[];
 }
@@ -133,7 +135,7 @@ function collectPlateFaces(plate: Plate, rx: number, ry: number): Face[] {
       z: u.x * v.y - u.y * v.x,
     });
     const diffuse = Math.max(0, n.x * LIGHT.x + n.y * LIGHT.y + n.z * LIGHT.z);
-    const k = 0.38 + 0.62 * diffuse;
+    const k = (0.38 + 0.62 * diffuse) * (plate.dim ?? 1);
     faces.push({
       kind: "fill",
       pts: [front[i], front[j], back[j], back[i]],
@@ -152,12 +154,9 @@ function collectPlateFaces(plate: Plate, rx: number, ry: number): Face[] {
       const n = rotXY(det.normal, rx, ry);
       if (n.z <= 0.05) continue;
       const pts = det.pts.map((p) => project(rotXY(model(p), rx, ry)));
-      faces.push({
-        kind: "fill",
-        pts,
-        z: pts.reduce((s, p) => s + p.z, 0) / pts.length + 0.5,
-        color: det.color,
-      });
+      // Way past any wall's z so the sort never buries a visible inlay — they only
+      // draw when their wall faces the camera, i.e. when nothing else covers them.
+      faces.push({ kind: "fill", pts, z: 1e4, color: det.color });
     }
   }
 
@@ -548,16 +547,21 @@ function buildSlabDevice(
   };
   paint(null);
 
-  /* --- physical side buttons: thin capsule plates half-sunk into the frame --- */
-  const BTN_OUT = 1.5; // how far a button protrudes past the frame
-  const BTN_DEPTH = 3; // in-out size perpendicular to the edge
+  /* --- physical side buttons ---
+   * Each button is a small capsule plate rotated so its face points OUT of the
+   * frame edge (not toward the screen), then half-sunk into the body. From the
+   * front you see its lit outer walls as a slim bump on the silhouette. */
+  const BTN_CAP = 3.1; // cap size across the device thickness
+  const BTN_OUT = 2.8; // extrusion depth in/out of the frame
+  const BTN_SINK = 0.4; // how far the capsule center sits inside the edge
+  type EdgeSide = "left" | "right" | "top" | "bottom";
   // Laid out in the portrait frame: `at` is the offset along the edge from center.
   const buttonRects: { side: "left" | "right" | "top"; at: number; len: number }[] = phone
     ? [
         { side: "left", at: 42, len: 6.5 }, // action button
         { side: "left", at: 25, len: 11 }, // volume up
         { side: "left", at: 12, len: 11 }, // volume down
-        { side: "right", at: 22, len: 14 }, // power
+        { side: "right", at: 25, len: 14 }, // power
       ]
     : [
         { side: "top", at: pw / 2 - 13, len: 10 }, // power
@@ -565,46 +569,64 @@ function buildSlabDevice(
         { side: "right", at: ph / 2 - 25, len: 8.5 }, // volume down
       ];
 
-  const buttonPlates: Plate[] = buttonRects.map((b) => {
-    let cu: number, cv: number, du: number, dv: number;
-    if (b.side === "top") {
-      cu = b.at;
-      cv = ph / 2 - BTN_DEPTH / 2 + BTN_OUT;
-      du = b.len;
-      dv = BTN_DEPTH;
-    } else {
-      cu = (b.side === "left" ? -1 : 1) * (pw / 2 - BTN_DEPTH / 2 + BTN_OUT);
-      cv = b.at;
-      du = BTN_DEPTH;
-      dv = b.len;
-    }
-    const c = map(cu, cv);
-    const bw = orientation === "portrait" ? du : dv;
-    const bh = orientation === "portrait" ? dv : du;
-    const r = Math.min(bw, bh) / 2 - 0.25;
+  // Local +Z (the plate face) must map to the edge's outward direction.
+  const SIDE_CCW: Record<EdgeSide, EdgeSide> = { left: "bottom", right: "top", top: "left", bottom: "right" };
+  const ROT: Record<EdgeSide, (p: Vec3) => Vec3> = {
+    left: (p) => ({ x: -p.z, y: p.y, z: p.x }),
+    right: (p) => ({ x: p.z, y: p.y, z: -p.x }),
+    top: (p) => ({ x: p.x, y: p.z, z: -p.y }),
+    bottom: (p) => ({ x: p.x, y: -p.z, z: p.y }),
+  };
+  const OUTWARD: Record<EdgeSide, { x: number; y: number }> = {
+    left: { x: -1, y: 0 },
+    right: { x: 1, y: 0 },
+    top: { x: 0, y: 1 },
+    bottom: { x: 0, y: -1 },
+  };
 
+  const buttonPlates: Plate[] = buttonRects.map((b) => {
+    const side = orientation === "portrait" ? b.side : SIDE_CCW[b.side];
+    const edge =
+      b.side === "top" ? map(b.at, ph / 2) : map((b.side === "left" ? -1 : 1) * (pw / 2), b.at);
+    const out = OUTWARD[side];
+    const cx = edge.x - out.x * BTN_SINK;
+    const cy = edge.y - out.y * BTN_SINK;
+    const horizontalEdge = side === "top" || side === "bottom";
+    const bw = horizontalEdge ? b.len : BTN_CAP;
+    const bh = horizontalEdge ? BTN_CAP : b.len;
+    const r = Math.min(bw, bh) / 2 - 0.2;
+
+    // Cap texture — metal gradient, light toward the screen side of the edge.
     const btnTex = document.createElement("canvas");
     btnTex.width = Math.max(2, Math.round(bw * TEX));
     btnTex.height = Math.max(2, Math.round(bh * TEX));
     const bctx = btnTex.getContext("2d")!;
-    const g = bctx.createLinearGradient(0, 0, btnTex.width, btnTex.height);
-    g.addColorStop(0, finish.light);
-    g.addColorStop(1, finish.dark);
+    const frontAtMax = side === "left" || side === "top";
+    const g = horizontalEdge
+      ? bctx.createLinearGradient(0, frontAtMax ? 0 : btnTex.height, 0, frontAtMax ? btnTex.height : 0)
+      : bctx.createLinearGradient(frontAtMax ? 0 : btnTex.width, 0, frontAtMax ? btnTex.width : 0, 0);
+    g.addColorStop(0, shade(finish.dark, 0.95));
+    g.addColorStop(1, shade(finish.light, 0.88));
     bctx.fillStyle = g;
     roundRectPath(bctx, 0, 0, btnTex.width, btnTex.height, r * TEX);
     bctx.fill();
 
+    const rot = ROT[side];
     return {
       w: bw,
       h: bh,
-      thickness: thickness * 0.42,
+      thickness: BTN_OUT,
       radius: Math.max(0.6, r),
       texture: btnTex,
-      transform: (p: Vec3) => ({ x: p.x + c.x, y: p.y + c.y, z: p.z }),
+      transform: (p: Vec3) => {
+        const q = rot(p);
+        return { x: q.x + cx, y: q.y + cy, z: q.z };
+      },
       edgeLight: finish.light,
       edgeDark: finish.dark,
       gridX: 2,
       gridY: 2,
+      dim: 0.8,
     };
   });
 
