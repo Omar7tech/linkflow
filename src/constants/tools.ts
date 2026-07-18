@@ -55,6 +55,7 @@ import {
   AnvilIcon,
   SmartphoneIcon,
   FrameIcon,
+  GalleryHorizontalEndIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -937,6 +938,24 @@ export const TOOLS = [
       "og image template",
     ],
     icon: FrameIcon,
+    category: "studio",
+  },
+  {
+    id: "carousel",
+    slug: "/tools/carousel",
+    name: "Carousel Maker",
+    shortName: "Carousel",
+    description:
+      "Design swipeable Instagram and LinkedIn carousels that get saved and shared — pick a theme once and every slide stays on-brand, with cover, bullet, quote and call-to-action layouts, gradient headlines, page dots and a swipe hint. Reorder slides live, then export every slide as a crisp PNG or download the whole set as a ZIP.",
+    keywords: [
+      "carousel maker",
+      "instagram carousel generator",
+      "linkedin carousel maker",
+      "swipe post generator",
+      "carousel template",
+      "social media carousel",
+    ],
+    icon: GalleryHorizontalEndIcon,
     category: "studio",
   },
 ] as const satisfies readonly ToolMeta[];
