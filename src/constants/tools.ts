@@ -54,6 +54,7 @@ import {
   DnaIcon,
   AnvilIcon,
   SmartphoneIcon,
+  FrameIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -919,6 +920,24 @@ export const TOOLS = [
     ],
     icon: ReceiptTextIcon,
     category: "utilities",
+  },
+  {
+    id: "ogstudio",
+    slug: "/tools/og-image",
+    name: "OG Image Studio",
+    shortName: "OG Studio",
+    description:
+      "Design social share cards that actually get clicked — mesh, gradient and photo backgrounds, gradient headlines, logos and bylines, film grain and glass. Lay out once, then export a pixel-perfect PNG for Open Graph, X, LinkedIn, stories and YouTube — or copy a drop-in Next.js opengraph-image route that generates it per page.",
+    keywords: [
+      "og image generator",
+      "open graph image maker",
+      "social share card generator",
+      "twitter card generator",
+      "opengraph-image next.js",
+      "og image template",
+    ],
+    icon: FrameIcon,
+    category: "studio",
   },
 ] as const satisfies readonly ToolMeta[];
 
