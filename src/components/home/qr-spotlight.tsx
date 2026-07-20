@@ -5,6 +5,7 @@ import {
   ImageIcon,
   LinkIcon,
   PaletteIcon,
+  QrCodeIcon,
   ScanLineIcon,
   TypeIcon,
   WifiIcon,
@@ -28,9 +29,13 @@ export function QrSpotlight() {
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-16 sm:py-20 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
         {/* Copy */}
         <Reveal className="order-2 lg:order-1">
+          <p className="text-emerald-700 dark:text-emerald-400 flex items-center gap-2 font-mono text-xs font-medium tracking-[0.2em] uppercase">
+            <QrCodeIcon className="size-3.5" aria-hidden />
+            QR Code Generator
+          </p>
           <h2
             id="qr-spotlight-heading"
-            className="font-heading text-4xl font-bold tracking-tight text-balance sm:text-5xl"
+            className="font-heading mt-4 text-4xl font-bold tracking-tight text-balance sm:text-5xl"
           >
             QR codes, crafted to match your brand
             <span className="text-primary">.</span>
