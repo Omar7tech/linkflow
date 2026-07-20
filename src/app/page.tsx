@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { FavoritesSection } from "@/components/home/favorites-section";
 import { Hero } from "@/components/home/hero";
+import { QrSpotlight } from "@/components/home/qr-spotlight";
 import { Reveal } from "@/components/home/reveal";
 import { JsonLd, faqJsonLd, webAppJsonLd } from "@/components/shared/json-ld";
 import { FAQ_ITEMS } from "@/constants/faq";
@@ -81,6 +82,8 @@ export default function HomePage() {
       <JsonLd data={faqJsonLd(HOME_FAQ)} />
 
       <Hero />
+
+      <QrSpotlight />
 
       <FavoritesSection />
 
