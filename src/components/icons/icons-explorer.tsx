@@ -3,10 +3,20 @@
 import * as React from "react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
-import { CopyIcon, ExternalLinkIcon, LayersIcon, SearchIcon, SparklesIcon } from "lucide-react";
+import {
+  CopyIcon,
+  DownloadIcon,
+  ExternalLinkIcon,
+  LayersIcon,
+  MoonIcon,
+  SearchIcon,
+  SparklesIcon,
+  SunIcon,
+  TypeIcon,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { routeForTheme, type Svg, type SvglCategory } from "@/lib/svgl";
+import type { Svg, SvglCategory, ThemeRoute } from "@/lib/svgl";
 
 const LATEST = "__latest__";
 const PAGE = 60; // icons rendered per window step
@@ -197,68 +207,173 @@ function RailButton({
   );
 }
 
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function proxyUrl(url: string): string {
+  return `/api/icons/svg?url=${encodeURIComponent(url)}`;
+}
+
 function IconCard({ svg }: { svg: Svg }) {
   const { resolvedTheme } = useTheme();
+  const dark = resolvedTheme === "dark";
+
+  const hasWordmark = svg.wordmark != null;
+  const [wordmark, setWordmark] = React.useState(false);
+  // Which asset (logo vs wordmark) and, for themed assets, which variant.
+  const asset = (wordmark && svg.wordmark ? svg.wordmark : svg.route) as string | ThemeRoute;
+  const themed = typeof asset !== "string";
+  const [pref, setPref] = React.useState<"light" | "dark" | null>(null); // null = follow app theme
+  const variant: "light" | "dark" = pref ?? (dark ? "dark" : "light");
+  const targetUrl = typeof asset === "string" ? asset : asset[variant];
+
+  const label = `${svg.title}${wordmark ? " wordmark" : ""}`;
 
   const copy = async () => {
-    const url = routeForTheme(svg.route, resolvedTheme === "dark");
     try {
-      const res = await fetch(`/api/icons/svg?url=${encodeURIComponent(url)}`);
+      const res = await fetch(proxyUrl(targetUrl));
       if (!res.ok) throw new Error();
       await navigator.clipboard.writeText(await res.text());
-      toast.success(`Copied ${svg.title} SVG`);
+      toast.success(`Copied ${label} SVG`);
     } catch {
       toast.error("Couldn't copy — try again");
     }
   };
 
+  const download = () => {
+    const suffix = `${wordmark ? "-wordmark" : ""}${themed ? `-${variant}` : ""}`;
+    const a = document.createElement("a");
+    a.href = proxyUrl(targetUrl);
+    a.download = `${slugify(svg.title)}${suffix}.svg`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
   return (
     <li className="group border-border/60 bg-card hover:border-emerald-500/40 relative flex flex-col items-center gap-3 rounded-xl border p-4 transition-colors">
+      {/* Action toolbar — appears on hover / focus-within */}
+      <div className="absolute top-1.5 right-1.5 left-1.5 flex items-center justify-between opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+        <div className="flex gap-0.5">
+          {hasWordmark && (
+            <ChipButton
+              active={wordmark}
+              onClick={() => setWordmark((w) => !w)}
+              title={wordmark ? "Show logo" : "Show wordmark"}
+            >
+              <TypeIcon className="size-3.5" aria-hidden />
+            </ChipButton>
+          )}
+          {themed && (
+            <ChipButton
+              active={pref != null}
+              onClick={() => setPref(variant === "dark" ? "light" : "dark")}
+              title={`Previewing ${variant} — switch variant`}
+            >
+              {variant === "dark" ? (
+                <MoonIcon className="size-3.5" aria-hidden />
+              ) : (
+                <SunIcon className="size-3.5" aria-hidden />
+              )}
+            </ChipButton>
+          )}
+        </div>
+        <div className="flex gap-0.5">
+          <ChipButton onClick={copy} title={`Copy ${label} SVG`}>
+            <CopyIcon className="size-3.5" aria-hidden />
+          </ChipButton>
+          <ChipButton onClick={download} title={`Download ${label} SVG`}>
+            <DownloadIcon className="size-3.5" aria-hidden />
+          </ChipButton>
+          {svg.url && (
+            <a
+              href={svg.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`Visit ${svg.title}`}
+              aria-label={`Visit ${svg.title} website`}
+              className="border-border/60 bg-background/90 text-muted-foreground hover:text-foreground flex size-6 items-center justify-center rounded-md border transition-colors"
+            >
+              <ExternalLinkIcon className="size-3.5" aria-hidden />
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Click the icon to copy */}
       <button
         type="button"
         onClick={copy}
-        title={`Copy ${svg.title} SVG`}
-        className="flex w-full flex-col items-center gap-3"
+        title={`Copy ${label} SVG`}
+        className="flex h-12 w-full items-center justify-center pt-2"
       >
-        <span className="flex h-12 items-center justify-center">
-          <IconImage svg={svg} />
-        </span>
-        <span className="text-muted-foreground group-hover:text-foreground max-w-full truncate text-xs font-medium transition-colors">
-          {svg.title}
-        </span>
-        {/* Copy affordance on hover */}
-        <span className="bg-background/90 text-muted-foreground pointer-events-none absolute top-2 right-2 rounded-md p-1 opacity-0 transition-opacity group-hover:opacity-100">
-          <CopyIcon className="size-3.5" aria-hidden />
-        </span>
+        <AssetImage asset={asset} pref={pref} alt={label} wide={wordmark} />
       </button>
-      {svg.url && (
-        <a
-          href={svg.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={`Visit ${svg.title}`}
-          className="bg-background/90 text-muted-foreground hover:text-foreground absolute top-2 left-2 rounded-md p-1 opacity-0 transition-opacity group-hover:opacity-100"
-          aria-label={`Visit ${svg.title} website`}
-        >
-          <ExternalLinkIcon className="size-3.5" aria-hidden />
-        </a>
-      )}
+      <span className="text-muted-foreground group-hover:text-foreground max-w-full truncate text-xs font-medium transition-colors">
+        {svg.title}
+      </span>
     </li>
   );
 }
 
-function IconImage({ svg }: { svg: Svg }) {
-  const cls = "h-10 w-10 object-contain";
-  if (typeof svg.route === "string") {
+function ChipButton({
+  active,
+  onClick,
+  title,
+  children,
+}: {
+  active?: boolean;
+  onClick: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      className={cn(
+        "flex size-6 items-center justify-center rounded-md border transition-colors",
+        active
+          ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+          : "border-border/60 bg-background/90 text-muted-foreground hover:text-foreground"
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function AssetImage({
+  asset,
+  pref,
+  alt,
+  wide,
+}: {
+  asset: string | ThemeRoute;
+  pref: "light" | "dark" | null;
+  alt: string;
+  wide?: boolean;
+}) {
+  const cls = cn("max-w-full object-contain", wide ? "h-8" : "h-10 w-10");
+  if (typeof asset === "string") {
     // eslint-disable-next-line @next/next/no-img-element -- remote SVG from svgl; next/image can't optimize SVGs and would need per-host config
-    return <img src={svg.route} alt={svg.title} loading="lazy" decoding="async" className={cls} />;
+    return <img src={asset} alt={alt} loading="lazy" decoding="async" className={cls} />;
   }
+  // Explicit variant chosen — render just that one.
+  if (pref) {
+    // eslint-disable-next-line @next/next/no-img-element -- see above
+    return <img src={asset[pref]} alt={alt} loading="lazy" decoding="async" className={cls} />;
+  }
+  // Follow the app theme with a flash-free CSS swap.
   return (
     <>
-      {/* eslint-disable-next-line @next/next/no-img-element -- theme-swapped via CSS, see above */}
-      <img src={svg.route.light} alt={svg.title} loading="lazy" decoding="async" className={cn(cls, "dark:hidden")} />
-      {/* eslint-disable-next-line @next/next/no-img-element -- theme-swapped via CSS, see above */}
-      <img src={svg.route.dark} alt="" loading="lazy" decoding="async" className={cn(cls, "hidden dark:block")} />
+      {/* eslint-disable-next-line @next/next/no-img-element -- theme-swapped via CSS */}
+      <img src={asset.light} alt={alt} loading="lazy" decoding="async" className={cn(cls, "dark:hidden")} />
+      {/* eslint-disable-next-line @next/next/no-img-element -- theme-swapped via CSS */}
+      <img src={asset.dark} alt="" loading="lazy" decoding="async" className={cn(cls, "hidden dark:block")} />
     </>
   );
 }
