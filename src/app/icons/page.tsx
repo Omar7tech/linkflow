@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { IconsExplorer } from "@/components/icons/icons-explorer";
-import { getCategories, getLatest } from "@/lib/svgl";
+import { getByCategory, getCategories, getLatest, searchSvgs } from "@/lib/svgl";
 import { SITE } from "@/constants/site";
 
 export const revalidate = 86400;
@@ -12,8 +12,21 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE.url}/icons` },
 };
 
-export default async function IconsPage() {
-  const [categories, initial] = await Promise.all([getCategories(), getLatest()]);
+export default async function IconsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; q?: string }>;
+}) {
+  const sp = await searchParams;
+  const q = (sp.q ?? "").trim();
+  const category = (sp.category ?? "").trim() || null;
+
+  // Seed the explorer with whatever the URL asks for, so deep links render
+  // server-side (great for sharing, no hydration flip).
+  const [categories, initial] = await Promise.all([
+    getCategories(),
+    q ? searchSvgs(q) : category ? getByCategory(category) : getLatest(),
+  ]);
 
   return (
     <div className="w-full px-4 py-12 sm:px-6 lg:px-8">
@@ -35,7 +48,12 @@ export default async function IconsPage() {
           source — theme-aware, always crisp.
         </p>
       </header>
-      <IconsExplorer categories={categories} initial={initial} />
+      <IconsExplorer
+        categories={categories}
+        initial={initial}
+        initialQuery={q}
+        initialCategory={category}
+      />
     </div>
   );
 }

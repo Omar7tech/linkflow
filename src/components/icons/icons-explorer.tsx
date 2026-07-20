@@ -31,30 +31,43 @@ const PAGE = 60; // icons rendered per window step
 interface Props {
   categories: SvglCategory[];
   initial: Svg[];
+  /** Search term seeded from the URL (?q=). */
+  initialQuery?: string;
+  /** Category seeded from the URL (?category=). */
+  initialCategory?: string | null;
 }
 
-export function IconsExplorer({ categories, initial }: Props) {
-  const [active, setActive] = React.useState<string>(LATEST);
-  const [rawQuery, setRawQuery] = React.useState("");
+export function IconsExplorer({ categories, initial, initialQuery, initialCategory }: Props) {
+  const [active, setActive] = React.useState<string>(initialCategory || LATEST);
+  const [rawQuery, setRawQuery] = React.useState(initialQuery ?? "");
   const [items, setItems] = React.useState<Svg[]>(initial);
   const [loading, setLoading] = React.useState(false);
   const [visible, setVisible] = React.useState(PAGE);
 
   // Debounce the search box.
-  const [query, setQuery] = React.useState("");
+  const [query, setQuery] = React.useState(initialQuery ?? "");
   React.useEffect(() => {
     const id = setTimeout(() => setQuery(rawQuery.trim()), 250);
     return () => clearTimeout(id);
   }, [rawQuery]);
 
-  // Fetch on filter/search change. The default view is seeded by the server,
-  // so skip the very first run when nothing has changed yet.
+  // Fetch on filter/search change, and mirror the state into the URL so the
+  // view is shareable. The initial view is already seeded by the server, so the
+  // first run only syncs the URL — it never refetches.
   const firstRun = React.useRef(true);
   React.useEffect(() => {
+    // Reflect the current view in the address bar (no navigation / RSC fetch).
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    else if (active !== LATEST) params.set("category", active);
+    const qs = params.toString();
+    window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+
     if (firstRun.current) {
       firstRun.current = false;
-      if (!query && active === LATEST) return;
+      return;
     }
+
     const ctrl = new AbortController();
     setLoading(true);
     const url = query
