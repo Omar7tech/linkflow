@@ -94,12 +94,12 @@ export function IconsExplorer({ categories, initial }: Props) {
   const searching = query.length > 0;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[220px_1fr]">
+    <div className="grid gap-6 lg:grid-cols-[180px_1fr]">
       {/* Sidebar / category rail */}
       <aside className="lg:sticky lg:top-20 lg:h-[calc(100dvh-6rem)] lg:self-start">
         <nav
           aria-label="Icon categories"
-          className="flex gap-1.5 overflow-x-auto pb-2 lg:h-full lg:flex-col lg:overflow-y-auto lg:pr-2 lg:pb-6"
+          className="flex gap-0.5 overflow-x-auto pb-2 lg:h-full lg:flex-col lg:overflow-y-auto lg:-ml-2.5 lg:pr-2 lg:pb-6"
         >
           <RailButton
             active={active === LATEST && !searching}
@@ -126,7 +126,7 @@ export function IconsExplorer({ categories, initial }: Props) {
       </aside>
 
       {/* Main */}
-      <div className="mx-auto w-full min-w-0 max-w-7xl">
+      <div className="w-full min-w-0">
         <div className="relative mb-6 max-w-md">
           <SearchIcon
             className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
@@ -159,7 +159,7 @@ export function IconsExplorer({ categories, initial }: Props) {
 
         {loading ? (
           <ul
-            className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5"
+            className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
             aria-hidden
           >
             {Array.from({ length: 15 }).map((_, i) => (
@@ -171,7 +171,7 @@ export function IconsExplorer({ categories, initial }: Props) {
             No icons found. Try another search or category.
           </div>
         ) : (
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {shown.map((svg) => (
               <IconCard key={svg.id} svg={svg} />
             ))}
@@ -209,7 +209,7 @@ function RailButton({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors lg:justify-between",
+        "flex shrink-0 items-center gap-2 rounded-md px-2.5 py-1 text-[13px] font-medium whitespace-nowrap transition-colors lg:justify-between",
         active
           ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
           : "text-muted-foreground hover:bg-muted hover:text-foreground"
