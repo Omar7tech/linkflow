@@ -217,7 +217,11 @@ function proxyUrl(url: string): string {
 
 function IconCard({ svg }: { svg: Svg }) {
   const { resolvedTheme } = useTheme();
-  const dark = resolvedTheme === "dark";
+  // next-themes only resolves on the client. Stay in the server-rendered
+  // (light) state until mounted so the first client render matches SSR.
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  const dark = mounted && resolvedTheme === "dark";
 
   const hasWordmark = svg.wordmark != null;
   const [wordmark, setWordmark] = React.useState(false);
