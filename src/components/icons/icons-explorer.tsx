@@ -8,13 +8,18 @@ import {
   DownloadIcon,
   ExternalLinkIcon,
   LayersIcon,
-  MoonIcon,
   SearchIcon,
   SparklesIcon,
-  SunIcon,
   TypeIcon,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { Svg, SvglCategory, ThemeRoute } from "@/lib/svgl";
 
@@ -215,30 +220,56 @@ function proxyUrl(url: string): string {
   return `/api/icons/svg?url=${encodeURIComponent(url)}`;
 }
 
+async function fetchSvgText(url: string): Promise<string> {
+  const res = await fetch(proxyUrl(url));
+  if (!res.ok) throw new Error("svg fetch failed");
+  return res.text();
+}
+
+function triggerDownload(href: string, filename: string) {
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+// Bundle light + dark SVGs into a single .zip, client-side.
+async function downloadZip(base: string, entries: { url: string; name: string }[]) {
+  const JSZip = (await import("jszip")).default;
+  const zip = new JSZip();
+  const texts = await Promise.all(entries.map((e) => fetchSvgText(e.url)));
+  entries.forEach((e, i) => zip.file(e.name, texts[i]));
+  const blob = await zip.generateAsync({ type: "blob" });
+  const href = URL.createObjectURL(blob);
+  triggerDownload(href, `${base}.zip`);
+  setTimeout(() => URL.revokeObjectURL(href), 10_000);
+}
+
 function IconCard({ svg }: { svg: Svg }) {
   const { resolvedTheme } = useTheme();
-  // next-themes only resolves on the client. Stay in the server-rendered
-  // (light) state until mounted so the first client render matches SSR.
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
-  const dark = mounted && resolvedTheme === "dark";
-
   const hasWordmark = svg.wordmark != null;
   const [wordmark, setWordmark] = React.useState(false);
-  // Which asset (logo vs wordmark) and, for themed assets, which variant.
-  const asset = (wordmark && svg.wordmark ? svg.wordmark : svg.route) as string | ThemeRoute;
-  const themed = typeof asset !== "string";
-  const [pref, setPref] = React.useState<"light" | "dark" | null>(null); // null = follow app theme
-  const variant: "light" | "dark" = pref ?? (dark ? "dark" : "light");
-  const targetUrl = typeof asset === "string" ? asset : asset[variant];
+  const [modalOpen, setModalOpen] = React.useState(false);
 
+  const asset = (wordmark && svg.wordmark ? svg.wordmark : svg.route) as string | ThemeRoute;
   const label = `${svg.title}${wordmark ? " wordmark" : ""}`;
+  const category = Array.isArray(svg.category) ? svg.category[0] : svg.category;
+
+  // Resolve the previewed asset to one concrete URL for copy / quick download.
+  // Read at click time only (client), so no hydration concern — the preview
+  // itself swaps light/dark purely via CSS.
+  const target = () =>
+    typeof asset === "string" ? asset : resolvedTheme === "dark" ? asset.dark : asset.light;
+
+  // A dialog is only worth showing when there's a real choice to make:
+  // a themed (light + dark) logo, or a separate wordmark.
+  const multiple = hasWordmark || typeof svg.route !== "string";
 
   const copy = async () => {
     try {
-      const res = await fetch(proxyUrl(targetUrl));
-      if (!res.ok) throw new Error();
-      await navigator.clipboard.writeText(await res.text());
+      await navigator.clipboard.writeText(await fetchSvgText(target()));
       toast.success(`Copied ${label} SVG`);
     } catch {
       toast.error("Couldn't copy — try again");
@@ -246,82 +277,73 @@ function IconCard({ svg }: { svg: Svg }) {
   };
 
   const download = () => {
-    const suffix = `${wordmark ? "-wordmark" : ""}${themed ? `-${variant}` : ""}`;
-    const a = document.createElement("a");
-    a.href = proxyUrl(targetUrl);
-    a.download = `${slugify(svg.title)}${suffix}.svg`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    if (multiple) {
+      setModalOpen(true);
+      return;
+    }
+    triggerDownload(proxyUrl(target()), `${slugify(svg.title)}.svg`);
+    toast.success(`Downloaded ${svg.title} SVG`);
   };
 
   return (
-    <li className="group border-border/60 bg-card hover:border-emerald-500/40 relative flex flex-col items-center gap-3 rounded-xl border p-4 transition-colors">
-      {/* Action toolbar — appears on hover / focus-within */}
-      <div className="absolute top-1.5 right-1.5 left-1.5 flex items-center justify-between opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-        <div className="flex gap-0.5">
-          {hasWordmark && (
-            <ChipButton
-              active={wordmark}
-              onClick={() => setWordmark((w) => !w)}
-              title={wordmark ? "Show logo" : "Show wordmark"}
-            >
-              <TypeIcon className="size-3.5" aria-hidden />
-            </ChipButton>
-          )}
-          {themed && (
-            <ChipButton
-              active={pref != null}
-              onClick={() => setPref(variant === "dark" ? "light" : "dark")}
-              title={`Previewing ${variant} — switch variant`}
-            >
-              {variant === "dark" ? (
-                <MoonIcon className="size-3.5" aria-hidden />
-              ) : (
-                <SunIcon className="size-3.5" aria-hidden />
-              )}
-            </ChipButton>
-          )}
-        </div>
-        <div className="flex gap-0.5">
-          <ChipButton onClick={copy} title={`Copy ${label} SVG`}>
-            <CopyIcon className="size-3.5" aria-hidden />
-          </ChipButton>
-          <ChipButton onClick={download} title={`Download ${label} SVG`}>
-            <DownloadIcon className="size-3.5" aria-hidden />
-          </ChipButton>
-          {svg.url && (
-            <a
-              href={svg.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={`Visit ${svg.title}`}
-              aria-label={`Visit ${svg.title} website`}
-              className="border-border/60 bg-background/90 text-muted-foreground hover:text-foreground flex size-6 items-center justify-center rounded-md border transition-colors"
-            >
-              <ExternalLinkIcon className="size-3.5" aria-hidden />
-            </a>
-          )}
-        </div>
-      </div>
-
-      {/* Click the icon to copy */}
+    <li className="group border-border/60 bg-card hover:border-emerald-500/40 hover:shadow-primary/5 relative flex flex-col rounded-xl border p-4 transition-all hover:shadow-lg">
+      {/* Preview — click to copy the current variant */}
       <button
         type="button"
         onClick={copy}
         title={`Copy ${label} SVG`}
-        className="flex h-12 w-full items-center justify-center pt-2"
+        className="flex h-20 w-full items-center justify-center"
       >
-        <AssetImage asset={asset} pref={pref} alt={label} wide={wordmark} />
+        <AssetImage asset={asset} alt={label} wide={wordmark} />
       </button>
-      <span className="text-muted-foreground group-hover:text-foreground max-w-full truncate text-xs font-medium transition-colors">
-        {svg.title}
-      </span>
+
+      {/* Identity */}
+      <div className="mt-1 flex flex-col items-center gap-1.5 text-center">
+        <span className="max-w-full truncate text-sm font-semibold">{svg.title}</span>
+        {category && (
+          <span className="border-border/60 text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase">
+            {category}
+          </span>
+        )}
+      </div>
+
+      {/* Actions — always visible, svgl-style */}
+      <div className="border-border/60 mt-3 flex items-center justify-center gap-0.5 border-t pt-3">
+        <ActionButton onClick={copy} title={`Copy ${label} SVG`}>
+          <CopyIcon className="size-4" aria-hidden />
+        </ActionButton>
+        <ActionButton onClick={download} title={`Download ${svg.title} SVG`}>
+          <DownloadIcon className="size-4" aria-hidden />
+        </ActionButton>
+        {svg.url && (
+          <a
+            href={svg.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`Visit ${svg.title}`}
+            aria-label={`Visit ${svg.title} website`}
+            className="text-muted-foreground hover:bg-muted hover:text-foreground flex size-8 items-center justify-center rounded-md transition-colors"
+          >
+            <ExternalLinkIcon className="size-4" aria-hidden />
+          </a>
+        )}
+        {hasWordmark && (
+          <ActionButton
+            active={wordmark}
+            onClick={() => setWordmark((w) => !w)}
+            title={wordmark ? "Show logo" : "Show wordmark"}
+          >
+            <TypeIcon className="size-4" aria-hidden />
+          </ActionButton>
+        )}
+      </div>
+
+      {multiple && <DownloadDialog svg={svg} open={modalOpen} onOpenChange={setModalOpen} />}
     </li>
   );
 }
 
-function ChipButton({
+function ActionButton({
   active,
   onClick,
   title,
@@ -338,11 +360,12 @@ function ChipButton({
       onClick={onClick}
       title={title}
       aria-label={title}
+      aria-pressed={active}
       className={cn(
-        "flex size-6 items-center justify-center rounded-md border transition-colors",
+        "flex size-8 items-center justify-center rounded-md transition-colors",
         active
-          ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-          : "border-border/60 bg-background/90 text-muted-foreground hover:text-foreground"
+          ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
       )}
     >
       {children}
@@ -350,14 +373,145 @@ function ChipButton({
   );
 }
 
+function DownloadDialog({
+  svg,
+  open,
+  onOpenChange,
+}: {
+  svg: Svg;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}) {
+  const single = svg.wordmark == null;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={cn("sm:max-w-2xl", single && "sm:max-w-md")}>
+        <DialogHeader>
+          <DialogTitle>Download {svg.title} SVGs</DialogTitle>
+          <DialogDescription>This logo has multiple options to download:</DialogDescription>
+        </DialogHeader>
+        <div className={cn("grid gap-3", !single && "sm:grid-cols-2")}>
+          <AssetColumn
+            title={svg.title}
+            asset={svg.route}
+            kind="logo"
+            onDone={() => onOpenChange(false)}
+          />
+          {svg.wordmark && (
+            <AssetColumn
+              title={svg.title}
+              asset={svg.wordmark}
+              kind="wordmark"
+              onDone={() => onOpenChange(false)}
+            />
+          )}
+        </div>
+        <p className="text-muted-foreground px-2 pb-1 text-center text-xs leading-relaxed">
+          Make sure you have permission from the brand owners before using their logo.
+        </p>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AssetColumn({
+  title,
+  asset,
+  kind,
+  onDone,
+}: {
+  title: string;
+  asset: string | ThemeRoute;
+  kind: "logo" | "wordmark";
+  onDone: () => void;
+}) {
+  const themed = typeof asset !== "string";
+  const wm = kind === "wordmark";
+  const base = `${slugify(title)}${wm ? "-wordmark" : ""}`;
+
+  const one = (url: string, name: string) => {
+    triggerDownload(proxyUrl(url), name);
+    toast.success(`Downloaded ${name}`);
+    onDone();
+  };
+
+  const zip = async () => {
+    const a = asset as ThemeRoute;
+    try {
+      await downloadZip(base, [
+        { url: a.light, name: `${base}-light.svg` },
+        { url: a.dark, name: `${base}-dark.svg` },
+      ]);
+      toast.success(`Downloaded ${base}.zip`);
+      onDone();
+    } catch {
+      toast.error("Couldn't build the .zip — try again");
+    }
+  };
+
+  return (
+    <div className="border-border/60 flex flex-col gap-2 rounded-xl border p-3">
+      <div className="bg-muted/40 flex h-24 items-center justify-center rounded-lg p-4">
+        <AssetImage asset={asset} alt={`${title}${wm ? " wordmark" : ""}`} wide={wm} />
+      </div>
+      {themed ? (
+        <>
+          <DownloadRow label="Light & dark variants" ext=".zip" onClick={zip} />
+          <DownloadRow
+            label={wm ? "Wordmark light variant" : "Only light variant"}
+            ext=".svg"
+            onClick={() => one((asset as ThemeRoute).light, `${base}-light.svg`)}
+          />
+          <DownloadRow
+            label={wm ? "Wordmark dark variant" : "Only dark variant"}
+            ext=".svg"
+            onClick={() => one((asset as ThemeRoute).dark, `${base}-dark.svg`)}
+          />
+        </>
+      ) : (
+        <DownloadRow
+          label={wm ? "Wordmark" : "Logo"}
+          ext=".svg"
+          onClick={() => one(asset as string, `${base}.svg`)}
+        />
+      )}
+    </div>
+  );
+}
+
+function DownloadRow({
+  label,
+  ext,
+  onClick,
+}: {
+  label: string;
+  ext: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group/row border-border/60 bg-background hover:border-emerald-500/50 hover:bg-muted flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm font-medium transition-colors"
+    >
+      <span className="flex items-center gap-2">
+        <DownloadIcon
+          className="text-muted-foreground size-4 transition-colors group-hover/row:text-emerald-600 dark:group-hover/row:text-emerald-400"
+          aria-hidden
+        />
+        {label}
+      </span>
+      <span className="text-muted-foreground/70 font-mono text-xs">{ext}</span>
+    </button>
+  );
+}
+
 function AssetImage({
   asset,
-  pref,
   alt,
   wide,
 }: {
   asset: string | ThemeRoute;
-  pref: "light" | "dark" | null;
   alt: string;
   wide?: boolean;
 }) {
@@ -365,11 +519,6 @@ function AssetImage({
   if (typeof asset === "string") {
     // eslint-disable-next-line @next/next/no-img-element -- remote SVG from svgl; next/image can't optimize SVGs and would need per-host config
     return <img src={asset} alt={alt} loading="lazy" decoding="async" className={cls} />;
-  }
-  // Explicit variant chosen — render just that one.
-  if (pref) {
-    // eslint-disable-next-line @next/next/no-img-element -- see above
-    return <img src={asset[pref]} alt={alt} loading="lazy" decoding="async" className={cls} />;
   }
   // Follow the app theme with a flash-free CSS swap.
   return (
