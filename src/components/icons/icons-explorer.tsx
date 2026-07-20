@@ -255,7 +255,6 @@ function IconCard({ svg }: { svg: Svg }) {
 
   const asset = (wordmark && svg.wordmark ? svg.wordmark : svg.route) as string | ThemeRoute;
   const label = `${svg.title}${wordmark ? " wordmark" : ""}`;
-  const category = Array.isArray(svg.category) ? svg.category[0] : svg.category;
 
   // Resolve the previewed asset to one concrete URL for copy / quick download.
   // Read at click time only (client), so no hydration concern — the preview
@@ -292,19 +291,14 @@ function IconCard({ svg }: { svg: Svg }) {
         type="button"
         onClick={copy}
         title={`Copy ${label} SVG`}
-        className="flex h-20 w-full items-center justify-center"
+        className="flex h-28 w-full items-center justify-center px-2"
       >
         <AssetImage asset={asset} alt={label} wide={wordmark} />
       </button>
 
       {/* Identity */}
-      <div className="mt-1 flex flex-col items-center gap-1.5 text-center">
+      <div className="mt-1 flex flex-col items-center text-center">
         <span className="max-w-full truncate text-sm font-semibold">{svg.title}</span>
-        {category && (
-          <span className="border-border/60 text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase">
-            {category}
-          </span>
-        )}
       </div>
 
       {/* Actions — always visible, svgl-style */}
@@ -515,7 +509,10 @@ function AssetImage({
   alt: string;
   wide?: boolean;
 }) {
-  const cls = cn("max-w-full object-contain", wide ? "h-8" : "h-10 w-10");
+  // Size by height with an auto width so landscape logos scale up to fill the
+  // card instead of being pinned to a small square. max-w-full keeps very wide
+  // marks from overflowing.
+  const cls = cn("w-auto max-w-full object-contain", wide ? "h-10" : "h-14");
   if (typeof asset === "string") {
     // eslint-disable-next-line @next/next/no-img-element -- remote SVG from svgl; next/image can't optimize SVGs and would need per-host config
     return <img src={asset} alt={alt} loading="lazy" decoding="async" className={cls} />;
