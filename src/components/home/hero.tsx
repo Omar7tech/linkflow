@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,22 @@ export function Hero() {
             { scaleX: 0, transformOrigin: "left center", duration: 1, ease: "power3.inOut" },
             0.35
           )
-          .from("[data-hero-row] > *", { y: 16, autoAlpha: 0, duration: 0.7, stagger: 0.1 }, 0.6);
+          .from("[data-hero-row] > *", { y: 16, autoAlpha: 0, duration: 0.7, stagger: 0.1 }, 0.6)
+          .from(
+            "[data-hero-art]",
+            { autoAlpha: 0, scale: 0.6, rotate: -12, y: 40, duration: 1, ease: "back.out(1.5)" },
+            0.4
+          );
+
+        // Gentle continuous float — transform only, no layout/paint cost.
+        gsap.to("[data-hero-art]", {
+          y: -14,
+          rotate: 3,
+          duration: 3.2,
+          ease: "sine.inOut",
+          repeat: -1,
+          yoyo: true,
+        });
       });
     },
     { scope: sectionRef }
@@ -65,7 +81,18 @@ export function Hero() {
         />
       </div>
 
-      <div className="mx-auto w-full max-w-7xl px-6 pt-24 sm:pt-32">
+      <div className="relative mx-auto w-full max-w-7xl px-6 pt-24 sm:pt-32">
+        {/* Floating 3D craft icon — anchored top-right, clear of the flush-left wordmark */}
+        <Image
+          src="/images/3d-rendering-mechanism-bulb-icon.png"
+          alt=""
+          data-hero-art
+          width={512}
+          height={512}
+          priority
+          className="pointer-events-none absolute top-6 right-4 z-0 hidden w-36 drop-shadow-xl select-none sm:top-10 sm:right-6 md:block lg:w-52 xl:w-60"
+        />
+
         {/* Wordmark — flush left, each character rising out of its own mask */}
         <h1
           aria-label="forma."
