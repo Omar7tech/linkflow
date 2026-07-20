@@ -4,6 +4,7 @@ import * as React from "react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import {
+  ContrastIcon,
   CopyIcon,
   DownloadIcon,
   ExternalLinkIcon,
@@ -275,12 +276,20 @@ function IconCard({ svg }: { svg: Svg }) {
 
   const asset = (wordmark && svg.wordmark ? svg.wordmark : svg.route) as string | ThemeRoute;
   const label = `${svg.title}${wordmark ? " wordmark" : ""}`;
+  const themed = typeof asset !== "string";
+
+  // Per-card background flip: preview the *opposite* variant on the opposite
+  // background, so a dark-only mark can be checked on white even in dark mode.
+  const [flip, setFlip] = React.useState(false);
+  const flipped = flip && themed;
+  const isDark = resolvedTheme === "dark";
+  const forced: "light" | "dark" | null = flipped ? (isDark ? "light" : "dark") : null;
 
   // Resolve the previewed asset to one concrete URL for copy / quick download.
   // Read at click time only (client), so no hydration concern — the preview
-  // itself swaps light/dark purely via CSS.
+  // itself swaps light/dark purely via CSS unless flipped.
   const target = () =>
-    typeof asset === "string" ? asset : resolvedTheme === "dark" ? asset.dark : asset.light;
+    typeof asset === "string" ? asset : asset[forced ?? (isDark ? "dark" : "light")];
 
   // A dialog is only worth showing when there's a real choice to make:
   // a themed (light + dark) logo, or a separate wordmark.
@@ -311,9 +320,12 @@ function IconCard({ svg }: { svg: Svg }) {
         type="button"
         onClick={copy}
         title={`Copy ${label} SVG`}
-        className="flex h-28 w-full items-center justify-center px-2"
+        className={cn(
+          "flex h-28 w-full items-center justify-center rounded-lg px-2 transition-colors",
+          flipped && (forced === "light" ? "bg-white" : "bg-neutral-950")
+        )}
       >
-        <AssetImage asset={asset} alt={label} wide={wordmark} />
+        <AssetImage asset={asset} alt={label} wide={wordmark} variant={forced} />
       </button>
 
       {/* Identity */}
@@ -348,6 +360,15 @@ function IconCard({ svg }: { svg: Svg }) {
             title={wordmark ? "Show logo" : "Show wordmark"}
           >
             <TypeIcon className="size-4" aria-hidden />
+          </ActionButton>
+        )}
+        {themed && (
+          <ActionButton
+            active={flip}
+            onClick={() => setFlip((f) => !f)}
+            title={flip ? "Preview on theme background" : "Preview on opposite background"}
+          >
+            <ContrastIcon className="size-4" aria-hidden />
           </ActionButton>
         )}
       </div>
@@ -545,10 +566,13 @@ function AssetImage({
   asset,
   alt,
   wide,
+  variant,
 }: {
   asset: string | ThemeRoute;
   alt: string;
   wide?: boolean;
+  /** Force a specific themed variant (null = follow the app theme via CSS). */
+  variant?: "light" | "dark" | null;
 }) {
   // Size by height with an auto width so landscape logos scale up to fill the
   // card instead of being pinned to a small square. max-w-full keeps very wide
@@ -556,6 +580,10 @@ function AssetImage({
   const cls = cn("w-auto max-w-full object-contain", wide ? "h-10" : "h-14");
   if (typeof asset === "string") {
     return <FadeImg src={asset} alt={alt} className={cls} />;
+  }
+  // Explicit variant chosen (background-flip preview) — render just that one.
+  if (variant) {
+    return <FadeImg key={variant} src={asset[variant]} alt={alt} className={cls} />;
   }
   // Follow the app theme with a flash-free CSS swap.
   return (
