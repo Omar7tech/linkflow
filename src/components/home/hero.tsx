@@ -43,6 +43,7 @@ export function Hero() {
           ease: "sine.inOut",
           repeat: -1,
           yoyo: true,
+          delay: 1.6,
         });
       });
     },
