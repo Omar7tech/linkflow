@@ -25,11 +25,6 @@ export interface SvglCategory {
 const BASE = "https://api.svgl.app";
 const REVALIDATE = 60 * 60 * 24; // 24h — icon set changes slowly.
 
-/** URL-safe category slug used by the `/category/<slug>` endpoint. */
-export function categorySlug(name: string): string {
-  return name.trim().toLowerCase().replace(/\s+/g, "-");
-}
-
 async function getJson<T>(url: string): Promise<T | null> {
   try {
     const res = await fetch(url, {
@@ -60,7 +55,10 @@ export async function getLatest(limit = 48): Promise<Svg[]> {
 }
 
 export async function getByCategory(name: string): Promise<Svg[]> {
-  return (await getJson<Svg[]>(`${BASE}/category/${categorySlug(name)}`)) ?? [];
+  // The /category endpoint matches the *exact* category name (case-sensitive,
+  // spaces URL-encoded) — e.g. "AI" works but "ai" returns nothing. Do NOT
+  // slugify or lowercase here.
+  return (await getJson<Svg[]>(`${BASE}/category/${encodeURIComponent(name.trim())}`)) ?? [];
 }
 
 export async function searchSvgs(query: string): Promise<Svg[]> {
