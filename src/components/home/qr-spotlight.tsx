@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRightIcon,
   ImageIcon,
@@ -10,24 +11,7 @@ import {
   WifiIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { QrPreview } from "@/components/shared/qr-preview";
 import { Reveal } from "@/components/home/reveal";
-import { SITE } from "@/constants/site";
-import type { QrOptions } from "@/types";
-
-/** Clean, standard black code — square modules and eyes, no gradient. */
-const SPOTLIGHT_QR: QrOptions = {
-  fgColor: "#0a0a0a",
-  bgColor: "#ffffff",
-  size: 512,
-  errorLevel: "M",
-  moduleStyle: "square",
-  eyeStyle: "square",
-  gradient: null,
-  transparent: false,
-  margin: 2,
-  logoScale: 0.22,
-};
 
 const CAPABILITIES = [
   { icon: LinkIcon, label: "Links & URLs", note: "Any web address" },
@@ -105,20 +89,16 @@ export function QrSpotlight() {
           </div>
         </Reveal>
 
-        {/* Live code — clean framed showcase */}
+        {/* Illustration — transparent-background art, reads on light and dark */}
         <Reveal delay={0.1} className="order-1 flex justify-center lg:order-2 lg:justify-end">
-          <div className="border-border bg-card w-full max-w-sm rounded-2xl border p-7 sm:p-8">
-            <QrPreview
-              value={`${SITE.url}/tools/qr`}
-              options={SPOTLIGHT_QR}
-              showActions={false}
-              className="[&_img]:!max-w-64"
-            />
-            <p className="text-muted-foreground mt-6 flex items-center justify-center gap-2 font-mono text-[11px] tracking-[0.18em] uppercase">
-              <ScanLineIcon className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden />
-              Scan to open
-            </p>
-          </div>
+          <Image
+            src="/images/qrcodeimage-illustration.webp"
+            alt="A hand holding a phone scanning a QR code"
+            width={928}
+            height={1200}
+            sizes="(max-width: 1024px) 60vw, 34vw"
+            className="h-auto w-full max-w-xs drop-shadow-xl sm:max-w-sm"
+          />
         </Reveal>
       </div>
     </section>
