@@ -22,7 +22,7 @@ export function Header() {
 
   return (
     <header className="border-border/60 bg-background/70 sticky top-0 z-50 border-b backdrop-blur-xl">
-      <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4">
+      <div className="flex h-14 items-center gap-3 px-4 sm:px-6 lg:px-8">
         <Link href="/" aria-label="Forma home">
           <Logo className="[&_span:last-child]:hidden sm:[&_span:last-child]:inline" />
         </Link>
