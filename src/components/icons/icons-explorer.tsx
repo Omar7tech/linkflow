@@ -119,7 +119,7 @@ export function IconsExplorer({ categories, initial }: Props) {
       </aside>
 
       {/* Main */}
-      <div className="min-w-0">
+      <div className="mx-auto w-full min-w-0 max-w-7xl">
         <div className="relative mb-6 max-w-md">
           <SearchIcon
             className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
