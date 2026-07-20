@@ -8,6 +8,7 @@ import {
   DownloadIcon,
   ExternalLinkIcon,
   LayersIcon,
+  Loader2Icon,
   SearchIcon,
   SparklesIcon,
   TypeIcon,
@@ -140,10 +141,14 @@ export function IconsExplorer({ categories, initial }: Props) {
           />
         </div>
 
-        <p className="text-muted-foreground mb-4 flex items-center gap-2 text-sm">
-          <LayersIcon className="size-4" aria-hidden />
+        <p className="text-muted-foreground mb-4 flex items-center gap-2 text-sm" aria-live="polite">
+          {loading ? (
+            <Loader2Icon className="size-4 animate-spin" aria-hidden />
+          ) : (
+            <LayersIcon className="size-4" aria-hidden />
+          )}
           {loading
-            ? "Loading…"
+            ? "Loading icons…"
             : searching
               ? `${items.length} result${items.length === 1 ? "" : "s"} for “${query}”`
               : active === LATEST
@@ -151,7 +156,16 @@ export function IconsExplorer({ categories, initial }: Props) {
                 : `${items.length} in ${active}`}
         </p>
 
-        {!loading && items.length === 0 ? (
+        {loading ? (
+          <ul
+            className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5"
+            aria-hidden
+          >
+            {Array.from({ length: 15 }).map((_, i) => (
+              <IconCardSkeleton key={i} />
+            ))}
+          </ul>
+        ) : items.length === 0 ? (
           <div className="border-border/60 text-muted-foreground rounded-2xl border border-dashed py-20 text-center text-sm">
             No icons found. Try another search or category.
           </div>
@@ -163,7 +177,13 @@ export function IconsExplorer({ categories, initial }: Props) {
           </ul>
         )}
 
+        {/* Grow-on-scroll sentinel + a spinner while more of the current set streams in */}
         <div ref={sentinel} aria-hidden className="h-px" />
+        {!loading && visible < items.length && (
+          <div className="text-muted-foreground flex justify-center py-8">
+            <Loader2Icon className="size-5 animate-spin" aria-hidden />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -500,6 +520,27 @@ function DownloadRow({
   );
 }
 
+// Remote SVG that fades in once decoded, so icons don't pop in as they stream.
+function FadeImg({ src, alt, className }: { src: string; alt: string; className?: string }) {
+  const [loaded, setLoaded] = React.useState(false);
+  // Cover the cached case, where onLoad may have already fired before mount.
+  const ref = React.useCallback((node: HTMLImageElement | null) => {
+    if (node?.complete) setLoaded(true);
+  }, []);
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- remote SVG from svgl; next/image can't optimize SVGs and would need per-host config
+    <img
+      ref={ref}
+      src={src}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      onLoad={() => setLoaded(true)}
+      className={cn(className, "transition-opacity duration-300", loaded ? "opacity-100" : "opacity-0")}
+    />
+  );
+}
+
 function AssetImage({
   asset,
   alt,
@@ -514,16 +555,32 @@ function AssetImage({
   // marks from overflowing.
   const cls = cn("w-auto max-w-full object-contain", wide ? "h-10" : "h-14");
   if (typeof asset === "string") {
-    // eslint-disable-next-line @next/next/no-img-element -- remote SVG from svgl; next/image can't optimize SVGs and would need per-host config
-    return <img src={asset} alt={alt} loading="lazy" decoding="async" className={cls} />;
+    return <FadeImg src={asset} alt={alt} className={cls} />;
   }
   // Follow the app theme with a flash-free CSS swap.
   return (
     <>
-      {/* eslint-disable-next-line @next/next/no-img-element -- theme-swapped via CSS */}
-      <img src={asset.light} alt={alt} loading="lazy" decoding="async" className={cn(cls, "dark:hidden")} />
-      {/* eslint-disable-next-line @next/next/no-img-element -- theme-swapped via CSS */}
-      <img src={asset.dark} alt="" loading="lazy" decoding="async" className={cn(cls, "hidden dark:block")} />
+      <FadeImg src={asset.light} alt={alt} className={cn(cls, "dark:hidden")} />
+      <FadeImg src={asset.dark} alt="" className={cn(cls, "hidden dark:block")} />
     </>
+  );
+}
+
+// Placeholder card shown while a category / search fetch is in flight.
+function IconCardSkeleton() {
+  return (
+    <li className="border-border/60 bg-card flex flex-col rounded-xl border p-4">
+      <div className="flex h-28 w-full items-center justify-center">
+        <div className="bg-muted size-14 animate-pulse rounded-xl" />
+      </div>
+      <div className="mt-1 flex justify-center">
+        <div className="bg-muted h-3.5 w-20 animate-pulse rounded-full" />
+      </div>
+      <div className="border-border/60 mt-3 flex items-center justify-center gap-1.5 border-t pt-3">
+        <div className="bg-muted size-6 animate-pulse rounded-md" />
+        <div className="bg-muted size-6 animate-pulse rounded-md" />
+        <div className="bg-muted size-6 animate-pulse rounded-md" />
+      </div>
+    </li>
   );
 }
