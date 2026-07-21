@@ -132,12 +132,14 @@ export function IconsExplorer({ initialQuery, initialCategory }: Props) {
   const searching = query.length > 0;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[180px_1fr]">
-      {/* Sidebar / category rail */}
-      <aside className="lg:sticky lg:top-20 lg:h-[calc(100dvh-6rem)] lg:self-start">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-[180px_1fr]">
+      {/* Sidebar / category rail — a horizontal scroll strip on mobile, a
+          vertical rail on desktop. min-w-0 lets it shrink so the non-wrapping
+          rail scrolls instead of forcing the whole page to overflow sideways. */}
+      <aside className="min-w-0 lg:sticky lg:top-20 lg:h-[calc(100dvh-6rem)] lg:self-start">
         <nav
           aria-label="Icon categories"
-          className="flex gap-0.5 overflow-x-auto pb-2 lg:h-full lg:flex-col lg:overflow-y-auto lg:-ml-2.5 lg:pr-2 lg:pb-6"
+          className="-mx-4 flex min-w-0 snap-x gap-1.5 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:px-0 lg:h-full lg:flex-col lg:gap-0.5 lg:overflow-y-auto lg:-ml-2.5 lg:pb-6 lg:pr-2 [&::-webkit-scrollbar]:hidden"
         >
           <RailButton
             active={active === LATEST && !searching}
