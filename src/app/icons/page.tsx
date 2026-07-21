@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { IconsExplorer } from "@/components/icons/icons-explorer";
-import { getByCategory, getCategories, getLatest, searchSvgs } from "@/lib/svgl";
 import { SITE } from "@/constants/site";
-
-export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Brand Icons",
@@ -21,13 +18,10 @@ export default async function IconsPage({
   const q = (sp.q ?? "").trim();
   const category = (sp.category ?? "").trim() || null;
 
-  // Seed the explorer with whatever the URL asks for, so deep links render
-  // server-side (great for sharing, no hydration flip).
-  const [categories, initial] = await Promise.all([
-    getCategories(),
-    q ? searchSvgs(q) : category ? getByCategory(category) : getLatest(),
-  ]);
-
+  // The icon data is fetched client-side (directly from the svgl API, which
+  // allows CORS) so it always loads from the user's own network — a server-side
+  // fetch gets blocked by svgl's Cloudflare from datacenter IPs in production.
+  // We only pass through what the URL asks for, to seed the initial view.
   return (
     <div className="w-full px-4 py-12 sm:px-6 lg:px-8">
       <header className="border-border relative mb-8 overflow-hidden border-b pb-6">
@@ -48,12 +42,7 @@ export default async function IconsPage({
           source — theme-aware, always crisp.
         </p>
       </header>
-      <IconsExplorer
-        categories={categories}
-        initial={initial}
-        initialQuery={q}
-        initialCategory={category}
-      />
+      <IconsExplorer initialQuery={q} initialCategory={category} />
     </div>
   );
 }

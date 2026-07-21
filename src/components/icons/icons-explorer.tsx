@@ -27,21 +27,33 @@ import type { Svg, SvglCategory, ThemeRoute } from "@/lib/svgl";
 
 const LATEST = "__latest__";
 const PAGE = 60; // icons rendered per window step
+const LATEST_COUNT = 48; // newest icons shown in the default view
+
+// The svgl API allows CORS (access-control-allow-origin: *), so the browser can
+// hit it directly. That's deliberate: a server-side fetch gets blocked by
+// svgl's Cloudflare from datacenter IPs, which broke the grid in production.
+const SVGL = "https://api.svgl.app";
+
+/** Build the svgl endpoint for the current view. */
+function viewUrl(query: string, active: string): string {
+  if (query) return `${SVGL}?search=${encodeURIComponent(query)}`;
+  if (active === LATEST) return SVGL;
+  return `${SVGL}/category/${encodeURIComponent(active)}`;
+}
 
 interface Props {
-  categories: SvglCategory[];
-  initial: Svg[];
   /** Search term seeded from the URL (?q=). */
   initialQuery?: string;
   /** Category seeded from the URL (?category=). */
   initialCategory?: string | null;
 }
 
-export function IconsExplorer({ categories, initial, initialQuery, initialCategory }: Props) {
+export function IconsExplorer({ initialQuery, initialCategory }: Props) {
   const [active, setActive] = React.useState<string>(initialCategory || LATEST);
   const [rawQuery, setRawQuery] = React.useState(initialQuery ?? "");
-  const [items, setItems] = React.useState<Svg[]>(initial);
-  const [loading, setLoading] = React.useState(false);
+  const [categories, setCategories] = React.useState<SvglCategory[]>([]);
+  const [items, setItems] = React.useState<Svg[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [visible, setVisible] = React.useState(PAGE);
 
   // Debounce the search box.
@@ -51,9 +63,22 @@ export function IconsExplorer({ categories, initial, initialQuery, initialCatego
     return () => clearTimeout(id);
   }, [rawQuery]);
 
-  // Fetch on filter/search change, and mirror the state into the URL so the
-  // view is shareable. The initial view is already seeded by the server, so the
-  // first run only syncs the URL — it never refetches.
+  // Load the category rail once, client-side.
+  React.useEffect(() => {
+    const ctrl = new AbortController();
+    fetch(`${SVGL}/categories`, { signal: ctrl.signal })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: SvglCategory[]) => {
+        if (Array.isArray(data)) {
+          setCategories([...data].sort((a, b) => a.category.localeCompare(b.category)));
+        }
+      })
+      .catch(() => {});
+    return () => ctrl.abort();
+  }, []);
+
+  // Fetch the grid on filter/search change (and on first mount), and mirror the
+  // state into the URL so the view is shareable.
   const firstRun = React.useRef(true);
   React.useEffect(() => {
     // Reflect the current view in the address bar (no navigation / RSC fetch).
@@ -63,27 +88,27 @@ export function IconsExplorer({ categories, initial, initialQuery, initialCatego
     const qs = params.toString();
     window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
 
-    if (firstRun.current) {
-      firstRun.current = false;
-      return;
-    }
-
     const ctrl = new AbortController();
-    setLoading(true);
-    const url = query
-      ? `/api/icons?search=${encodeURIComponent(query)}`
-      : active === LATEST
-        ? "/api/icons"
-        : `/api/icons?category=${encodeURIComponent(active)}`;
+    // `loading` already starts true for the first fetch; only re-arm it after.
+    if (firstRun.current) firstRun.current = false;
+    else setLoading(true);
+    const isLatest = !query && active === LATEST;
 
-    fetch(url, { signal: ctrl.signal })
+    fetch(viewUrl(query, active), { signal: ctrl.signal })
       .then((r) => (r.ok ? r.json() : []))
       .then((data: Svg[]) => {
-        setItems(Array.isArray(data) ? data : []);
+        if (!Array.isArray(data)) return setItems([]);
+        // The default view fetches the whole set — newest icons are at the tail.
+        setItems(isLatest ? data.slice(-LATEST_COUNT).reverse() : data);
         setVisible(PAGE);
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (!(err instanceof DOMException && err.name === "AbortError")) setItems([]);
+      })
+      .finally(() => {
+        // Don't clear loading for a fetch we've superseded/aborted.
+        if (!ctrl.signal.aborted) setLoading(false);
+      });
 
     return () => ctrl.abort();
   }, [query, active]);

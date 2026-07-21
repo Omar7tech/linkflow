@@ -3,7 +3,7 @@ export const SITE = {
   tagline: "Form follows function.",
   description:
     "A free studio of everyday tools for developers and designers. Generators, converters and visual editors that take you from idea to finished asset in seconds.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://forma.tools",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://linkflow-pi.vercel.app",
   author: "Forma",
   twitter: "@formatools",
 } as const;
