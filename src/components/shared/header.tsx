@@ -12,7 +12,7 @@ import { ThemeToggle } from "./theme-toggle";
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/tools", label: "Tools" },
-  { href: "/icons", label: "Icons" },
+  { href: "/icons", label: "Icons", badge: "New" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
 ];
@@ -34,11 +34,16 @@ export function Header() {
               key={link.href}
               href={link.href}
               className={cn(
-                "text-muted-foreground hover:text-foreground rounded-lg px-3 py-1.5 text-sm transition-colors",
+                "text-muted-foreground hover:text-foreground inline-flex items-center rounded-lg px-3 py-1.5 text-sm transition-colors",
                 pathname === link.href && "text-foreground bg-muted"
               )}
             >
               {link.label}
+              {link.badge && (
+                <span className="ml-1.5 rounded-full bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-wider text-emerald-600 uppercase dark:text-emerald-400">
+                  {link.badge}
+                </span>
+              )}
             </Link>
           ))}
         </nav>

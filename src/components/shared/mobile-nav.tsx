@@ -12,7 +12,7 @@ gsap.registerPlugin(useGSAP);
 const MOBILE_NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/tools", label: "Tools" },
-  { href: "/icons", label: "Icons" },
+  { href: "/icons", label: "Icons", badge: "New" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
 ];
@@ -116,6 +116,11 @@ export function MobileNavPanel({ open, onNavigate }: { open: boolean; onNavigate
               >
                 {link.label}
               </span>
+              {link.badge && (
+                <span className="rounded-full bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-wider text-emerald-600 uppercase dark:text-emerald-400">
+                  {link.badge}
+                </span>
+              )}
             </Link>
           );
         })}
