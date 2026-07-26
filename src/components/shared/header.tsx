@@ -9,13 +9,37 @@ import { Logo } from "./logo";
 import { MobileNavPanel, MobileNavTrigger } from "./mobile-nav";
 import { ThemeToggle } from "./theme-toggle";
 
-const NAV_LINKS = [
+type NavLink = { href: string; label: string; badge?: string };
+
+const PRIMARY_LINKS: NavLink[] = [
   { href: "/", label: "Home" },
   { href: "/tools", label: "Tools" },
   { href: "/icons", label: "Icons", badge: "New" },
+];
+
+const SECONDARY_LINKS: NavLink[] = [
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
 ];
+
+function NavItem({ link, active }: { link: NavLink; active: boolean }) {
+  return (
+    <Link
+      href={link.href}
+      className={cn(
+        "text-muted-foreground hover:text-foreground inline-flex items-center rounded-lg px-3 py-1.5 text-sm transition-colors",
+        active && "text-foreground bg-muted"
+      )}
+    >
+      {link.label}
+      {link.badge && (
+        <span className="ml-1.5 rounded-full bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-wider text-emerald-600 uppercase dark:text-emerald-400">
+          {link.badge}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 export function Header() {
   const pathname = usePathname();
@@ -29,26 +53,17 @@ export function Header() {
         </Link>
 
         <nav className="ml-4 hidden items-center gap-1 md:flex" aria-label="Main">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "text-muted-foreground hover:text-foreground inline-flex items-center rounded-lg px-3 py-1.5 text-sm transition-colors",
-                pathname === link.href && "text-foreground bg-muted"
-              )}
-            >
-              {link.label}
-              {link.badge && (
-                <span className="ml-1.5 rounded-full bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-wider text-emerald-600 uppercase dark:text-emerald-400">
-                  {link.badge}
-                </span>
-              )}
-            </Link>
+          {PRIMARY_LINKS.map((link) => (
+            <NavItem key={link.href} link={link} active={pathname === link.href} />
           ))}
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <nav className="mr-1 hidden items-center gap-1 md:flex" aria-label="Secondary">
+            {SECONDARY_LINKS.map((link) => (
+              <NavItem key={link.href} link={link} active={pathname === link.href} />
+            ))}
+          </nav>
           <CommandPalette />
           <ThemeToggle />
           <MobileNavTrigger open={mobileOpen} onToggle={() => setMobileOpen((o) => !o)} />
