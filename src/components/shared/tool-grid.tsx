@@ -1,43 +1,142 @@
 import Link from "next/link";
 import { Reveal } from "@/components/home/reveal";
-import { TOOLS } from "@/constants/tools";
+import { TOOLS, TOOL_CATEGORIES } from "@/constants/tools";
 import { cn } from "@/lib/utils";
-import type { ToolMeta } from "@/types";
+import type { ToolCategory, ToolMeta } from "@/types";
 import { FavoriteButton } from "./favorite-button";
 import { ToolCardIndicator } from "./link-indicator";
 
+/**
+ * One signature colour per category, used editorially — as a thin sweeping
+ * rule, a mono eyebrow and the arrow, never as a gradient fill. Cards read as
+ * a typographic specimen sheet, not a wall of glowing tiles. Full class
+ * strings so Tailwind keeps them.
+ */
+type Accent = {
+  text: string; // eyebrow + arrow colour
+  bar: string; // sweeping left rule
+  border: string; // card border tint on hover
+  shadow: string; // coloured lift shadow on hover
+};
+
+const CATEGORY_ACCENT: Record<ToolCategory, Accent> = {
+  studio: {
+    text: "text-violet-500 dark:text-violet-400",
+    bar: "bg-violet-500",
+    border: "hover:border-violet-500/40",
+    shadow: "hover:shadow-violet-500/10",
+  },
+  links: {
+    text: "text-emerald-600 dark:text-emerald-400",
+    bar: "bg-emerald-500",
+    border: "hover:border-emerald-500/40",
+    shadow: "hover:shadow-emerald-500/10",
+  },
+  image: {
+    text: "text-rose-500 dark:text-rose-400",
+    bar: "bg-rose-500",
+    border: "hover:border-rose-500/40",
+    shadow: "hover:shadow-rose-500/10",
+  },
+  color: {
+    text: "text-amber-500 dark:text-amber-400",
+    bar: "bg-amber-500",
+    border: "hover:border-amber-500/40",
+    shadow: "hover:shadow-amber-500/10",
+  },
+  backgrounds: {
+    text: "text-sky-500 dark:text-sky-400",
+    bar: "bg-sky-500",
+    border: "hover:border-sky-500/40",
+    shadow: "hover:shadow-sky-500/10",
+  },
+  css: {
+    text: "text-blue-500 dark:text-blue-400",
+    bar: "bg-blue-500",
+    border: "hover:border-blue-500/40",
+    shadow: "hover:shadow-blue-500/10",
+  },
+  type: {
+    text: "text-fuchsia-500 dark:text-fuchsia-400",
+    bar: "bg-fuchsia-500",
+    border: "hover:border-fuchsia-500/40",
+    shadow: "hover:shadow-fuchsia-500/10",
+  },
+  brandlab: {
+    text: "text-teal-500 dark:text-teal-400",
+    bar: "bg-teal-500",
+    border: "hover:border-teal-500/40",
+    shadow: "hover:shadow-teal-500/10",
+  },
+  utilities: {
+    text: "text-orange-500 dark:text-orange-400",
+    bar: "bg-orange-500",
+    border: "hover:border-orange-500/40",
+    shadow: "hover:shadow-orange-500/10",
+  },
+  playground: {
+    text: "text-purple-500 dark:text-purple-400",
+    bar: "bg-purple-500",
+    border: "hover:border-purple-500/40",
+    shadow: "hover:shadow-purple-500/10",
+  },
+};
+
+const CATEGORY_LABEL: Record<ToolCategory, string> = Object.fromEntries(
+  TOOL_CATEGORIES.map((c) => [c.id, c.label])
+) as Record<ToolCategory, string>;
+
 export function ToolCard({ tool }: { tool: ToolMeta }) {
   const Icon = tool.icon;
+  const category = tool.category as ToolCategory;
+  const accent = CATEGORY_ACCENT[category] ?? CATEGORY_ACCENT.links;
 
   return (
     <Link
       href={tool.slug}
       className={cn(
-        "group border-border/60 bg-card hover:border-emerald-500/40 hover:shadow-emerald-500/5 relative flex flex-col gap-4 rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+        "group bg-card border-border/60 relative flex min-h-[172px] flex-col overflow-hidden rounded-xl border p-6 pl-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl",
+        accent.border,
+        accent.shadow
       )}
     >
-      {/* Top row: leading icon tile + favourite star */}
-      <div className="flex items-start justify-between gap-3">
-        <span className="border-border/70 bg-muted/40 group-hover:border-emerald-500/30 group-hover:bg-emerald-500/10 flex size-11 shrink-0 items-center justify-center rounded-xl border transition-colors">
-          <Icon
-            className="size-5 text-emerald-600 dark:text-emerald-400"
-            aria-hidden
-          />
+      {/* Signature accent rule that sweeps down the left edge on hover */}
+      <span
+        aria-hidden
+        className={cn(
+          "absolute inset-y-4 left-0 w-[3px] origin-top scale-y-0 rounded-full transition-transform duration-300 ease-out group-hover:scale-y-100",
+          accent.bar
+        )}
+      />
+
+      {/* The tool's own mark as a large, crisp outline drifting off the corner */}
+      <Icon
+        aria-hidden
+        strokeWidth={1}
+        className="text-foreground/[0.05] pointer-events-none absolute -right-3 -bottom-5 size-28 transition-all duration-500 ease-out group-hover:-translate-y-1 group-hover:-rotate-6"
+      />
+
+      <div className="relative z-10 flex items-start justify-between gap-3">
+        <span
+          className={cn(
+            "font-mono text-[10px] font-semibold tracking-[0.18em] uppercase",
+            accent.text
+          )}
+        >
+          {CATEGORY_LABEL[category]}
         </span>
         <FavoriteButton toolId={tool.id} variant="chip" />
       </div>
 
-      <div className="space-y-1">
-        <h3 className="font-heading flex items-center gap-1.5 text-lg font-bold tracking-tight">
-          {tool.shortName}
-          <span className="text-emerald-600 dark:text-emerald-400">
-            <ToolCardIndicator />
-          </span>
-        </h3>
-        <p className="text-muted-foreground line-clamp-2 text-sm leading-snug">
-          {tool.description}
-        </p>
-      </div>
+      <h3 className="font-heading relative z-10 mt-4 flex items-center gap-1.5 text-2xl font-bold tracking-tight">
+        {tool.shortName}
+        <span className={accent.text}>
+          <ToolCardIndicator />
+        </span>
+      </h3>
+      <p className="text-muted-foreground relative z-10 mt-1.5 line-clamp-2 text-sm leading-snug">
+        {tool.description}
+      </p>
     </Link>
   );
 }
