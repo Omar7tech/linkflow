@@ -199,3 +199,31 @@
     0 0 24px var(--glow),
     0 0 64px var(--glow);
 }
+
+/* QR showcase — flagship spotlight visual. */
+@keyframes qr-scan {
+  0% {
+    top: -18%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes qr-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}

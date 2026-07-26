@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowRightIcon,
   ImageIcon,
@@ -12,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/home/reveal";
+import { QrShowcase } from "@/components/home/qr-showcase";
 
 const CAPABILITIES = [
   { icon: LinkIcon, label: "Links & URLs" },
@@ -80,17 +80,9 @@ export function QrSpotlight() {
           </div>
         </Reveal>
 
-        {/* Illustration */}
+        {/* Flagship 3D QR visual */}
         <Reveal delay={0.1} className="order-1 flex justify-center lg:order-2 lg:justify-end">
-          <div className="border-border/60 relative aspect-[16/10] w-full max-w-md overflow-hidden rounded-2xl border shadow-xl">
-            <Image
-              src="/tools/qr-code.webp"
-              alt="Custom-styled QR code with branding"
-              fill
-              sizes="(max-width: 1024px) 70vw, 34vw"
-              className="object-cover"
-            />
-          </div>
+          <QrShowcase />
         </Reveal>
       </div>
     </section>
