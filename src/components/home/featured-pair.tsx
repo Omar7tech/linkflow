@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRightIcon,
   BinaryIcon,
@@ -12,7 +13,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Reveal } from "@/components/home/reveal";
 import { TOOL_BY_ID } from "@/constants/tools";
 import type { ToolId } from "@/constants/tools";
 
@@ -24,8 +24,7 @@ type Spotlight = {
   capabilities: readonly { icon: LucideIcon; label: string }[];
   cta: string;
   secondary: { href: string; label: string };
-  /** Backdrop behind the big glyph in the visual banner. */
-  pattern: "checkerboard" | "dots";
+  image: string;
 };
 
 const SPOTLIGHTS: readonly Spotlight[] = [
@@ -43,7 +42,7 @@ const SPOTLIGHTS: readonly Spotlight[] = [
     ],
     cta: "Open the background remover",
     secondary: { href: "/tools#cat-image", label: "Browse image tools" },
-    pattern: "checkerboard",
+    image: "/tools/bg-remover.webp",
   },
   {
     id: "whatsapp",
@@ -59,54 +58,15 @@ const SPOTLIGHTS: readonly Spotlight[] = [
     ],
     cta: "Open the WhatsApp generator",
     secondary: { href: "/tools#cat-links", label: "Browse link tools" },
-    pattern: "dots",
+    image: "/tools/whatsapp.webp",
   },
 ];
-
-function VisualBanner({ Icon, pattern }: { Icon: LucideIcon; pattern: Spotlight["pattern"] }) {
-  return (
-    <div className="border-border/60 bg-muted/20 relative aspect-[16/9] w-full overflow-hidden border-b">
-      {pattern === "checkerboard" ? (
-        <div
-          aria-hidden
-          className="absolute inset-0 opacity-[0.5] dark:opacity-[0.18]"
-          style={{
-            backgroundImage:
-              "linear-gradient(45deg, var(--border) 25%, transparent 25%), linear-gradient(-45deg, var(--border) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--border) 75%), linear-gradient(-45deg, transparent 75%, var(--border) 75%)",
-            backgroundSize: "22px 22px",
-            backgroundPosition: "0 0, 0 11px, 11px -11px, -11px 0",
-          }}
-        />
-      ) : (
-        <div
-          aria-hidden
-          className="absolute inset-0 opacity-[0.6] dark:opacity-[0.35]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0)",
-            backgroundSize: "18px 18px",
-          }}
-        />
-      )}
-
-      <div className="absolute inset-0 grid place-items-center">
-        <div className="border-border/60 bg-background/80 flex size-24 items-center justify-center rounded-3xl border shadow-xl backdrop-blur-sm transition-transform duration-300 group-hover:scale-105">
-          <Icon
-            className="size-12 text-emerald-600 dark:text-emerald-400"
-            strokeWidth={1.5}
-            aria-hidden
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function FeaturedPair() {
   return (
     <section aria-label="Featured tools" className="border-border/70 border-t">
       <div className="mx-auto w-full max-w-7xl px-6 py-16 sm:py-20">
-        <Reveal stagger className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2">
           {SPOTLIGHTS.map((s) => {
             const tool = TOOL_BY_ID[s.id];
             const Icon = tool.icon;
@@ -117,7 +77,16 @@ export function FeaturedPair() {
                 aria-labelledby={headingId}
                 className="group border-border/60 bg-card flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/5"
               >
-                <VisualBanner Icon={Icon} pattern={s.pattern} />
+                {/* Banner image */}
+                <div className="border-border/60 relative aspect-[16/9] w-full overflow-hidden border-b">
+                  <Image
+                    src={s.image}
+                    alt={`${tool.name} illustration`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                  />
+                </div>
 
                 <div className="flex flex-1 flex-col p-8">
                   <p className="flex items-center gap-2 font-mono text-xs font-medium tracking-[0.2em] text-emerald-700 uppercase dark:text-emerald-400">
@@ -176,7 +145,7 @@ export function FeaturedPair() {
               </article>
             );
           })}
-        </Reveal>
+        </div>
       </div>
     </section>
   );

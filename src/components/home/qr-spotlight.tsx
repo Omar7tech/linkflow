@@ -80,16 +80,17 @@ export function QrSpotlight() {
           </div>
         </Reveal>
 
-        {/* Illustration — transparent-background art, reads on light and dark */}
+        {/* Illustration */}
         <Reveal delay={0.1} className="order-1 flex justify-center lg:order-2 lg:justify-end">
-          <Image
-            src="/images/qrcodeimage-illustration.webp"
-            alt="A hand holding a phone scanning a QR code"
-            width={928}
-            height={1200}
-            sizes="(max-width: 1024px) 60vw, 34vw"
-            className="h-auto w-full max-w-xs drop-shadow-xl sm:max-w-sm"
-          />
+          <div className="border-border/60 relative aspect-[16/10] w-full max-w-md overflow-hidden rounded-2xl border shadow-xl">
+            <Image
+              src="/tools/qr-code.webp"
+              alt="Custom-styled QR code with branding"
+              fill
+              sizes="(max-width: 1024px) 70vw, 34vw"
+              className="object-cover"
+            />
+          </div>
         </Reveal>
       </div>
     </section>
