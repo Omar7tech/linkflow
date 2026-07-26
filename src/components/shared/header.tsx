@@ -10,6 +10,7 @@ import { MobileNavPanel, MobileNavTrigger } from "./mobile-nav";
 import { ThemeToggle } from "./theme-toggle";
 
 const NAV_LINKS = [
+  { href: "/", label: "Home" },
   { href: "/tools", label: "Tools" },
   { href: "/icons", label: "Icons" },
   { href: "/faq", label: "FAQ" },
