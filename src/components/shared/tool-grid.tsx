@@ -14,7 +14,6 @@ import { ToolCardIndicator } from "./link-indicator";
  */
 type Accent = {
   text: string; // eyebrow + arrow colour
-  bar: string; // sweeping left rule
   border: string; // card border tint on hover
   shadow: string; // coloured lift shadow on hover
 };
@@ -22,61 +21,51 @@ type Accent = {
 const CATEGORY_ACCENT: Record<ToolCategory, Accent> = {
   studio: {
     text: "text-violet-500 dark:text-violet-400",
-    bar: "bg-violet-500",
     border: "hover:border-violet-500/40",
     shadow: "hover:shadow-violet-500/10",
   },
   links: {
     text: "text-emerald-600 dark:text-emerald-400",
-    bar: "bg-emerald-500",
     border: "hover:border-emerald-500/40",
     shadow: "hover:shadow-emerald-500/10",
   },
   image: {
     text: "text-rose-500 dark:text-rose-400",
-    bar: "bg-rose-500",
     border: "hover:border-rose-500/40",
     shadow: "hover:shadow-rose-500/10",
   },
   color: {
     text: "text-amber-500 dark:text-amber-400",
-    bar: "bg-amber-500",
     border: "hover:border-amber-500/40",
     shadow: "hover:shadow-amber-500/10",
   },
   backgrounds: {
     text: "text-sky-500 dark:text-sky-400",
-    bar: "bg-sky-500",
     border: "hover:border-sky-500/40",
     shadow: "hover:shadow-sky-500/10",
   },
   css: {
     text: "text-blue-500 dark:text-blue-400",
-    bar: "bg-blue-500",
     border: "hover:border-blue-500/40",
     shadow: "hover:shadow-blue-500/10",
   },
   type: {
     text: "text-fuchsia-500 dark:text-fuchsia-400",
-    bar: "bg-fuchsia-500",
     border: "hover:border-fuchsia-500/40",
     shadow: "hover:shadow-fuchsia-500/10",
   },
   brandlab: {
     text: "text-teal-500 dark:text-teal-400",
-    bar: "bg-teal-500",
     border: "hover:border-teal-500/40",
     shadow: "hover:shadow-teal-500/10",
   },
   utilities: {
     text: "text-orange-500 dark:text-orange-400",
-    bar: "bg-orange-500",
     border: "hover:border-orange-500/40",
     shadow: "hover:shadow-orange-500/10",
   },
   playground: {
     text: "text-purple-500 dark:text-purple-400",
-    bar: "bg-purple-500",
     border: "hover:border-purple-500/40",
     shadow: "hover:shadow-purple-500/10",
   },
@@ -95,20 +84,11 @@ export function ToolCard({ tool }: { tool: ToolMeta }) {
     <Link
       href={tool.slug}
       className={cn(
-        "group bg-card border-border/60 relative flex min-h-[172px] flex-col overflow-hidden rounded-xl border p-6 pl-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl",
+        "group bg-card border-border/60 relative flex min-h-[172px] flex-col overflow-hidden rounded-xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl",
         accent.border,
         accent.shadow
       )}
     >
-      {/* Signature accent rule that sweeps down the left edge on hover */}
-      <span
-        aria-hidden
-        className={cn(
-          "absolute inset-y-4 left-0 w-[3px] origin-top scale-y-0 rounded-full transition-transform duration-300 ease-out group-hover:scale-y-100",
-          accent.bar
-        )}
-      />
-
       {/* The tool's own mark as a large, crisp outline drifting off the corner */}
       <Icon
         aria-hidden
