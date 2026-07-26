@@ -1,12 +1,12 @@
 import Link from "next/link";
 import {
   ArrowRightIcon,
+  ContactIcon,
+  DownloadIcon,
   ImageIcon,
   LinkIcon,
   PaletteIcon,
   QrCodeIcon,
-  ScanLineIcon,
-  TypeIcon,
   WifiIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,11 @@ import { QrShowcase } from "@/components/home/qr-showcase";
 
 const CAPABILITIES = [
   { icon: LinkIcon, label: "Links & URLs" },
-  { icon: WifiIcon, label: "WiFi" },
-  { icon: TypeIcon, label: "Plain text" },
-  { icon: PaletteIcon, label: "Custom styling" },
+  { icon: WifiIcon, label: "WiFi networks" },
+  { icon: ContactIcon, label: "vCard contacts" },
+  { icon: PaletteIcon, label: "Custom eyes & colors" },
   { icon: ImageIcon, label: "Logo overlay" },
-  { icon: ScanLineIcon, label: "Static forever" },
+  { icon: DownloadIcon, label: "SVG & PNG export" },
 ];
 
 /** Featured full-width section that frames the QR generator as the flagship tool. */
@@ -41,8 +41,8 @@ export function QrSpotlight() {
             <span className="text-primary">.</span>
           </h2>
           <p className="text-muted-foreground mt-4 max-w-md text-sm leading-relaxed">
-            Shape the modules, eyes and colors, drop in a logo, and export — every code is static, so
-            it works forever.
+            Style every module, finder eye and color, drop your logo in the middle, then export
+            razor-sharp SVG or PNG. Each code is static — no redirects, no expiry, scanning forever.
           </p>
 
           <ul className="mt-7 flex max-w-lg flex-wrap gap-2">
