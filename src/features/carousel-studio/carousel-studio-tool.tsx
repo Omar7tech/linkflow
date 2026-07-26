@@ -263,34 +263,36 @@ export function CarouselStudioTool() {
                   </span>
                 </div>
 
-                <div className="bg-muted/40 flex items-center justify-center gap-2 rounded-xl p-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => go(-1)}
-                    disabled={idx <= 0}
-                    aria-label="Previous slide"
-                    className="shrink-0"
-                  >
-                    <ChevronLeftIcon className="size-4" />
-                  </Button>
-                  <canvas
-                    ref={canvasRef}
-                    className="h-auto max-h-[54vh] w-auto max-w-full rounded-lg bg-black shadow-lg"
-                    style={{ aspectRatio: `${size.w} / ${size.h}` }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => go(1)}
-                    disabled={idx >= slides.length - 1}
-                    aria-label="Next slide"
-                    className="shrink-0"
-                  >
-                    <ChevronRightIcon className="size-4" />
-                  </Button>
+                <div className="bg-muted/40 flex items-center justify-center rounded-xl p-3">
+                  <div className="relative flex max-w-full items-center justify-center">
+                    <canvas
+                      ref={canvasRef}
+                      className="h-auto max-h-[54vh] w-auto max-w-full rounded-lg bg-black shadow-lg"
+                      style={{ aspectRatio: `${size.w} / ${size.h}` }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => go(-1)}
+                      disabled={idx <= 0}
+                      aria-label="Previous slide"
+                      className="absolute left-1 top-1/2 -translate-y-1/2 shrink-0 shadow-md sm:left-2"
+                    >
+                      <ChevronLeftIcon className="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => go(1)}
+                      disabled={idx >= slides.length - 1}
+                      aria-label="Next slide"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 shrink-0 shadow-md sm:right-2"
+                    >
+                      <ChevronRightIcon className="size-4" />
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Slide dots */}

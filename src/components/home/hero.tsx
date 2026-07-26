@@ -121,10 +121,10 @@ export function Hero() {
               <Link href="/tools">Browse all tools</Link>
             </Button>
             <Link
-              href="/tools/universal"
+              href="/tools/whatsapp"
               className="text-foreground inline-flex items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline"
             >
-              Universal
+              WhatsApp
               <LinkLoadingIndicator />
             </Link>
           </div>

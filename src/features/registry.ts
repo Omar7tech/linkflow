@@ -8,12 +8,10 @@ import type { ToolId } from "@/constants/tools";
  * TypeScript errors if an id is missing.
  */
 export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
-  universal: dynamic(() => import("./universal/universal-tool").then((m) => m.UniversalTool)),
   whatsapp: dynamic(() => import("./whatsapp/whatsapp-tool").then((m) => m.WhatsAppTool)),
   qr: dynamic(() => import("./qr/qr-tool").then((m) => m.QrTool)),
   share: dynamic(() => import("./share/share-tool").then((m) => m.ShareTool)),
   sms: dynamic(() => import("./sms/sms-tool").then((m) => m.SmsTool)),
-  tel: dynamic(() => import("./tel/tel-tool").then((m) => m.TelTool)),
   email: dynamic(() => import("./email/email-tool").then((m) => m.EmailTool)),
   vcard: dynamic(() => import("./vcard/vcard-tool").then((m) => m.VCardTool)),
   utm: dynamic(() => import("./utm/utm-tool").then((m) => m.UtmTool)),

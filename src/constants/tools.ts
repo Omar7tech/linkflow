@@ -17,14 +17,12 @@ import {
   MailIcon,
   MessageSquareIcon,
   PaletteIcon,
-  PhoneIcon,
   QrCodeIcon,
   RainbowIcon,
   ReceiptTextIcon,
   Share2Icon,
   SwatchBookIcon,
   SparkleIcon,
-  SparklesIcon,
   SquircleIcon,
   TypeIcon,
   EyeIcon,
@@ -62,17 +60,6 @@ import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolCategory, ToolMeta } from "@/types";
 
 export const TOOLS = [
-  {
-    id: "universal",
-    slug: "/tools/universal",
-    name: "Universal Link Generator",
-    shortName: "Universal",
-    description:
-      "Pick a link type — WhatsApp, SMS, call, email, WiFi or plain URL — and the form morphs instantly. One tool, every protocol.",
-    keywords: ["universal link generator", "link builder", "qr generator"],
-    icon: SparklesIcon,
-    category: "links",
-  },
   {
     id: "whatsapp",
     slug: "/tools/whatsapp",
@@ -115,17 +102,6 @@ export const TOOLS = [
       "Create sms: links that open the messaging app with the number and message already filled in. Perfect for ads, posters and email signatures.",
     keywords: ["sms link generator", "sms link", "text message link"],
     icon: MessageSquareIcon,
-    category: "links",
-  },
-  {
-    id: "tel",
-    slug: "/tools/tel",
-    name: "Click-to-Call Link Generator",
-    shortName: "Call",
-    description:
-      "Generate tel: links that start a phone call with one tap. Validate any international number with a built-in country picker.",
-    keywords: ["tel link generator", "click to call", "phone link"],
-    icon: PhoneIcon,
     category: "links",
   },
   {
