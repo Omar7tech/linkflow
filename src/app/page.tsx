@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { FavoritesSection } from "@/components/home/favorites-section";
+import { FeaturedPair } from "@/components/home/featured-pair";
 import { Hero } from "@/components/home/hero";
 import { QrSpotlight } from "@/components/home/qr-spotlight";
 import { Reveal } from "@/components/home/reveal";
@@ -84,6 +85,8 @@ export default function HomePage() {
       <Hero />
 
       <QrSpotlight />
+
+      <FeaturedPair />
 
       <FavoritesSection />
 
