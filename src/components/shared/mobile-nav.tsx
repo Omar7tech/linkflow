@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(useGSAP);
 
-const MOBILE_NAV_LINKS = [
+const MOBILE_NAV_LINKS: { href: string; label: string; badge?: string }[] = [
   { href: "/", label: "Home" },
   { href: "/tools", label: "Tools" },
   { href: "/icons", label: "Icons" },

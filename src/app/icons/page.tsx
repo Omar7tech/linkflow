@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { IconsExplorer } from "@/components/icons/icons-explorer";
+import { IconsHub } from "@/components/icons/icons-hub";
 import { SITE } from "@/constants/site";
 
 export const metadata: Metadata = {
-  title: "Brand Icons",
+  title: "Icons",
   description:
-    "Browse and copy 1,000+ brand SVG logos by category — frameworks, libraries, design tools, social, crypto and more. Theme-aware, one-click copy, powered by SVGL.",
+    "Search 200,000+ open-source icons across 150+ sets via Iconify, plus 1,000+ brand SVG logos by category. Theme-aware, recolor, one-click copy and download.",
   alternates: { canonical: `${SITE.url}/icons` },
 };
 
@@ -35,14 +35,14 @@ export default async function IconsPage({
           SVG Library
         </p>
         <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
-          Brand icons<span className="text-primary">.</span>
+          Icons<span className="text-primary">.</span>
         </h1>
         <p className="text-muted-foreground mt-2 max-w-lg text-sm leading-relaxed">
-          A searchable library of brand SVG logos, sorted by category. Click any icon to copy its
-          source — theme-aware, always crisp.
+          200,000+ open-source icons across 150+ sets, plus brand logos by category. Search,
+          recolor, then copy the SVG or download — theme-aware and always crisp.
         </p>
       </header>
-      <IconsExplorer initialQuery={q} initialCategory={category} />
+      <IconsHub initialQuery={q} initialCategory={category} />
     </div>
   );
 }
