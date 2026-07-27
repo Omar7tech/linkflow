@@ -86,14 +86,14 @@ export default function AboutPage() {
         </div>
 
         {/* Visual */}
-        <div className="border-border/60 relative overflow-hidden rounded-3xl border shadow-xl">
+        <div className="relative">
           <Image
             src="/about/desk-green.webp"
             alt="An illustrated desk with a laptop and small tools floating out of the screen"
             width={1024}
             height={1024}
             sizes="(max-width: 1024px) 100vw, 45vw"
-            className="h-auto w-full"
+            className="h-auto w-full drop-shadow-xl"
             priority
           />
         </div>
