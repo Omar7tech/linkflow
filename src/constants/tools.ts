@@ -21,6 +21,7 @@ import {
   RainbowIcon,
   ReceiptTextIcon,
   Share2Icon,
+  SmileIcon,
   SwatchBookIcon,
   SparkleIcon,
   SquircleIcon,
@@ -932,6 +933,24 @@ export const TOOLS = [
       "social media carousel",
     ],
     icon: GalleryHorizontalEndIcon,
+    category: "studio",
+  },
+  {
+    id: "avatar",
+    slug: "/tools/avatar",
+    name: "Avatar Generator",
+    shortName: "Avatars",
+    description:
+      "Generate unique avatars in 21 art styles — type any name for a matching face, tweak the background and corners, then export crisp SVG or PNG. Perfect for profiles, placeholders and team pages.",
+    keywords: [
+      "avatar generator",
+      "random avatar",
+      "profile picture generator",
+      "placeholder avatar",
+      "svg avatar",
+      "identicon generator",
+    ],
+    icon: SmileIcon,
     category: "studio",
   },
 ] as const satisfies readonly ToolMeta[];

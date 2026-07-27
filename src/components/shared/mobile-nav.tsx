@@ -12,7 +12,8 @@ gsap.registerPlugin(useGSAP);
 const MOBILE_NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/tools", label: "Tools" },
-  { href: "/icons", label: "Icons", badge: "New" },
+  { href: "/icons", label: "Icons" },
+  { href: "/tools/avatar", label: "Avatars", badge: "New" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
 ];
