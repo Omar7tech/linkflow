@@ -105,7 +105,7 @@ export function ToolsBrowser() {
       {searching ? (
         // Search view — flat grid of matches, or an empty state.
         matches.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {matches.map((tool) => (
               <ToolCard key={tool.id} tool={tool} />
             ))}
@@ -139,7 +139,7 @@ export function ToolsBrowser() {
                     <p className="text-muted-foreground mt-0.5 text-sm">{section.description}</p>
                   </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {section.tools.map((tool) => (
                     <ToolCard key={tool.id} tool={tool} />
                   ))}
