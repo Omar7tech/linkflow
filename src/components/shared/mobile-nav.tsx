@@ -14,6 +14,7 @@ const MOBILE_NAV_LINKS: { href: string; label: string; badge?: string }[] = [
   { href: "/tools", label: "Tools" },
   { href: "/icons", label: "Icons" },
   { href: "/docs", label: "Docs" },
+  { href: "/books", label: "Books" },
   { href: "/tools/avatar", label: "Avatars" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },

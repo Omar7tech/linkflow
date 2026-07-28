@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
+  BookMarkedIcon,
   BookOpenIcon,
   HelpCircleIcon,
   HomeIcon,
@@ -91,6 +92,12 @@ export function CommandPalette() {
               onSelect={() => run(() => router.push("/icons"))}
             >
               <ShapesIcon className="size-4" /> Icons
+            </CommandItem>
+            <CommandItem
+              value="books free programming books pdf ebooks library"
+              onSelect={() => run(() => router.push("/books"))}
+            >
+              <BookMarkedIcon className="size-4" /> Books
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push("/faq"))}>
               <HelpCircleIcon className="size-4" /> FAQ

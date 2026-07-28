@@ -55,6 +55,11 @@ export const FAQ_ITEMS: FaqItem[] = [
       "UTM parameters tag incoming traffic so analytics tools can attribute visits to a specific source, medium and campaign. Consistent tagging (lowercase, underscores, no spaces) keeps your reports clean — the UTM builder enforces good habits.",
   },
   {
+    question: "Are the programming books really free to download?",
+    answer:
+      "Yes. The Books page searches three open catalogues — the curated free-programming-books list, the Internet Archive and Open Library — and every result is a title its publisher or rights holder put online for free, or one that has passed into the public domain. Nothing is mirrored here: the download button sends you to the source.",
+  },
+  {
     question: "Can I use everything I create commercially?",
     answer:
       "Absolutely. Everything you make with Forma — links, QR codes, images, palettes, code snippets — is yours to use in ads, packaging, apps, client work or anywhere else, with no attribution required.",
