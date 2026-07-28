@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import type { ToolCategory, ToolMeta } from "@/types";
 import { FavoriteButton } from "./favorite-button";
 import { ToolCardIndicator } from "./link-indicator";
+import { ToolCardImage } from "./tool-card-image";
 
 /**
  * One signature colour per category, used editorially — as a thin sweeping
@@ -75,8 +76,10 @@ const CATEGORY_LABEL: Record<ToolCategory, string> = Object.fromEntries(
   TOOL_CATEGORIES.map((c) => [c.id, c.label])
 ) as Record<ToolCategory, string>;
 
+/** Banner art lives at /tools/{last slug segment}.png. */
+const cardImage = (slug: string) => `/tools/${slug.split("/").pop()}.png`;
+
 export function ToolCard({ tool }: { tool: ToolMeta }) {
-  const Icon = tool.icon;
   const category = tool.category as ToolCategory;
   const accent = CATEGORY_ACCENT[category] ?? CATEGORY_ACCENT.links;
 
@@ -84,19 +87,19 @@ export function ToolCard({ tool }: { tool: ToolMeta }) {
     <Link
       href={tool.slug}
       className={cn(
-        "group bg-card border-border/60 relative flex min-h-[172px] flex-col overflow-hidden rounded-xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl",
+        "group bg-card border-border/60 relative flex flex-col overflow-hidden rounded-xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl",
         accent.border,
         accent.shadow
       )}
     >
-      {/* The tool's own mark as a large, crisp outline drifting off the corner */}
-      <Icon
-        aria-hidden
-        strokeWidth={1}
-        className="text-foreground/[0.05] pointer-events-none absolute -right-3 -bottom-5 size-28 transition-all duration-500 ease-out group-hover:-translate-y-1 group-hover:-rotate-6"
-      />
+      <ToolCardImage src={cardImage(tool.slug)} alt={`${tool.name} illustration`} />
 
-      <div className="relative z-10 flex items-start justify-between gap-3">
+      {/* Star floats over the banner so the copy below stays a clean text block */}
+      <div className="absolute top-3 right-3 z-10">
+        <FavoriteButton toolId={tool.id} variant="chip" />
+      </div>
+
+      <div className="flex flex-1 flex-col p-5">
         <span
           className={cn(
             "font-mono text-[10px] font-semibold tracking-[0.18em] uppercase",
@@ -105,18 +108,17 @@ export function ToolCard({ tool }: { tool: ToolMeta }) {
         >
           {CATEGORY_LABEL[category]}
         </span>
-        <FavoriteButton toolId={tool.id} variant="chip" />
-      </div>
 
-      <h3 className="font-heading relative z-10 mt-4 flex items-center gap-1.5 text-2xl font-bold tracking-tight">
-        {tool.shortName}
-        <span className={accent.text}>
-          <ToolCardIndicator />
-        </span>
-      </h3>
-      <p className="text-muted-foreground relative z-10 mt-1.5 line-clamp-2 text-sm leading-snug">
-        {tool.description}
-      </p>
+        <h3 className="font-heading mt-2 flex items-center gap-1.5 text-xl font-bold tracking-tight">
+          {tool.shortName}
+          <span className={accent.text}>
+            <ToolCardIndicator />
+          </span>
+        </h3>
+        <p className="text-muted-foreground mt-1.5 line-clamp-2 text-sm leading-snug">
+          {tool.description}
+        </p>
+      </div>
     </Link>
   );
 }
