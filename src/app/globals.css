@@ -193,6 +193,46 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/*
+ * A row of filter chips. On phones it stays on one line and scrolls sideways,
+ * bleeding into the page gutter so the edge fade sits over the padding rather
+ * than over the first chip; from `sm` up there is room to wrap, so it wraps and
+ * the fade comes off. The scrollbar is hidden — the fade is the affordance.
+ */
+@utility chip-rail {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.375rem;
+  overflow-x: auto;
+  margin-inline: -1rem;
+  padding-inline: 1rem;
+  padding-block-end: 0.25rem;
+  scrollbar-width: none;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black 1rem,
+    black calc(100% - 1rem),
+    transparent 100%
+  );
+}
+.chip-rail::-webkit-scrollbar {
+  display: none;
+}
+.chip-rail > * {
+  flex-shrink: 0;
+}
+@media (width >= 40rem) {
+  .chip-rail {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    margin-inline: 0;
+    padding-inline: 0;
+    padding-block-end: 0;
+    mask-image: none;
+  }
+}
+
 /* Soft glow behind primary CTAs. */
 @utility glow {
   box-shadow:

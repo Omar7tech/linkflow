@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { FPB_URL, type CuratedCatalog, type CuratedEntry } from "@/lib/books";
+import { FPB_URL, hasCuratedPdf, type CuratedCatalog, type CuratedEntry } from "@/lib/books";
 
 export const runtime = "nodejs";
 
@@ -55,9 +55,12 @@ function collectSection(section: FpbSection, path: string, into: CuratedEntry[])
     const title = entry.title?.trim();
     if (!title) continue;
 
+    const notes = (entry.notes ?? []).filter(Boolean).join(" · ").trim();
+    // The list is mostly web tutorials; only the ones with a PDF belong here.
+    if (!hasCuratedPdf(url, notes)) continue;
+
     const record: CuratedEntry = { t: title.slice(0, 180), u: url, s: label };
     if (entry.author?.trim()) Object.assign(record, { a: entry.author.trim().slice(0, 140) });
-    const notes = (entry.notes ?? []).filter(Boolean).join(" · ").trim();
     if (notes) Object.assign(record, { n: notes.slice(0, 140) });
     into.push(record);
   }
@@ -145,18 +148,12 @@ export async function GET(request: Request) {
     const bucket = languages.get(lang);
     if (!bucket) throw new Error("no English bucket in the catalogue");
 
-    const counts = new Map<string, number>();
-    for (const book of bucket.books) counts.set(book.s, (counts.get(book.s) ?? 0) + 1);
-
     const catalog: CuratedCatalog = {
       lang,
       languages: [...languages.values()]
         .map((entry) => ({ code: entry.code, name: entry.name, count: entry.books.length }))
         .filter((entry) => entry.count > 0)
         .sort((a, b) => b.count - a.count),
-      sections: [...counts.entries()]
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)),
       books: bucket.books,
     };
 

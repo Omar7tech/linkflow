@@ -5,7 +5,7 @@ import { SITE } from "@/constants/site";
 export const metadata: Metadata = {
   title: "Free Programming Books",
   description:
-    "Search thousands of free programming books and PDFs — Python, JavaScript, Rust, Go, C, algorithms and more — across free-programming-books, the Internet Archive and Open Library, with direct download links.",
+    "Search thousands of free programming book PDFs — Python, JavaScript, PHP, Java, Rust, Go, C, algorithms and more — across free-programming-books, the Internet Archive and Open Library. Every result is a downloadable PDF.",
   keywords: [
     "free programming books",
     "programming books pdf",
@@ -42,9 +42,8 @@ export default async function BooksPage({
           </h1>
         </div>
         <p className="text-muted-foreground max-w-md text-sm leading-relaxed">
-          Thousands of legally free books and PDFs, searched across three open catalogues at once —
-          a curated list, the Internet Archive and Open Library. Direct download links, no account,
-          no key.
+          Thousands of legally free programming PDFs, searched across three open catalogues at once
+          — a curated list, the Internet Archive and Open Library. Every result downloads as a PDF.
         </p>
       </header>
 

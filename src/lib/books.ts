@@ -18,10 +18,13 @@
 
 export type BookSource = "curated" | "archive" | "openlibrary";
 
-/** Delivery formats we bother to badge. Anything else is dropped. */
-export type BookFormat = "pdf" | "epub" | "html" | "kindle" | "mobi" | "video";
-
-/** One book, normalised across the three sources. */
+/**
+ * One book, normalised across the three sources.
+ *
+ * Every book here is a PDF. Each source is filtered to downloadable PDFs before
+ * it ever becomes a `Book` — web-only tutorials, borrow-only scans and records
+ * with no file behind them never reach the grid.
+ */
 export interface Book {
   /** Stable, source-prefixed key — safe as a React key and a dedupe key. */
   readonly id: string;
@@ -34,7 +37,6 @@ export interface Book {
   readonly topic: string;
   /** Where the book lives: a publisher page, an Archive details page, a PDF. */
   readonly url: string;
-  readonly formats: readonly BookFormat[];
   readonly coverUrl: string | null;
   /** Archive identifier, when the book has downloadable files behind it. */
   readonly archiveId: string | null;
@@ -73,8 +75,21 @@ export interface CuratedEntry {
 export interface CuratedCatalog {
   readonly lang: string;
   readonly languages: readonly { code: string; name: string; count: number }[];
-  readonly sections: readonly { name: string; count: number }[];
   readonly books: readonly CuratedEntry[];
+}
+
+/**
+ * Books per top-level topic, counted the way the topic filter selects them:
+ * "Python / Django" counts towards Python, because clicking Python shows it.
+ */
+export function topicCounts(books: readonly Book[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const book of books) {
+    const top = book.topic.split(" / ")[0];
+    if (!top || /^\d+\s*-/.test(top)) continue;
+    counts.set(top, (counts.get(top) ?? 0) + 1);
+  }
+  return counts;
 }
 
 /* --------------------------------------------------------------------- upstream */
@@ -100,23 +115,46 @@ export const SOURCE_CREDITS: Record<BookSource, { label: string; href: string }>
   openlibrary: { label: "Open Library", href: "https://openlibrary.org" },
 };
 
-/** Topics offered as quick filters before anything has been typed. */
+/**
+ * Topics pinned to the front of the rail, in this order, whenever the current
+ * language has books in them. Pure top-by-count ordering buries the languages
+ * people actually search for (PHP, Go, Rust) under "Mathematics" and "Misc",
+ * and shuffles the rail every time the language changes.
+ *
+ * Names must match the section headings used by free-programming-books.
+ */
 export const QUICK_TOPICS = [
   "Python",
   "JavaScript",
-  "Rust",
-  "Go",
+  "PHP",
+  "Java",
   "C",
   "C++",
-  "Java",
+  "C#",
+  "Go",
+  "Rust",
   "TypeScript",
+  "Ruby",
+  "Kotlin",
+  "Swift",
+  "R",
+  "Scala",
   "Haskell",
+  "Perl",
+  "Assembly Language",
+  "Bash",
+  "Linux",
+  "Android",
   "Algorithms & Data Structures",
   "Machine Learning",
-  "Linux",
-  "Bash",
-  "SQL",
-  "Git",
+  "Artificial Intelligence",
+  "Operating Systems",
+  "Networking",
+  "Software Architecture",
+  "Version Control Systems",
+  "HTML and CSS",
+  "SQL Server",
+  "Graphics Programming",
   "Mathematics",
 ] as const;
 
@@ -204,9 +242,6 @@ export function archiveToBook(doc: ArchiveDoc): Book | null {
     year: Number.isFinite(year) && year > 0 ? year : null,
     topic: "",
     url: `https://archive.org/details/${encodeURIComponent(id)}`,
-    // The `format:(PDF)` filter above guarantees the PDF; EPUB is derived for
-    // most scans but not all, so it isn't claimed until the details sheet says so.
-    formats: ["pdf"],
     coverUrl: `https://archive.org/services/img/${encodeURIComponent(id)}`,
     archiveId: id,
     note: "",
@@ -277,7 +312,12 @@ export function openLibraryToBook(doc: OpenLibraryDoc, query = ""): Book | null 
   if (!key || !doc.title) return null;
   if (!(doc.subject ?? []).some((subject) => TOPICAL_SUBJECT.test(subject))) return null;
   if (!titleMatches(doc.title, sanitizeQuery(query))) return null;
-  const ia = (doc.ia ?? []).find((v) => ARCHIVE_ID_PATTERN.test(v)) ?? null;
+
+  // No Archive item behind the record means no file to download — an Open
+  // Library page on its own is a catalogue entry, not a book.
+  const ia = (doc.ia ?? []).find((v) => ARCHIVE_ID_PATTERN.test(v));
+  if (!ia) return null;
+
   return {
     id: `openlibrary:${key}`,
     source: "openlibrary",
@@ -285,10 +325,7 @@ export function openLibraryToBook(doc: OpenLibraryDoc, query = ""): Book | null 
     author: (doc.author_name ?? []).slice(0, 2).join(", "),
     year: typeof doc.first_publish_year === "number" ? doc.first_publish_year : null,
     topic: (doc.subject ?? [])[0]?.replace(/_/g, " ") ?? "",
-    url: ia
-      ? `https://archive.org/details/${encodeURIComponent(ia)}`
-      : `https://openlibrary.org${key}`,
-    formats: ia ? ["pdf"] : ["html"],
+    url: `https://archive.org/details/${encodeURIComponent(ia)}`,
     coverUrl: doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg` : null,
     archiveId: ia,
     note: "",
@@ -299,30 +336,15 @@ export function openLibraryToBook(doc: OpenLibraryDoc, query = ""): Book | null 
 
 /* -------------------------------------------------------------------- curated */
 
-/** `(PDF)`-style annotations the list uses, mapped to the badges we render. */
-const FORMAT_WORDS: readonly [RegExp, BookFormat][] = [
-  [/\bpdf\b/i, "pdf"],
-  [/\bepub\b/i, "epub"],
-  [/\bhtml\b/i, "html"],
-  [/\bkindle\b/i, "kindle"],
-  [/\bmobi\b/i, "mobi"],
-  [/\b(video|screencast)\b/i, "video"],
-];
-
 /**
- * Work out what a curated entry actually offers. The list records formats in a
- * free-text note ("HTML, PDF, EPUB"), and a URL ending in `.pdf` is a PDF
- * whatever the note says.
+ * Does a curated entry offer a PDF?
+ *
+ * The list records formats in a free-text note ("HTML, PDF, EPUB"), and a URL
+ * ending in `.pdf` is a PDF whatever the note says. Entries that fail this are
+ * dropped from the catalogue server-side — they're web tutorials, not files.
  */
-export function curatedFormats(url: string, notes: string): BookFormat[] {
-  const found = new Set<BookFormat>();
-  if (/\.pdf(\?|#|$)/i.test(url)) found.add("pdf");
-  if (/\.epub(\?|#|$)/i.test(url)) found.add("epub");
-  for (const [pattern, format] of FORMAT_WORDS) {
-    if (pattern.test(notes)) found.add(format);
-  }
-  if (found.size === 0) found.add("html");
-  return [...found];
+export function hasCuratedPdf(url: string, notes: string): boolean {
+  return /\.pdf(\?|#|$)/i.test(url) || /\bpdf\b/i.test(notes);
 }
 
 /** Every file-type word the list uses, so a pure format note can be recognised. */
@@ -352,7 +374,6 @@ export function curatedToBook(entry: CuratedEntry, lang: string, index: number):
     year: null,
     topic: entry.s,
     url: entry.u,
-    formats: curatedFormats(entry.u, notes),
     coverUrl: null,
     archiveId: null,
     note: curatedNote(notes),

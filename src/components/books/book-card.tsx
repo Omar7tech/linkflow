@@ -2,14 +2,7 @@
 
 import * as React from "react";
 import { DownloadIcon, ExternalLinkIcon, InfoIcon } from "lucide-react";
-import {
-  archiveFileUrl,
-  formatDownloads,
-  hostOf,
-  SOURCE_LABELS,
-  type Book,
-  type BookFormat,
-} from "@/lib/books";
+import { archiveFileUrl, formatDownloads, hostOf, SOURCE_LABELS, type Book } from "@/lib/books";
 import { cn } from "@/lib/utils";
 
 /** Stable per-title number, so a book keeps the same generated cover forever. */
@@ -73,7 +66,12 @@ function BookCover({ book }: { book: Book }) {
         alt=""
         loading="lazy"
         decoding="async"
-        onLoad={() => setLoaded(true)}
+        // Open Library answers a missing cover with a 1×1 placeholder rather
+        // than a 404, so a "successful" load can still be nothing to look at.
+        onLoad={(event) => {
+          if (event.currentTarget.naturalWidth < 10) setFailed(true);
+          else setLoaded(true);
+        }}
         onError={() => setFailed(true)}
         className={cn(
           "h-full w-full object-cover transition-opacity duration-300",
@@ -84,27 +82,18 @@ function BookCover({ book }: { book: Book }) {
   );
 }
 
-const FORMAT_LABELS: Record<BookFormat, string> = {
-  pdf: "PDF",
-  epub: "EPUB",
-  html: "Web",
-  kindle: "Kindle",
-  mobi: "MOBI",
-  video: "Video",
-};
-
-function FormatBadge({ format }: { format: BookFormat }) {
+/** Placeholder tile, shown while the first page of results is still on the wire. */
+export function BookCardSkeleton() {
   return (
-    <span
-      className={cn(
-        "rounded px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-wider uppercase",
-        format === "pdf"
-          ? "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400"
-          : "bg-muted text-muted-foreground"
-      )}
-    >
-      {FORMAT_LABELS[format]}
-    </span>
+    <div className="border-border/60 bg-card overflow-hidden rounded-xl border" aria-hidden>
+      <div className="bg-muted aspect-3/4 animate-pulse" />
+      <div className="flex flex-col gap-2 p-3">
+        <div className="bg-muted h-3 w-4/5 animate-pulse rounded" />
+        <div className="bg-muted h-3 w-3/5 animate-pulse rounded" />
+        <div className="bg-muted mt-1 h-2.5 w-2/5 animate-pulse rounded" />
+      </div>
+      <div className="border-border/60 h-9 border-t" />
+    </div>
   );
 }
 
@@ -152,16 +141,11 @@ export function BookCard({ book, onDetails }: { book: Book; onDetails: (book: Bo
           {meta.join(" · ")}
         </p>
 
-        <div className="flex flex-wrap items-center gap-1">
-          {book.formats.map((format) => (
-            <FormatBadge key={format} format={format} />
-          ))}
-          {book.note && (
-            <span className="text-muted-foreground/70 truncate text-[10px] italic">
-              {book.note}
-            </span>
-          )}
-        </div>
+        {/* No format badge: the whole page is PDFs, and the footer button says
+            so where it matters. Only the caveats from the curated list remain. */}
+        {book.note && (
+          <p className="text-muted-foreground/70 truncate text-[10px] italic">{book.note}</p>
+        )}
       </div>
 
       <div className="border-border/60 flex items-stretch border-t text-[11px]">

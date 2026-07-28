@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { BookOpenIcon, DownloadIcon, Loader2Icon, SearchIcon, XIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -17,13 +18,15 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { BookCard } from "@/components/books/book-card";
+import { BookCard, BookCardSkeleton } from "@/components/books/book-card";
 import {
   curatedToBook,
   dedupeBooks,
   formatBytes,
+  QUICK_TOPICS,
   searchCurated,
   SOURCE_CREDITS,
+  topicCounts,
   type Book,
   type BookDetail,
   type BookSource,
@@ -40,11 +43,15 @@ const SOURCE_FILTERS: { value: SourceFilter; label: string; hint: string }[] = [
   { value: "openlibrary", label: "Open Library", hint: "Public-access records" },
 ];
 
-/** How many curated hits to reveal per scroll, and how many remote rows per page. */
+/** How many curated hits each "Load more" reveals, and how many remote rows per page. */
 const CURATED_PAGE = 36;
 const REMOTE_ROWS = 24;
 /** Ceiling on curated matches held in memory for one query. */
 const CURATED_LIMIT = 600;
+/** Placeholder tiles drawn while the first page is loading. */
+const SKELETONS = 12;
+/** How many topic chips the rail shows. */
+const TOPIC_LIMIT = 24;
 
 interface SearchResponse {
   books: Book[];
@@ -63,7 +70,6 @@ export function BooksBrowser({
   const [query, setQuery] = React.useState(initialQuery);
   const [topic, setTopic] = React.useState(initialTopic);
   const [source, setSource] = React.useState<SourceFilter>("all");
-  const [pdfOnly, setPdfOnly] = React.useState(false);
   const [lang, setLang] = React.useState("en");
 
   const [catalog, setCatalog] = React.useState<CuratedCatalog | null>(null);
@@ -80,7 +86,6 @@ export function BooksBrowser({
   const [detail, setDetail] = React.useState<BookDetail | null>(null);
 
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const sentinelRef = React.useRef<HTMLDivElement>(null);
 
   /* ------------------------------------------------------------------ inputs */
 
@@ -200,9 +205,8 @@ export function BooksBrowser({
       list = list.filter((book) => book.topic === topic || book.topic.startsWith(`${topic} / `));
     }
     if (query) list = searchCurated(list, query, CURATED_LIMIT);
-    if (pdfOnly) list = list.filter((book) => book.formats.includes("pdf"));
     return list;
-  }, [curatedBooks, topic, query, pdfOnly, source]);
+  }, [curatedBooks, topic, query, source]);
 
   const remoteResults = React.useMemo(() => {
     if (source === "curated") return [];
@@ -223,22 +227,17 @@ export function BooksBrowser({
     [query, topic, shownCurated, remoteResults]
   );
 
-  // One sentinel drives both lists: reveal the rest of the curated matches
-  // first, then start pulling further pages from the remote catalogues.
-  React.useEffect(() => {
-    const element = sentinelRef.current;
-    if (!element) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries[0].isIntersecting) return;
-        if (moreCurated) setVisible((count) => count + CURATED_PAGE);
-        else if (remoteHasMore && !remoteLoading) setPage((current) => current + 1);
-      },
-      { rootMargin: "600px" }
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [moreCurated, remoteHasMore, remoteLoading]);
+  const canLoadMore = moreCurated || remoteHasMore;
+
+  /**
+   * "Load more" reveals the rest of the curated matches first — they're already
+   * in memory, so that step is instant — and only then asks the remote
+   * catalogues for another page.
+   */
+  function loadMore() {
+    if (moreCurated) setVisible((count) => count + CURATED_PAGE);
+    else if (remoteHasMore && !remoteLoading) setPage((current) => current + 1);
+  }
 
   /* ------------------------------------------------------------------ detail */
 
@@ -265,15 +264,27 @@ export function BooksBrowser({
 
   /* --------------------------------------------------------------------- ui */
 
+  /**
+   * The topic rail: the pinned languages first, in `QUICK_TOPICS` order, then
+   * whatever else this language has most of. Size alone would put PHP, Go and
+   * Rust below "Misc" and "Force.com", which is not what anyone is here for.
+   * Counts do the ordering but aren't shown — the chip is the label, nothing more.
+   */
   const topics = React.useMemo(() => {
-    if (!catalog) return [];
-    return catalog.sections
-      .filter((section) => !section.name.includes(" / ") && !/^\d+\s*-/.test(section.name))
-      .slice(0, 22);
-  }, [catalog]);
+    const counts = topicCounts(curatedBooks);
+    const pinned = QUICK_TOPICS.filter((name) => counts.has(name));
+    const rest = [...counts.keys()]
+      .filter((name) => !pinned.includes(name as (typeof QUICK_TOPICS)[number]))
+      .sort((a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0) || a.localeCompare(b));
+
+    return [...pinned, ...rest].slice(0, TOPIC_LIMIT);
+  }, [curatedBooks]);
 
   const hasResults = shownCurated.length + remoteResults.length > 0;
-  const busy = remoteLoading || (!catalog && !catalogFailed);
+  const catalogLoading = !catalog && !catalogFailed;
+  const busy = remoteLoading || catalogLoading;
+  /** Nothing on screen yet and something still in flight — draw placeholders. */
+  const showSkeletons = busy && !hasResults;
 
   function reset() {
     setRawQuery("");
@@ -309,8 +320,8 @@ export function BooksBrowser({
         )}
       </div>
 
-      {/* Source, format and language filters */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+      {/* Source and language filters */}
+      <div className="chip-rail mb-3 items-center">
         {SOURCE_FILTERS.map((filter) => (
           <button
             key={filter.value}
@@ -318,7 +329,7 @@ export function BooksBrowser({
             onClick={() => setSource(filter.value)}
             title={filter.hint}
             className={cn(
-              "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+              "rounded-full border px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors",
               source === filter.value
                 ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                 : "border-border/60 bg-card text-muted-foreground hover:border-emerald-500/40 hover:text-foreground"
@@ -328,22 +339,6 @@ export function BooksBrowser({
           </button>
         ))}
 
-        <span className="bg-border/60 mx-1 hidden h-5 w-px sm:block" aria-hidden />
-
-        <button
-          type="button"
-          onClick={() => setPdfOnly((on) => !on)}
-          aria-pressed={pdfOnly}
-          className={cn(
-            "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-            pdfOnly
-              ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-              : "border-border/60 bg-card text-muted-foreground hover:border-emerald-500/40 hover:text-foreground"
-          )}
-        >
-          PDF only
-        </button>
-
         {catalog && catalog.languages.length > 1 && (
           <Select value={lang} onValueChange={setLang}>
             <SelectTrigger size="sm" className="h-8 w-[9.5rem] rounded-full text-xs">
@@ -352,7 +347,7 @@ export function BooksBrowser({
             <SelectContent>
               {catalog.languages.map((entry) => (
                 <SelectItem key={entry.code} value={entry.code} className="text-xs">
-                  {entry.name} ({entry.count})
+                  {entry.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -362,31 +357,30 @@ export function BooksBrowser({
 
       {/* Topic rail */}
       {topics.length > 0 && (
-        <div className="mb-5 flex flex-wrap gap-1.5">
+        <div className="chip-rail mb-5">
           {topic && (
             <button
               type="button"
               onClick={() => setTopic("")}
-              className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 rounded-full border border-dashed px-2.5 py-1 text-[11px]"
+              className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 rounded-full border border-dashed px-2.5 py-1 text-[11px] whitespace-nowrap"
             >
               <XIcon className="size-3" aria-hidden />
               Clear topic
             </button>
           )}
-          {topics.map((section) => (
+          {topics.map((name) => (
             <button
-              key={section.name}
+              key={name}
               type="button"
-              onClick={() => setTopic(topic === section.name ? "" : section.name)}
+              onClick={() => setTopic(topic === name ? "" : name)}
               className={cn(
-                "rounded-full px-2.5 py-1 text-[11px] transition-colors",
-                topic === section.name
+                "rounded-full px-2.5 py-1 text-[11px] whitespace-nowrap transition-colors",
+                topic === name
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted/60 text-muted-foreground hover:text-foreground"
               )}
             >
-              {section.name}
-              <span className="ml-1 opacity-50">{section.count}</span>
+              {name}
             </button>
           ))}
         </div>
@@ -399,7 +393,12 @@ export function BooksBrowser({
             counted before the subject check, so its loaded rows are shown instead. */}
         {archiveTotal > 0 && <span>{archiveTotal.toLocaleString()} on Archive</span>}
         {libraryRows > 0 && <span>{libraryRows.toLocaleString()} loaded from libraries</span>}
-        {busy && <Loader2Icon className="size-3 animate-spin" aria-label="Loading" />}
+        {busy && (
+          <span className="text-primary flex items-center gap-1.5">
+            <Loader2Icon className="size-3.5 animate-spin" aria-hidden />
+            {catalogLoading ? "Loading the catalogue…" : "Searching…"}
+          </span>
+        )}
       </div>
 
       {catalogFailed && source !== "archive" && source !== "openlibrary" && (
@@ -409,30 +408,46 @@ export function BooksBrowser({
       )}
 
       {/* Grid */}
-      {hasResults ? (
+      {showSkeletons ? (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          {Array.from({ length: SKELETONS }, (_, index) => (
+            <BookCardSkeleton key={index} />
+          ))}
+        </div>
+      ) : hasResults ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {ordered.map((book) => (
             <BookCard key={book.id} book={book} onDetails={setSelected} />
           ))}
         </div>
       ) : (
-        !busy && (
-          <div className="border-border/60 text-muted-foreground rounded-xl border border-dashed py-16 text-center text-sm">
-            <BookOpenIcon className="mx-auto mb-3 size-6 opacity-40" aria-hidden />
-            No books matched{" "}
-            {effectiveQuery ? <span className="text-foreground">“{effectiveQuery}”</span> : "that"}.
-            <br />
-            Try a language, a framework, or an author.
-          </div>
-        )
+        <div className="border-border/60 text-muted-foreground rounded-xl border border-dashed py-16 text-center text-sm">
+          <BookOpenIcon className="mx-auto mb-3 size-6 opacity-40" aria-hidden />
+          No PDFs matched{" "}
+          {effectiveQuery ? <span className="text-foreground">“{effectiveQuery}”</span> : "that"}.
+          <br />
+          Try a language, a framework, or an author.
+        </div>
       )}
 
-      <div ref={sentinelRef} className="h-10" aria-hidden />
-
-      {(moreCurated || remoteHasMore) && (
-        <p className="text-muted-foreground py-4 text-center text-xs">
-          {remoteLoading ? "Loading more…" : "Scroll for more"}
-        </p>
+      {canLoadMore && !showSkeletons && (
+        <div className="flex justify-center pt-8">
+          <Button
+            variant="outline"
+            onClick={loadMore}
+            disabled={remoteLoading && !moreCurated}
+            className="rounded-full px-6"
+          >
+            {remoteLoading && !moreCurated ? (
+              <>
+                <Loader2Icon className="size-4 animate-spin" aria-hidden />
+                Loading…
+              </>
+            ) : (
+              "Load more"
+            )}
+          </Button>
+        </div>
       )}
 
       {/* Credits — every source here asks to be named. */}
