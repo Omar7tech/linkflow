@@ -17,7 +17,6 @@ const PRIMARY_LINKS: NavLink[] = [
   { href: "/icons", label: "Icons" },
   { href: "/docs", label: "Docs" },
   { href: "/books", label: "Books" },
-  { href: "/tools/avatar", label: "Avatars" },
 ];
 
 const SECONDARY_LINKS: NavLink[] = [
