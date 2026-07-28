@@ -53,6 +53,7 @@ import {
   DnaIcon,
   AnvilIcon,
   SmartphoneIcon,
+  SignpostIcon,
   FrameIcon,
   GalleryHorizontalEndIcon,
   type LucideIcon,
@@ -952,6 +953,24 @@ export const TOOLS = [
     ],
     icon: SmileIcon,
     category: "studio",
+  },
+  {
+    id: "slugify",
+    slug: "/tools/slugify",
+    name: "Slug Generator",
+    shortName: "Slugify",
+    description:
+      "Turn any title into a clean URL slug — accents folded, symbols spelled out, filler words dropped and length capped. Paste a list to slugify hundreds at once.",
+    keywords: [
+      "slug generator",
+      "slugify",
+      "url slug maker",
+      "seo friendly url",
+      "permalink generator",
+      "text to slug",
+    ],
+    icon: SignpostIcon,
+    category: "utilities",
   },
 ] as const satisfies readonly ToolMeta[];
 
