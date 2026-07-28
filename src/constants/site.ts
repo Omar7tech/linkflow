@@ -12,6 +12,8 @@ export const STORAGE_KEYS = {
   history: (toolId: string) => `forma:history:${toolId}`,
   presets: (toolId: string) => `forma:presets:${toolId}`,
   favorites: "forma:favorites",
+  /** Slugs of the DevDocs sets enabled on /docs. */
+  docsets: "forma:docs:enabled",
 } as const;
 
 export const HISTORY_LIMIT = 10;

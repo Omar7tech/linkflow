@@ -1,0 +1,519 @@
+/* =====================================================================
+   DevDocs page presentation.
+
+   The markup here is upstream HTML we don't author, and every publisher
+   uses its own conventions: MDN ships `.notecard`, Python's Sphinx ships
+   `.admonition`, rustdoc ships `.docblock`, PostgreSQL ships DocBook.
+   These rules map all of them onto one set of tokens, so a page reads the
+   same whichever project it came from. Element and upstream-class
+   selectors are the only way in — utilities can't reach injected HTML.
+   ===================================================================== */
+
+.devdocs-prose {
+  --doc-accent: var(--primary);
+  color: var(--foreground);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  overflow-wrap: break-word;
+}
+
+/* ------------------------------------------------------------ headings */
+
+.devdocs-prose :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  scroll-margin-top: 1rem;
+  position: relative;
+}
+.devdocs-prose h1 {
+  font-size: 1.875rem;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+.devdocs-prose h2 {
+  font-size: 1.3125rem;
+  margin: 2.5rem 0 0.85rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--border);
+}
+.devdocs-prose h3 {
+  font-size: 1.0625rem;
+  margin: 1.9rem 0 0.55rem;
+}
+.devdocs-prose :is(h4, h5, h6) {
+  font-size: 0.9375rem;
+  margin: 1.35rem 0 0.4rem;
+  color: var(--muted-foreground);
+}
+
+/* Permalink that fades in beside a heading on hover. */
+.devdocs-anchor {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.4rem;
+  color: var(--muted-foreground);
+  opacity: 0;
+  text-decoration: none;
+  vertical-align: middle;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
+}
+.devdocs-prose :is(h2, h3, h4):hover .devdocs-anchor,
+.devdocs-anchor:focus-visible {
+  opacity: 1;
+}
+.devdocs-anchor:hover {
+  color: var(--doc-accent);
+}
+
+/* ---------------------------------------------------------------- text */
+
+.devdocs-prose p {
+  margin: 0.9rem 0;
+}
+.devdocs-prose :is(ul, ol) {
+  margin: 0.9rem 0;
+  padding-left: 1.4rem;
+}
+.devdocs-prose ul {
+  list-style: disc;
+}
+.devdocs-prose ol {
+  list-style: decimal;
+}
+.devdocs-prose li {
+  margin: 0.35rem 0;
+}
+.devdocs-prose li::marker {
+  color: color-mix(in oklch, var(--doc-accent), transparent 25%);
+}
+.devdocs-prose :is(ul, ol) :is(ul, ol) {
+  margin: 0.35rem 0;
+}
+.devdocs-prose strong {
+  font-weight: 600;
+}
+.devdocs-prose abbr {
+  text-decoration: underline dotted;
+  cursor: help;
+}
+.devdocs-prose hr {
+  margin: 2.25rem 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+.devdocs-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+.devdocs-prose blockquote {
+  margin: 1.2rem 0;
+  border-left: 2px solid var(--doc-accent);
+  padding: 0.15rem 0 0.15rem 1rem;
+  color: var(--muted-foreground);
+}
+
+/* Definition lists carry parameter docs in most sets — indent, don't box. */
+.devdocs-prose dl {
+  margin: 1rem 0;
+}
+.devdocs-prose dt {
+  font-weight: 600;
+  margin-top: 1.05rem;
+}
+.devdocs-prose dd {
+  margin: 0.3rem 0 0 0.15rem;
+  border-left: 2px solid var(--border);
+  padding-left: 1rem;
+}
+.devdocs-prose dd > :first-child {
+  margin-top: 0;
+}
+.devdocs-prose dd > :last-child {
+  margin-bottom: 0;
+}
+
+/* --------------------------------------------------------------- links */
+
+.devdocs-prose a {
+  color: var(--doc-accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--doc-accent), transparent 70%);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s;
+}
+.devdocs-prose a:hover {
+  text-decoration-color: var(--doc-accent);
+}
+.devdocs-prose a[data-doc-external]::after {
+  content: "↗";
+  font-size: 0.7em;
+  margin-left: 0.12em;
+  vertical-align: super;
+  opacity: 0.55;
+}
+.devdocs-prose a.devdocs-anchor {
+  text-decoration: none;
+}
+
+/* --------------------------------------------------------- inline code */
+
+.devdocs-prose code,
+.devdocs-prose :is(.literal, .command, .option, .envar, .replaceable) {
+  font-family: var(--font-mono);
+  font-size: 0.855em;
+  background: color-mix(in oklch, var(--muted), transparent 25%);
+  border: 1px solid color-mix(in oklch, var(--border), transparent 45%);
+  border-radius: var(--radius-sm);
+  padding: 0.08em 0.34em;
+  white-space: nowrap;
+}
+.devdocs-prose a code {
+  background: color-mix(in oklch, var(--doc-accent), transparent 88%);
+  border-color: color-mix(in oklch, var(--doc-accent), transparent 78%);
+  color: inherit;
+}
+.devdocs-prose pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+  white-space: inherit;
+}
+
+/* ---------------------------------------------------------- code blocks */
+
+.devdocs-prose [data-code-wrap] {
+  position: relative;
+  margin: 1.25rem 0;
+}
+.devdocs-prose pre {
+  overflow-x: auto;
+  background: color-mix(in oklch, var(--muted), var(--background) 40%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.95rem 1.05rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  tab-size: 2;
+  white-space: pre;
+}
+
+/* Room for the language chip once a block is labelled. */
+.devdocs-prose [data-code-wrap][data-language] pre {
+  padding-top: 1.95rem;
+}
+.devdocs-prose [data-code-wrap][data-language]::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0.5rem;
+  left: 1.05rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+/* Shiki emits both palettes as custom properties in a single pass, so
+   switching theme is a repaint rather than a re-highlight. */
+.devdocs-prose pre[data-highlighted] span {
+  color: var(--shiki-light);
+}
+.dark .devdocs-prose pre[data-highlighted] span {
+  color: var(--shiki-dark);
+}
+.devdocs-prose pre[data-highlighted] .line {
+  display: block;
+  min-height: 1lh;
+}
+
+.devdocs-copy {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  color: var(--muted-foreground);
+  opacity: 0;
+  transition:
+    opacity 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+[data-code-wrap]:hover .devdocs-copy,
+.devdocs-copy:focus-visible {
+  opacity: 1;
+}
+.devdocs-copy:hover {
+  color: var(--doc-accent);
+  border-color: color-mix(in oklch, var(--doc-accent), transparent 55%);
+}
+
+/* rustdoc, MDN and Sphinx each wrap samples in their own container. */
+.devdocs-prose :is(.example-wrap, .code-example, .highlight, .sample-code-frame) {
+  margin: 1.25rem 0;
+}
+.devdocs-prose :is(.example-wrap, .code-example, .highlight) > [data-code-wrap] {
+  margin: 0;
+}
+.devdocs-prose .output pre,
+.devdocs-prose pre.output {
+  border-style: dashed;
+}
+
+/* -------------------------------------------------------------- tables */
+
+.devdocs-prose table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin: 1.25rem 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+.devdocs-prose :is(th, td) {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid color-mix(in oklch, var(--border), transparent 40%);
+}
+.devdocs-prose :is(th, td):last-child {
+  border-right: 0;
+}
+.devdocs-prose tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+.devdocs-prose th {
+  background: color-mix(in oklch, var(--muted), transparent 30%);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.devdocs-prose tbody tr:nth-child(even) td {
+  background: color-mix(in oklch, var(--muted), transparent 70%);
+}
+.devdocs-prose table code {
+  white-space: nowrap;
+}
+
+/* MDN compatibility cells read as status, so colour them like it. */
+.devdocs-prose .bc-supports-yes {
+  color: oklch(0.52 0.13 162);
+  font-weight: 500;
+}
+.dark .devdocs-prose .bc-supports-yes {
+  color: oklch(0.8 0.16 162);
+}
+.devdocs-prose .bc-supports-no {
+  color: var(--destructive);
+}
+.devdocs-prose .bc-supports-partial {
+  color: oklch(0.72 0.15 75);
+}
+
+/* --------------------------------------------------- notes and warnings */
+
+/* One box, four vocabularies: MDN, Sphinx, DocBook and rustdoc. */
+.devdocs-prose
+  :is(
+    .notecard,
+    .admonition,
+    .note,
+    .tip,
+    .important,
+    .warning,
+    .caution,
+    .danger,
+    .impl-detail,
+    .item-info
+  ) {
+  --note-tone: var(--doc-accent);
+  margin: 1.25rem 0;
+  border: 1px solid color-mix(in oklch, var(--note-tone), transparent 75%);
+  border-left: 3px solid var(--note-tone);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  background: color-mix(in oklch, var(--note-tone), transparent 94%);
+}
+.devdocs-prose :is(.warning, .caution, .danger) {
+  --note-tone: oklch(0.72 0.16 70);
+}
+.devdocs-prose :is(.deprecated, .deprecated-removed, .stab.deprecated) {
+  --note-tone: var(--destructive);
+}
+.devdocs-prose
+  :is(.notecard, .admonition, .note, .tip, .warning, .caution, .impl-detail)
+  > :first-child {
+  margin-top: 0;
+}
+.devdocs-prose
+  :is(.notecard, .admonition, .note, .tip, .warning, .caution, .impl-detail)
+  > :last-child {
+  margin-bottom: 0;
+}
+
+/* Sphinx puts the label in its own paragraph; make it read as a heading. */
+.devdocs-prose .admonition-title {
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  color: var(--note-tone);
+  margin: 0 0 0.35rem;
+}
+
+/* Status chips: Sphinx version notes, rustdoc stability, MDN baseline. */
+.devdocs-prose :is(.versionadded, .versionchanged, .versionremoved, .baseline-indicator) {
+  display: block;
+  margin: 1rem 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: color-mix(in oklch, var(--muted), transparent 40%);
+  padding: 0.5rem 0.8rem;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+.devdocs-prose :is(.badge, .since, .stab) {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklch, var(--muted), transparent 30%);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--muted-foreground);
+}
+.devdocs-prose .baseline-indicator.high {
+  border-color: color-mix(in oklch, var(--doc-accent), transparent 65%);
+  background: color-mix(in oklch, var(--doc-accent), transparent 92%);
+}
+.devdocs-prose .status-title {
+  font-weight: 600;
+  color: var(--foreground);
+}
+.devdocs-prose .not-bold {
+  font-weight: 400;
+  color: var(--muted-foreground);
+}
+
+/* ----------------------------------------------- API signatures (Sphinx) */
+
+.devdocs-prose .sig {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  background: color-mix(in oklch, var(--muted), var(--background) 40%);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--doc-accent);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.85rem;
+  margin: 1.1rem 0 0.5rem;
+  overflow-x: auto;
+}
+.devdocs-prose :is(.sig-name, .descname) {
+  font-weight: 600;
+  color: var(--foreground);
+}
+.devdocs-prose :is(.sig-prename, .sig-paren, .sig-param) {
+  color: var(--muted-foreground);
+}
+.devdocs-prose .sig :is(.property, .k) {
+  color: var(--doc-accent);
+}
+.devdocs-prose .headerlink {
+  opacity: 0;
+  margin-left: 0.35rem;
+  text-decoration: none;
+}
+.devdocs-prose :hover > .headerlink {
+  opacity: 0.6;
+}
+
+/* Sphinx field lists — "Parameters:", "Returns:", "Raises:". */
+.devdocs-prose .field-list dt {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.devdocs-prose .rubric {
+  font-weight: 600;
+  margin: 1.5rem 0 0.4rem;
+}
+
+/* ----------------------------------------------------- rustdoc specifics */
+
+.devdocs-prose .code-header {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  background: color-mix(in oklch, var(--muted), transparent 40%);
+  border-radius: var(--radius-md);
+  padding: 0.45rem 0.7rem;
+  margin: 1rem 0 0.4rem;
+  overflow-x: auto;
+}
+.devdocs-prose .item-decl > [data-code-wrap] {
+  margin-top: 0;
+}
+.devdocs-prose .rightside {
+  float: right;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+.devdocs-prose .docblock {
+  margin-bottom: 1.25rem;
+}
+
+/* ------------------------------------------------------------- details */
+
+.devdocs-prose details {
+  margin: 1.2rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.95rem;
+}
+.devdocs-prose summary {
+  cursor: pointer;
+  font-weight: 500;
+}
+.devdocs-prose summary::marker {
+  color: var(--muted-foreground);
+}
+
+/* ---------------------------------------------------------- attribution */
+
+/* Every DevDocs page ends with its own licence block — style it as a footer
+   rather than body copy. Required by the upstream terms, so never hidden. */
+.devdocs-prose ._attribution {
+  margin-top: 3.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+.devdocs-prose ._attribution p {
+  margin: 0.25rem 0;
+}
+.devdocs-prose ._attribution a {
+  color: inherit;
+  text-decoration-color: color-mix(in oklch, var(--muted-foreground), transparent 60%);
+}

@@ -3,7 +3,15 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { HelpCircleIcon, HomeIcon, InfoIcon, MoonIcon, SunIcon } from "lucide-react";
+import {
+  BookOpenIcon,
+  HelpCircleIcon,
+  HomeIcon,
+  InfoIcon,
+  MoonIcon,
+  ShapesIcon,
+  SunIcon,
+} from "lucide-react";
 import {
   Command,
   CommandDialog,
@@ -71,6 +79,18 @@ export function CommandPalette() {
           <CommandGroup heading="Pages">
             <CommandItem onSelect={() => run(() => router.push("/"))}>
               <HomeIcon className="size-4" /> Home
+            </CommandItem>
+            <CommandItem
+              value="docs documentation reference api devdocs"
+              onSelect={() => run(() => router.push("/docs"))}
+            >
+              <BookOpenIcon className="size-4" /> Docs
+            </CommandItem>
+            <CommandItem
+              value="icons svg logos"
+              onSelect={() => run(() => router.push("/icons"))}
+            >
+              <ShapesIcon className="size-4" /> Icons
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push("/faq"))}>
               <HelpCircleIcon className="size-4" /> FAQ
