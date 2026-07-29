@@ -14,6 +14,7 @@ type NavLink = { href: string; label: string; badge?: string };
 const PRIMARY_LINKS: NavLink[] = [
   { href: "/", label: "Home" },
   { href: "/tools", label: "Tools" },
+  { href: "/tools/live-editor", label: "Editor", badge: "New" },
   { href: "/icons", label: "Icons" },
   { href: "/docs", label: "Docs" },
   { href: "/books", label: "Books" },

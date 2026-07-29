@@ -1,0 +1,468 @@
+/* =====================================================================
+   Live editor surface.
+
+   The editor is a transparent <textarea> sitting exactly on top of a painted
+   layer, so every metric below has to match on both sides — font, size, line
+   height, padding and the gutter width. Anything that differs by half a pixel
+   shows up as text drifting away from the caret, which is why these live in
+   CSS variables set once on the wrapper rather than on the two elements.
+
+   Themes are just variable sets: switching one is an attribute change, with no
+   re-tokenising and no work in React.
+   ===================================================================== */
+
+.ed-editor {
+  --ed-line-height: 1.6;
+  --ed-pad-y: 0.75rem;
+  --ed-pad-x: 0.875rem;
+  --ed-gutter-w: 3.25rem;
+
+  position: relative;
+  overflow: hidden;
+  background: var(--ed-bg);
+  color: var(--ed-fg);
+  font-family: var(--ed-font);
+  font-size: var(--ed-size);
+  line-height: var(--ed-line-height);
+  tab-size: var(--ed-tab);
+  font-variant-ligatures: var(--ed-ligatures, normal);
+}
+
+/* Numbers off still leaves the cell in place — it doubles as the left padding,
+   and both layers have to agree on where column 0 starts. */
+.ed-editor[data-gutter="off"] {
+  --ed-gutter-w: 0.875rem;
+}
+
+/* ------------------------------------------------------------- layers */
+
+.ed-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+/* Scrolling is driven by the textarea; the paint follows on the compositor. */
+.ed-rows {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: max-content;
+  min-width: 100%;
+  padding: var(--ed-pad-y) var(--ed-pad-x) var(--ed-pad-y) 0;
+  will-change: transform;
+}
+
+.ed-row {
+  display: flex;
+  width: 100%;
+  min-height: calc(var(--ed-size) * var(--ed-line-height));
+}
+
+.ed-row.is-active {
+  background: var(--ed-line);
+}
+
+.ed-ln {
+  flex: 0 0 var(--ed-gutter-w);
+  padding-right: 0.75rem;
+  text-align: right;
+  color: var(--ed-gutter);
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.ed-editor[data-gutter="off"] .ed-ln {
+  visibility: hidden;
+  padding-right: 0;
+}
+
+.ed-row.is-active .ed-ln {
+  color: var(--ed-gutter-active);
+}
+
+.ed-code {
+  flex: none;
+  white-space: pre;
+}
+
+.ed-editor[data-wrap="on"] .ed-rows {
+  width: 100%;
+}
+
+.ed-editor[data-wrap="on"] .ed-code {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* ------------------------------------------------------------ textarea */
+
+.ed-input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: var(--ed-pad-y) var(--ed-pad-x) var(--ed-pad-y) var(--ed-gutter-w);
+  border: 0;
+  outline: none;
+  resize: none;
+  overflow: auto;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--ed-caret);
+  font: inherit;
+  line-height: inherit;
+  tab-size: inherit;
+  white-space: pre;
+  overflow-wrap: normal;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ed-gutter) transparent;
+}
+
+.ed-editor[data-wrap="on"] .ed-input {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
+}
+
+.ed-input::selection {
+  background: var(--ed-sel);
+}
+
+.ed-input::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.ed-input::-webkit-scrollbar-thumb {
+  background: var(--ed-gutter);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+
+.ed-input::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* --------------------------------------------------------- completions */
+
+.ed-complete {
+  position: absolute;
+  z-index: 30;
+  width: 17rem;
+  max-height: 13.5rem;
+  overflow-y: auto;
+  border-radius: 0.5rem;
+  border: 1px solid color-mix(in oklab, var(--ed-fg) 16%, transparent);
+  background: color-mix(in oklab, var(--ed-bg) 92%, #000 8%);
+  box-shadow: 0 14px 40px rgb(0 0 0 / 45%);
+  padding: 0.25rem;
+  font-size: 0.75rem;
+  scrollbar-width: thin;
+}
+
+.ed-complete-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  text-align: left;
+  color: var(--ed-fg);
+  cursor: pointer;
+}
+
+.ed-complete-item[aria-selected="true"] {
+  background: color-mix(in oklab, var(--ed-caret) 22%, transparent);
+}
+
+.ed-complete-label {
+  font-family: var(--ed-font);
+}
+
+.ed-complete-detail {
+  margin-left: auto;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ed-gutter);
+}
+
+/* --------------------------------------------------------- token colors */
+
+.ed-t1 { color: var(--ed-t1); font-style: italic; }
+.ed-t2 { color: var(--ed-t2); }
+.ed-t3 { color: var(--ed-t3); }
+.ed-t4 { color: var(--ed-t4); }
+.ed-t5 { color: var(--ed-t5); }
+.ed-t6 { color: var(--ed-t6); }
+.ed-t7 { color: var(--ed-t7); }
+.ed-t8 { color: var(--ed-t8); }
+.ed-t9 { color: var(--ed-t9); }
+.ed-t10 { color: var(--ed-t10); }
+.ed-t11 { color: var(--ed-t11); }
+.ed-t12 { color: var(--ed-t12); }
+.ed-t13 { color: var(--ed-t13); }
+.ed-t14 { color: var(--ed-t14); }
+.ed-t15 { color: var(--ed-t15); }
+
+/* ------------------------------------------------------------- themes */
+
+[data-ed-theme="emerald"] {
+  --ed-bg: #07100d;
+  --ed-fg: #dbe7e2;
+  --ed-gutter: #35564b;
+  --ed-gutter-active: #6ee7b7;
+  --ed-line: rgb(255 255 255 / 4%);
+  --ed-sel: rgb(52 211 153 / 25%);
+  --ed-caret: #34d399;
+  --ed-t1: #4f6f64;
+  --ed-t2: #34d399;
+  --ed-t3: #7dd3fc;
+  --ed-t4: #fcd34d;
+  --ed-t5: #f472b6;
+  --ed-t6: #fca5a5;
+  --ed-t7: #7c9a90;
+  --ed-t8: #5eead4;
+  --ed-t9: #a7f3d0;
+  --ed-t10: #93c5fd;
+  --ed-t11: #34d399;
+  --ed-t12: #f472b6;
+  --ed-t13: #fdba74;
+  --ed-t14: #c4b5fd;
+  --ed-t15: #64748b;
+}
+
+[data-ed-theme="terminal"] {
+  --ed-bg: #010b04;
+  --ed-fg: #7ef2a3;
+  --ed-gutter: #1d6b38;
+  --ed-gutter-active: #86efac;
+  --ed-line: rgb(74 222 128 / 7%);
+  --ed-sel: rgb(34 197 94 / 30%);
+  --ed-caret: #4ade80;
+  --ed-t1: #2f7d4b;
+  --ed-t2: #22c55e;
+  --ed-t3: #86efac;
+  --ed-t4: #d9f99d;
+  --ed-t5: #4ade80;
+  --ed-t6: #bbf7d0;
+  --ed-t7: #3f8f5c;
+  --ed-t8: #a7f3d0;
+  --ed-t9: #6ee7b7;
+  --ed-t10: #86efac;
+  --ed-t11: #22c55e;
+  --ed-t12: #4ade80;
+  --ed-t13: #d9f99d;
+  --ed-t14: #bbf7d0;
+  --ed-t15: #2f7d4b;
+}
+
+[data-ed-theme="midnight"] {
+  --ed-bg: #0b1020;
+  --ed-fg: #cbd5e1;
+  --ed-gutter: #3d4a63;
+  --ed-gutter-active: #93c5fd;
+  --ed-line: rgb(255 255 255 / 4%);
+  --ed-sel: rgb(96 165 250 / 28%);
+  --ed-caret: #60a5fa;
+  --ed-t1: #4a5878;
+  --ed-t2: #60a5fa;
+  --ed-t3: #93c5fd;
+  --ed-t4: #86efac;
+  --ed-t5: #c084fc;
+  --ed-t6: #fbbf24;
+  --ed-t7: #64748b;
+  --ed-t8: #38bdf8;
+  --ed-t9: #a5b4fc;
+  --ed-t10: #67e8f9;
+  --ed-t11: #f472b6;
+  --ed-t12: #c084fc;
+  --ed-t13: #fda4af;
+  --ed-t14: #f0abfc;
+  --ed-t15: #64748b;
+}
+
+[data-ed-theme="dracula"] {
+  --ed-bg: #282a36;
+  --ed-fg: #f8f8f2;
+  --ed-gutter: #5b6285;
+  --ed-gutter-active: #f8f8f2;
+  --ed-line: rgb(255 255 255 / 5%);
+  --ed-sel: rgb(189 147 249 / 32%);
+  --ed-caret: #ff79c6;
+  --ed-t1: #6272a4;
+  --ed-t2: #ff79c6;
+  --ed-t3: #50fa7b;
+  --ed-t4: #f1fa8c;
+  --ed-t5: #ff79c6;
+  --ed-t6: #bd93f9;
+  --ed-t7: #f8f8f2;
+  --ed-t8: #50fa7b;
+  --ed-t9: #8be9fd;
+  --ed-t10: #8be9fd;
+  --ed-t11: #50fa7b;
+  --ed-t12: #ff79c6;
+  --ed-t13: #ffb86c;
+  --ed-t14: #bd93f9;
+  --ed-t15: #6272a4;
+}
+
+[data-ed-theme="monokai"] {
+  --ed-bg: #272822;
+  --ed-fg: #f8f8f2;
+  --ed-gutter: #6b6a5f;
+  --ed-gutter-active: #f8f8f2;
+  --ed-line: rgb(255 255 255 / 5%);
+  --ed-sel: rgb(249 38 114 / 25%);
+  --ed-caret: #f8f8f0;
+  --ed-t1: #75715e;
+  --ed-t2: #f92672;
+  --ed-t3: #a6e22e;
+  --ed-t4: #e6db74;
+  --ed-t5: #f92672;
+  --ed-t6: #ae81ff;
+  --ed-t7: #f8f8f2;
+  --ed-t8: #a6e22e;
+  --ed-t9: #66d9ef;
+  --ed-t10: #66d9ef;
+  --ed-t11: #a6e22e;
+  --ed-t12: #f92672;
+  --ed-t13: #e6db74;
+  --ed-t14: #ae81ff;
+  --ed-t15: #75715e;
+}
+
+[data-ed-theme="nord"] {
+  --ed-bg: #2e3440;
+  --ed-fg: #d8dee9;
+  --ed-gutter: #59637a;
+  --ed-gutter-active: #eceff4;
+  --ed-line: rgb(255 255 255 / 4%);
+  --ed-sel: rgb(136 192 208 / 25%);
+  --ed-caret: #88c0d0;
+  --ed-t1: #616e88;
+  --ed-t2: #81a1c1;
+  --ed-t3: #8fbcbb;
+  --ed-t4: #a3be8c;
+  --ed-t5: #81a1c1;
+  --ed-t6: #b48ead;
+  --ed-t7: #eceff4;
+  --ed-t8: #88c0d0;
+  --ed-t9: #8fbcbb;
+  --ed-t10: #d08770;
+  --ed-t11: #88c0d0;
+  --ed-t12: #b48ead;
+  --ed-t13: #ebcb8b;
+  --ed-t14: #b48ead;
+  --ed-t15: #616e88;
+}
+
+[data-ed-theme="cobalt"] {
+  --ed-bg: #002240;
+  --ed-fg: #e1efff;
+  --ed-gutter: #37628f;
+  --ed-gutter-active: #ffc600;
+  --ed-line: rgb(255 255 255 / 5%);
+  --ed-sel: rgb(0 136 255 / 32%);
+  --ed-caret: #ffc600;
+  --ed-t1: #3d6b99;
+  --ed-t2: #9effff;
+  --ed-t3: #ffee80;
+  --ed-t4: #3ad900;
+  --ed-t5: #ff9d00;
+  --ed-t6: #ff628c;
+  --ed-t7: #a8c7e0;
+  --ed-t8: #ffdd00;
+  --ed-t9: #80ffbb;
+  --ed-t10: #9effff;
+  --ed-t11: #ffc600;
+  --ed-t12: #ff9d00;
+  --ed-t13: #3ad900;
+  --ed-t14: #ff628c;
+  --ed-t15: #3d6b99;
+}
+
+[data-ed-theme="twilight"] {
+  --ed-bg: #141414;
+  --ed-fg: #d6d6d6;
+  --ed-gutter: #565656;
+  --ed-gutter-active: #e9c062;
+  --ed-line: rgb(255 255 255 / 5%);
+  --ed-sel: rgb(205 168 105 / 24%);
+  --ed-caret: #e9c062;
+  --ed-t1: #5f5a60;
+  --ed-t2: #cda869;
+  --ed-t3: #9b859d;
+  --ed-t4: #8f9d6a;
+  --ed-t5: #cda869;
+  --ed-t6: #cf6a4c;
+  --ed-t7: #9b9b9b;
+  --ed-t8: #dad085;
+  --ed-t9: #7587a6;
+  --ed-t10: #cf7d34;
+  --ed-t11: #cda869;
+  --ed-t12: #cda869;
+  --ed-t13: #e9c062;
+  --ed-t14: #cf6a4c;
+  --ed-t15: #5f5a60;
+}
+
+[data-ed-theme="paper"] {
+  --ed-bg: #fbf9f4;
+  --ed-fg: #2c2a26;
+  --ed-gutter: #b6b0a4;
+  --ed-gutter-active: #0f766e;
+  --ed-line: rgb(0 0 0 / 4%);
+  --ed-sel: rgb(5 150 105 / 22%);
+  --ed-caret: #059669;
+  --ed-t1: #a39e93;
+  --ed-t2: #047857;
+  --ed-t3: #b45309;
+  --ed-t4: #15803d;
+  --ed-t5: #7c3aed;
+  --ed-t6: #b45309;
+  --ed-t7: #78716c;
+  --ed-t8: #1d4ed8;
+  --ed-t9: #0f766e;
+  --ed-t10: #1d4ed8;
+  --ed-t11: #047857;
+  --ed-t12: #7c3aed;
+  --ed-t13: #be123c;
+  --ed-t14: #7c3aed;
+  --ed-t15: #a39e93;
+}
+
+[data-ed-theme="daylight"] {
+  --ed-bg: #ffffff;
+  --ed-fg: #24292f;
+  --ed-gutter: #afb8c1;
+  --ed-gutter-active: #24292f;
+  --ed-line: rgb(0 0 0 / 4%);
+  --ed-sel: rgb(84 174 255 / 28%);
+  --ed-caret: #0969da;
+  --ed-t1: #6e7781;
+  --ed-t2: #116329;
+  --ed-t3: #0550ae;
+  --ed-t4: #0a3069;
+  --ed-t5: #cf222e;
+  --ed-t6: #0550ae;
+  --ed-t7: #57606a;
+  --ed-t8: #8250df;
+  --ed-t9: #0550ae;
+  --ed-t10: #0a3069;
+  --ed-t11: #116329;
+  --ed-t12: #cf222e;
+  --ed-t13: #0a3069;
+  --ed-t14: #0550ae;
+  --ed-t15: #6e7781;
+}

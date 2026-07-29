@@ -3,6 +3,7 @@ import {
   BarChart3Icon,
   BlendIcon,
   BoxIcon,
+  CodeXmlIcon,
   ContrastIcon,
   EraserIcon,
   FingerprintIcon,
@@ -62,6 +63,25 @@ import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolCategory, ToolMeta } from "@/types";
 
 export const TOOLS = [
+  {
+    id: "editor",
+    slug: "/tools/live-editor",
+    name: "Live Code Editor",
+    shortName: "Live Editor",
+    description:
+      "Write HTML, CSS and JavaScript and watch the page rebuild as you type — with Emmet, autocomplete, a real console, an element inspector and one-link sharing.",
+    keywords: [
+      "online html css js editor",
+      "live code editor",
+      "html editor online",
+      "css playground",
+      "javascript playground",
+      "code sandbox online",
+      "emmet online",
+    ],
+    icon: CodeXmlIcon,
+    category: "playground",
+  },
   {
     id: "whatsapp",
     slug: "/tools/whatsapp",
@@ -1048,6 +1068,7 @@ export const TOOL_CATEGORIES: readonly {
     id: "playground",
     label: "Playground",
     icon: VenetianMaskIcon,
-    description: "Hide messages inside pixels, 3D dot fields and sound.",
+    description:
+      "A live code editor, messages hidden inside pixels, 3D dot fields and sound.",
   },
 ];
