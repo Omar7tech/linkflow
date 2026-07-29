@@ -135,10 +135,9 @@ export function ToolsBrowser() {
                     className={cn("block h-[3px] w-12 rounded-full", accent.rule)}
                   />
                   {/*
-                   * Split-fill display type: the word is drawn twice at desktop —
-                   * a hollow stroked base, with a solid copy clipped to the upper
-                   * band sitting exactly on top. Reads as one word cut by a
-                   * horizon line. Solid throughout on small screens.
+                   * Offset print: the word set twice at desktop — a faint copy
+                   * shifted down-right behind the solid one, like a misregistered
+                   * riso pass. Single clean pass on small screens.
                    */}
                   <h2
                     id={`cat-${section.id}`}
@@ -147,13 +146,13 @@ export function ToolsBrowser() {
                       accent.text
                     )}
                   >
-                    <span className="lg:text-outline">{section.label}</span>
                     <span
                       aria-hidden
-                      className="pointer-events-none absolute inset-0 hidden lg:block [clip-path:inset(0_0_48%_0)]"
+                      className="pointer-events-none absolute inset-0 hidden translate-x-[7px] translate-y-[7px] opacity-20 select-none lg:block"
                     >
                       {section.label}
                     </span>
+                    <span className="relative">{section.label}</span>
                   </h2>
                   <p className="text-muted-foreground mt-3 max-w-2xl text-sm leading-relaxed lg:mt-4 lg:text-base">
                     {section.description}

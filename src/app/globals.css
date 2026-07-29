@@ -157,17 +157,6 @@
   animation: gradient-pan 7s linear infinite;
 }
 
-/*
- * Hollow display type — the fill drops out and the glyphs are drawn as a stroke
- * in the element's own colour. `-webkit-text-fill-color` (not `color`) so
- * `currentColor` still resolves to the accent. Only legible at large sizes.
- */
-@utility text-outline {
-  -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 1.5px currentColor;
-  paint-order: stroke fill;
-}
-
 @keyframes gradient-pan {
   to {
     background-position: 220% 0%;
