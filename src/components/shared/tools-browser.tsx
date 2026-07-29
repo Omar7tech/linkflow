@@ -3,6 +3,7 @@
 import { LayoutGridIcon, SearchIcon, XIcon, type LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { TOOLS, TOOL_CATEGORIES } from "@/constants/tools";
+import { accentFor } from "@/lib/tool-accent";
 import { cn } from "@/lib/utils";
 import type { ToolCategory } from "@/types";
 import { ToolCard } from "./tool-grid";
@@ -80,6 +81,11 @@ export function ToolsBrowser() {
           {PILLS.map((pill) => {
             const selected = active === pill.id;
             const Icon = pill.icon;
+            // Each category wears its own colour when active; "All" keeps the site accent.
+            const selectedClass =
+              pill.id === "all"
+                ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : accentFor(pill.id).pill;
             return (
               <button
                 key={pill.id}
@@ -90,8 +96,8 @@ export function ToolsBrowser() {
                 className={cn(
                   "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-95",
                   selected
-                    ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    : "border-border/60 bg-card text-muted-foreground hover:border-emerald-500/40 hover:text-foreground"
+                    ? selectedClass
+                    : "border-border/60 bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground"
                 )}
               >
                 <Icon className="size-4" aria-hidden />
@@ -119,26 +125,28 @@ export function ToolsBrowser() {
         // Browse view — one section per category, headed and breathable.
         <div className="space-y-14">
           {sections.map((section) => {
-            const Icon = section.icon;
+            const accent = accentFor(section.id);
             return (
               <section key={section.id} aria-labelledby={`cat-${section.id}`}>
-                <div className="mb-5 flex items-start gap-3">
-                  <span className="border-border bg-card mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border">
-                    <Icon
-                      className="size-4 text-emerald-600 dark:text-emerald-400"
-                      aria-hidden
-                    />
-                  </span>
-                  <div>
-                    <h2
-                      id={`cat-${section.id}`}
-                      className="font-heading text-xl font-bold tracking-tight"
-                    >
-                      {section.label}
-                    </h2>
-                    <p className="text-muted-foreground mt-0.5 text-sm">{section.description}</p>
-                  </div>
-                </div>
+                <header className="mb-7">
+                  {/* Short solid bar in the category colour — the whole ornament */}
+                  <span
+                    aria-hidden
+                    className={cn("block h-[3px] w-12 rounded-full", accent.rule)}
+                  />
+                  <h2
+                    id={`cat-${section.id}`}
+                    className={cn(
+                      "font-heading mt-4 text-3xl font-bold tracking-tight text-balance sm:text-4xl",
+                      accent.text
+                    )}
+                  >
+                    {section.label}
+                  </h2>
+                  <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-relaxed">
+                    {section.description}
+                  </p>
+                </header>
                 <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {section.tools.map((tool) => (
                     <ToolCard key={tool.id} tool={tool} />
