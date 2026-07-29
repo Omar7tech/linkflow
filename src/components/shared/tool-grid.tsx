@@ -13,7 +13,7 @@ const CATEGORY_LABEL: Record<ToolCategory, string> = Object.fromEntries(
 ) as Record<ToolCategory, string>;
 
 /** Banner art lives at /tools/{last slug segment}.png. */
-const cardImage = (slug: string) => `/tools/${slug.split("/").pop()}.png`;
+const cardImage = (slug: string) => `/tools/${slug.split("/").pop()}.webp`;
 
 export function ToolCard({ tool }: { tool: ToolMeta }) {
   const category = tool.category as ToolCategory;
