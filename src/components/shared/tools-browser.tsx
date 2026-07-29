@@ -134,16 +134,28 @@ export function ToolsBrowser() {
                     aria-hidden
                     className={cn("block h-[3px] w-12 rounded-full", accent.rule)}
                   />
+                  {/*
+                   * Split-fill display type: the word is drawn twice at desktop —
+                   * a hollow stroked base, with a solid copy clipped to the upper
+                   * band sitting exactly on top. Reads as one word cut by a
+                   * horizon line. Solid throughout on small screens.
+                   */}
                   <h2
                     id={`cat-${section.id}`}
                     className={cn(
-                      "font-heading mt-4 text-3xl font-bold tracking-tight text-balance sm:text-4xl",
+                      "font-heading relative mt-4 text-3xl font-bold tracking-tight text-balance sm:text-5xl lg:text-7xl lg:tracking-[-0.03em]",
                       accent.text
                     )}
                   >
-                    {section.label}
+                    <span className="lg:text-outline">{section.label}</span>
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 hidden lg:block [clip-path:inset(0_0_48%_0)]"
+                    >
+                      {section.label}
+                    </span>
                   </h2>
-                  <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-relaxed">
+                  <p className="text-muted-foreground mt-3 max-w-2xl text-sm leading-relaxed lg:mt-4 lg:text-base">
                     {section.description}
                   </p>
                 </header>
