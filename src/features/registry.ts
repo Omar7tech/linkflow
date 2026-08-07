@@ -79,5 +79,8 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   ogstudio: dynamic(() => import("./og-studio/og-studio-tool").then((m) => m.OgStudioTool)),
   carousel: dynamic(() => import("./carousel-studio/carousel-studio-tool").then((m) => m.CarouselStudioTool)),
   avatar: dynamic(() => import("./avatar/avatar-tool").then((m) => m.AvatarTool)),
+  launchready: dynamic(() =>
+    import("./launch-ready/launch-ready-tool").then((m) => m.LaunchReadyTool)
+  ),
   slugify: dynamic(() => import("./slugify/slugify-tool").then((m) => m.SlugifyTool)),
 };

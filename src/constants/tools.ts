@@ -57,6 +57,7 @@ import {
   SignpostIcon,
   FrameIcon,
   GalleryHorizontalEndIcon,
+  RocketIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -973,6 +974,24 @@ export const TOOLS = [
     ],
     icon: SmileIcon,
     category: "studio",
+  },
+  {
+    id: "launchready",
+    slug: "/tools/launch-ready",
+    name: "LaunchReady Website Audit",
+    shortName: "LaunchReady",
+    description:
+      "Run a practical preflight before you publish — scan any public page for search, accessibility, security, speed and content issues, then get the important fixes in plain language with code ready to copy.",
+    keywords: [
+      "website audit tool",
+      "website launch checklist",
+      "seo accessibility checker",
+      "website security headers checker",
+      "pagespeed audit",
+      "website readiness test",
+    ],
+    icon: RocketIcon,
+    category: "utilities",
   },
   {
     id: "slugify",
