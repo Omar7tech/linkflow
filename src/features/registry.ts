@@ -86,5 +86,6 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
     import("./launch-ready/launch-ready-tool").then((m) => m.LaunchReadyTool)
   ),
   appshots: dynamic(() => import("./app-shots/app-shots-tool").then((m) => m.AppShotsTool)),
+  loop: dynamic(() => import("./loop-studio/loop-studio-tool").then((m) => m.LoopStudioTool)),
   slugify: dynamic(() => import("./slugify/slugify-tool").then((m) => m.SlugifyTool)),
 };

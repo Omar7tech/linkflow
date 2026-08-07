@@ -55,6 +55,7 @@ import {
   AnvilIcon,
   SmartphoneIcon,
   TabletSmartphoneIcon,
+  Repeat2Icon,
   SignpostIcon,
   FrameIcon,
   GalleryHorizontalEndIcon,
@@ -1029,6 +1030,24 @@ export const TOOLS = [
       "feature graphic generator",
     ],
     icon: TabletSmartphoneIcon,
+    category: "studio",
+  },
+  {
+    id: "loop",
+    slug: "/tools/loop-studio",
+    name: "Loop Studio Animated Logo Maker",
+    shortName: "Loop Studio",
+    description:
+      "Animate a wordmark, SVG or logo into a seamless loop — ten motion presets, scrubbable timeline — then export it as a GIF, a WebM, a CSS sprite sheet or a numbered PNG sequence.",
+    keywords: [
+      "animated logo maker",
+      "gif maker",
+      "animated text generator",
+      "svg animation generator",
+      "css sprite sheet animation",
+      "looping animation maker",
+    ],
+    icon: Repeat2Icon,
     category: "studio",
   },
   {
