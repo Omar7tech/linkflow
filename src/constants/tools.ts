@@ -1051,6 +1051,24 @@ export const TOOLS = [
     category: "studio",
   },
   {
+    id: "sorting",
+    slug: "/tools/sorting-visualizer",
+    name: "Sorting Algorithm Visualizer",
+    shortName: "Sorting Lab",
+    description:
+      "Watch fourteen sorting algorithms work, step by step and backwards too — scrub the timeline, race four at once on the same array, and see the comparisons and writes counted as they happen.",
+    keywords: [
+      "sorting algorithm visualizer",
+      "sorting visualizer",
+      "bubble sort animation",
+      "quicksort visualization",
+      "merge sort visualizer",
+      "algorithm animation",
+    ],
+    icon: BarChart3Icon,
+    category: "playground",
+  },
+  {
     id: "slugify",
     slug: "/tools/slugify",
     name: "Slug Generator",

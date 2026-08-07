@@ -87,5 +87,6 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   ),
   appshots: dynamic(() => import("./app-shots/app-shots-tool").then((m) => m.AppShotsTool)),
   loop: dynamic(() => import("./loop-studio/loop-studio-tool").then((m) => m.LoopStudioTool)),
+  sorting: dynamic(() => import("./sorting/sorting-tool").then((m) => m.SortingTool)),
   slugify: dynamic(() => import("./slugify/slugify-tool").then((m) => m.SlugifyTool)),
 };
