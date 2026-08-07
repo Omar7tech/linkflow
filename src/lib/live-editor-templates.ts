@@ -20,12 +20,22 @@ export interface SketchTemplate {
 export const SKETCH_TEMPLATES: readonly SketchTemplate[] = [
   {
     id: "blank",
-    name: "Blank canvas",
-    blurb: "An empty page with sensible defaults",
-    html: `<main>
-  <h1>Hello there</h1>
-  <p>Edit the panes and watch this update.</p>
-</main>`,
+    name: "Beginner HTML page",
+    blurb: "A complete page with html, head and body",
+    html: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My first page</title>
+</head>
+<body>
+  <main>
+    <h1>Hello there</h1>
+    <p>Edit the HTML, CSS, and JavaScript panes to build your page.</p>
+  </main>
+</body>
+</html>`,
     css: `body {
   display: grid;
   place-items: center;
@@ -46,6 +56,33 @@ p {
   color: #7f9c92;
 }`,
     js: `console.log('Ready. Press Ctrl+Enter to re-run.')`,
+  },
+
+  {
+    id: "tailwind-start",
+    name: "Tailwind starter",
+    blurb: "Utility classes with Tailwind autocomplete enabled",
+    html: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Tailwind page</title>
+</head>
+<body class="min-h-screen bg-gray-900 text-white flex items-center justify-center p-6">
+  <main class="w-full max-w-md rounded-2xl bg-gray-800 p-8 shadow-xl">
+    <p class="text-sm font-semibold text-emerald-500">My first Tailwind page</p>
+    <h1 class="mt-2 text-3xl font-bold tracking-tight">Build something great</h1>
+    <p class="mt-4 text-gray-500 leading-relaxed">Type inside a class attribute to see Tailwind suggestions.</p>
+    <button class="mt-8 rounded-lg bg-emerald-500 px-6 py-3 font-semibold text-black transition hover:opacity-80">
+      Get started
+    </button>
+  </main>
+</body>
+</html>`,
+    css: `/* Tailwind handles the styling for this starter. */`,
+    js: `console.log('Tailwind is ready.')`,
+    libs: ["tailwind"],
   },
 
   {

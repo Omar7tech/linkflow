@@ -24,7 +24,81 @@ export interface CompletionResult {
   to: number;
 }
 
+export interface CompletionContext {
+  enabledLibraries?: readonly string[];
+}
+
 const MAX_ITEMS = 40;
+
+const HTML_DOCUMENT_SNIPPETS: Completion[] = [
+  {
+    label: "!",
+    insert: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My page</title>
+</head>
+<body>
+  |
+</body>
+</html>`,
+    detail: "HTML page",
+  },
+  {
+    label: "html:5",
+    insert: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My page</title>
+</head>
+<body>
+  |
+</body>
+</html>`,
+    detail: "HTML page",
+  },
+];
+
+// A focused, beginner-friendly set of common Tailwind utilities. Suggestions
+// are intentionally contextual and only appear when the Tailwind library is on.
+const TAILWIND_CLASSES = [
+  "container", "mx-auto", "m-0", "m-2", "m-4", "m-6", "m-8", "mt-2", "mt-4", "mt-8",
+  "mb-2", "mb-4", "mb-8", "p-0", "p-2", "p-4", "p-6", "p-8", "px-2", "px-4", "px-6",
+  "py-2", "py-3", "py-4", "space-x-2", "space-x-4", "space-y-2", "space-y-4", "gap-2",
+  "gap-4", "gap-6", "block", "inline-block", "hidden", "flex", "inline-flex", "grid",
+  "grid-cols-1", "grid-cols-2", "grid-cols-3", "items-start", "items-center", "items-end",
+  "justify-start", "justify-center", "justify-between", "justify-end", "flex-col", "flex-wrap",
+  "w-full", "w-screen", "w-1/2", "max-w-sm", "max-w-md", "max-w-lg", "max-w-2xl", "h-full",
+  "h-screen", "min-h-screen", "relative", "absolute", "fixed", "sticky", "inset-0", "top-0",
+  "right-0", "bottom-0", "left-0", "z-10", "z-50", "overflow-hidden", "overflow-auto",
+  "rounded", "rounded-md", "rounded-lg", "rounded-xl", "rounded-2xl", "rounded-full", "border",
+  "border-0", "border-gray-200", "border-gray-700", "bg-white", "bg-black", "bg-transparent",
+  "bg-gray-50", "bg-gray-100", "bg-gray-800", "bg-gray-900", "bg-blue-500", "bg-emerald-500",
+  "bg-red-500", "text-left", "text-center", "text-right", "text-xs", "text-sm", "text-base",
+  "text-lg", "text-xl", "text-2xl", "text-3xl", "text-4xl", "font-normal", "font-medium",
+  "font-semibold", "font-bold", "text-white", "text-black", "text-gray-500", "text-gray-700",
+  "text-gray-900", "text-blue-500", "text-emerald-500", "leading-tight", "leading-relaxed",
+  "tracking-tight", "truncate", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "opacity-0",
+  "opacity-50", "opacity-100", "cursor-pointer", "select-none", "transition", "transition-colors",
+  "duration-200", "duration-300", "hover:bg-blue-600", "hover:opacity-80", "hover:scale-105",
+  "focus:outline-none", "focus:ring-2", "sm:flex", "sm:grid-cols-2", "md:flex", "md:grid-cols-2",
+  "lg:grid-cols-3", "dark:bg-gray-900", "dark:text-white",
+];
+
+const LIBRARY_GLOBALS: Record<string, string[]> = {
+  gsap: ["gsap", "ScrollTrigger"],
+  three: ["THREE"],
+  anime: ["anime"],
+  p5: ["p5", "createCanvas", "background", "draw", "setup"],
+  matter: ["Matter"],
+  d3: ["d3"],
+  chartjs: ["Chart"],
+  alpine: ["Alpine"],
+};
 
 /* --------------------------------------------------------------- tables */
 
@@ -215,6 +289,13 @@ const JS_MEMBERS: Record<string, string[]> = {
   location: ["href", "hash", "search", "pathname", "reload", "assign", "origin"],
   crypto: ["randomUUID", "getRandomValues", "subtle"],
   performance: ["now", "mark", "measure"],
+  gsap: ["to", "from", "fromTo", "set", "timeline", "registerPlugin", "matchMedia", "utils"],
+  ScrollTrigger: ["create", "refresh", "update", "getAll", "killAll", "batch"],
+  THREE: ["Scene", "PerspectiveCamera", "WebGLRenderer", "Mesh", "BoxGeometry", "SphereGeometry", "MeshStandardMaterial", "Color", "Vector2", "Vector3", "Clock"],
+  d3: ["select", "selectAll", "scaleLinear", "scaleBand", "axisBottom", "axisLeft", "extent", "max", "min", "line", "arc", "pie"],
+  anime: ["timeline", "stagger", "random", "set", "remove"],
+  Matter: ["Engine", "Render", "Runner", "Bodies", "Body", "Composite", "Composites", "Constraint", "Events", "Mouse", "MouseConstraint"],
+  Chart: ["register", "getChart", "defaults", "overrides"],
 };
 
 /** Members offered after `.` when the receiver is unknown. */
@@ -244,7 +325,7 @@ function rank(items: Completion[], prefix: string): Completion[] {
 
   for (const item of items) {
     const label = item.label.toLowerCase();
-    if (label === lower) continue; // nothing left to complete
+    if (label === lower && !item.insert) continue; // nothing left to complete
     if (label.startsWith(lower)) scored.push({ item, score: 0 });
     else if (label.includes(lower)) scored.push({ item, score: 1 });
     else if (isSubsequence(lower, label)) scored.push({ item, score: 2 });
@@ -284,23 +365,34 @@ export function getCompletions(
   value: string,
   caret: number,
   lang: EditorLang,
-  explicit: boolean
+  explicit: boolean,
+  context: CompletionContext = {}
 ): CompletionResult | null {
-  if (lang === "html") return htmlCompletions(value, caret, explicit);
+  if (lang === "html") return htmlCompletions(value, caret, explicit, context);
   if (lang === "css") return cssCompletions(value, caret, explicit);
-  return jsCompletions(value, caret, explicit);
+  return jsCompletions(value, caret, explicit, context);
 }
 
-function htmlCompletions(value: string, caret: number, explicit: boolean): CompletionResult | null {
+function htmlCompletions(
+  value: string,
+  caret: number,
+  explicit: boolean,
+  context: CompletionContext
+): CompletionResult | null {
   const before = value.slice(0, caret);
   const lastLt = before.lastIndexOf("<");
   const lastGt = before.lastIndexOf(">");
 
   // Outside any tag: only offer tags when the user asked for it.
   if (lastLt === -1 || lastLt < lastGt) {
-    if (!explicit) return null;
-    const from = wordStart(value, caret, /[\w-]/);
-    return { items: rank(toItems(HTML_TAGS, "tag"), value.slice(from, caret)), from, to: caret };
+    const from = wordStart(value, caret, /[\w:!-]/);
+    const typed = value.slice(from, caret);
+    const atDocumentStart = value.slice(0, from).trim() === "";
+    if (!explicit && !(atDocumentStart && (typed === "!" || typed.startsWith("html:")))) return null;
+    const pool = atDocumentStart
+      ? [...HTML_DOCUMENT_SNIPPETS, ...toItems(HTML_TAGS, "tag")]
+      : toItems(HTML_TAGS, "tag");
+    return { items: rank(pool, typed), from, to: caret };
   }
 
   const inside = before.slice(lastLt);
@@ -319,6 +411,12 @@ function htmlCompletions(value: string, caret: number, explicit: boolean): Compl
   const quoteMatch = /([\w:-]+)\s*=\s*(["'])([^"']*)$/.exec(afterName);
   if (quoteMatch) {
     const [, attr, , typed] = quoteMatch;
+    if (attr.toLowerCase() === "class" && context.enabledLibraries?.includes("tailwind")) {
+      const currentClass = /[^\s]*$/.exec(typed)?.[0] ?? "";
+      const from = caret - currentClass.length;
+      const items = rank(toItems(TAILWIND_CLASSES, "Tailwind"), currentClass);
+      return items.length ? { items, from, to: caret } : null;
+    }
     const pool = ATTR_VALUES[attr.toLowerCase()];
     if (!pool) return null;
     const from = caret - typed.length;
@@ -386,7 +484,12 @@ function cssCompletions(value: string, caret: number, explicit: boolean): Comple
   return items.length ? { items, from, to: caret } : null;
 }
 
-function jsCompletions(value: string, caret: number, explicit: boolean): CompletionResult | null {
+function jsCompletions(
+  value: string,
+  caret: number,
+  explicit: boolean,
+  context: CompletionContext
+): CompletionResult | null {
   const before = value.slice(0, caret);
 
   // Member access.
@@ -405,10 +508,14 @@ function jsCompletions(value: string, caret: number, explicit: boolean): Complet
   if (typed.length < 1 && !explicit) return null;
 
   const known = new Set([...JS_KEYWORDS, ...JS_GLOBALS]);
+  const libraryGlobals = (context.enabledLibraries ?? []).flatMap(
+    (library) => LIBRARY_GLOBALS[library] ?? []
+  );
   const items = rank(
     [
       ...toItems(JS_KEYWORDS, "keyword"),
       ...toItems(JS_GLOBALS, "global"),
+      ...toItems(libraryGlobals, "library"),
       ...JS_SNIPPETS,
       ...bufferWords(value, typed, known),
     ],

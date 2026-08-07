@@ -43,6 +43,7 @@ interface CodePaneProps {
   onChange: (next: string) => void;
   lang: EditorLang;
   settings: PaneSettings;
+  enabledLibraries?: readonly string[];
   label: string;
   onRun?: () => void;
   onSave?: () => void;
@@ -95,11 +96,12 @@ function applyEdit(textarea: HTMLTextAreaElement, edit: Edit, fallback: (next: s
   textarea.setSelectionRange(edit.selStart, edit.selEnd);
 }
 
-export function CodePane({
+function CodePaneImpl({
   value,
   onChange,
   lang,
   settings,
+  enabledLibraries = [],
   label,
   onRun,
   onSave,
@@ -115,7 +117,10 @@ export function CodePane({
 
   const [popup, setPopup] = React.useState<PopupState | null>(null);
 
-  const painted = React.useMemo(() => highlightToHtml(value, lang), [value, lang]);
+  // Defer the expensive syntax paint so typing stays responsive even when the
+  // source changes quickly.
+  const deferredValue = React.useDeferredValue(value);
+  const painted = React.useMemo(() => highlightToHtml(deferredValue, lang), [deferredValue, lang]);
 
   /* --------------------------------------------------------- painting */
 
@@ -188,7 +193,9 @@ export function CodePane({
         return;
       }
 
-      const result = getCompletions(textarea.value, textarea.selectionStart, lang, explicit);
+      const result = getCompletions(textarea.value, textarea.selectionStart, lang, explicit, {
+        enabledLibraries,
+      });
       if (!result || result.items.length === 0) {
         setPopup(null);
         return;
@@ -196,7 +203,7 @@ export function CodePane({
       const point = caretPoint();
       setPopup({ ...result, index: 0, x: point.x, y: point.y });
     },
-    [caretPoint, lang, settings.autoComplete]
+    [caretPoint, enabledLibraries, lang, settings.autoComplete]
   );
 
   const acceptCompletion = React.useCallback(
@@ -517,3 +524,5 @@ function measureCharWidth(fontFamily: string, fontSize: number): number {
   widthCache.set(key, width);
   return width;
 }
+
+export const CodePane = React.memo(CodePaneImpl);

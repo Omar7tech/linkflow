@@ -142,7 +142,7 @@ export function LiveEditorTool() {
   );
 
   const [sketch, setSketch] = React.useState<Sketch>(() =>
-    createSketch({ name: "Glass panel", ...pickTemplate("glass") })
+    createSketch({ name: "My first page", ...pickTemplate("blank") })
   );
   const [activePane, setActivePane] = React.useState<PaneId>("html");
   const [mobileView, setMobileView] = React.useState<"code" | "preview">("code");
@@ -172,10 +172,16 @@ export function LiveEditorTool() {
     () => ({ ...DEFAULT_SETTINGS, ...settings }),
     [settings]
   );
-  const updateSettings = (patch: Partial<EditorSettings>) =>
-    setSettings((prev) => ({ ...DEFAULT_SETTINGS, ...prev, ...patch }));
+  const updateSettings = React.useCallback(
+    (patch: Partial<EditorSettings>) =>
+      setSettings((prev) => ({ ...DEFAULT_SETTINGS, ...prev, ...patch })),
+    [setSettings]
+  );
 
-  const errorCount = entries.filter((entry) => entry.level === "error").length;
+  const errorCount = React.useMemo(
+    () => entries.filter((entry) => entry.level === "error").length,
+    [entries]
+  );
 
   /* ------------------------------------------------------------ running */
 
@@ -288,21 +294,21 @@ export function LiveEditorTool() {
     return () => window.removeEventListener("message", onMessage);
   }, [jumpToSource, pushEntry, token]);
 
-  const toggleInspect = () => {
+  const toggleInspect = React.useCallback(() => {
     const next = !inspecting;
     setInspecting(next);
     inspectingRef.current = next;
     if (!next) setHover(null);
     frameRef.current?.contentWindow?.postMessage({ source: token, type: "inspect", payload: next }, "*");
-  };
+  }, [inspecting, token]);
 
-  const evaluate = (code: string) => {
+  const evaluate = React.useCallback((code: string) => {
     pushEntry("input", [code]);
     frameRef.current?.contentWindow?.postMessage(
       { source: token, type: "eval", payload: { code, id: Date.now() } },
       "*"
     );
-  };
+  }, [pushEntry, token]);
 
   /* ------------------------------------------------------- restore state */
 
@@ -347,10 +353,13 @@ export function LiveEditorTool() {
 
   /* ------------------------------------------------------------ actions */
 
-  const update = (pane: PaneId, code: string) =>
-    setSketch((prev) => ({ ...prev, [pane]: code, updatedAt: Date.now() }));
+  const update = React.useCallback(
+    (pane: PaneId, code: string) =>
+      setSketch((prev) => ({ ...prev, [pane]: code, updatedAt: Date.now() })),
+    []
+  );
 
-  const loadTemplate = (id: string) => {
+  const loadTemplate = React.useCallback((id: string) => {
     const template = TEMPLATE_BY_ID.get(id);
     if (!template) return;
     const next = createSketch({
@@ -363,13 +372,16 @@ export function LiveEditorTool() {
     setSketch(next);
     run(next);
     toast.success(`Loaded “${template.name}”`);
-  };
+  }, [run]);
 
-  const toggleLibrary = (id: string) =>
-    setSketch((prev) => ({
-      ...prev,
-      libs: prev.libs.includes(id) ? prev.libs.filter((l) => l !== id) : [...prev.libs, id],
-    }));
+  const toggleLibrary = React.useCallback(
+    (id: string) =>
+      setSketch((prev) => ({
+        ...prev,
+        libs: prev.libs.includes(id) ? prev.libs.filter((l) => l !== id) : [...prev.libs, id],
+      })),
+    []
+  );
 
   const saveSketch = React.useCallback(() => {
     const snapshot = { ...sketch, updatedAt: Date.now() };
@@ -383,7 +395,7 @@ export function LiveEditorTool() {
     toast.success(`Saved “${snapshot.name}”`);
   }, [setLibrary, sketch]);
 
-  const share = async () => {
+  const share = React.useCallback(async () => {
     try {
       const hash = await encodeSketchToHash(sketch);
       const url = `${window.location.origin}${window.location.pathname}#s=${hash}`;
@@ -397,23 +409,23 @@ export function LiveEditorTool() {
     } catch {
       toast.error("Couldn't build the share link");
     }
-  };
+  }, [sketch]);
 
-  const download = (blob: Blob, filename: string) => {
+  const download = React.useCallback((blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download = filename;
     anchor.click();
     URL.revokeObjectURL(url);
-  };
+  }, []);
 
-  const downloadHtml = () => {
+  const downloadHtml = React.useCallback(() => {
     download(new Blob([exportSingleFile(sketch)], { type: "text/html" }), `${sketchSlug(sketch.name)}.html`);
     toast.success("Downloaded a single HTML file");
-  };
+  }, [download, sketch]);
 
-  const downloadZip = () => {
+  const downloadZip = React.useCallback(() => {
     const encoder = new TextEncoder();
     const files = exportProjectFiles(sketch).map((file) => ({
       name: file.name,
@@ -421,19 +433,37 @@ export function LiveEditorTool() {
     }));
     download(buildZip(files), `${sketchSlug(sketch.name)}.zip`);
     toast.success("Downloaded index.html, style.css and script.js");
-  };
+  }, [download, sketch]);
 
-  const copyHtml = async () => {
+  const copyHtml = React.useCallback(async () => {
     await navigator.clipboard.writeText(exportSingleFile(sketch));
     toast.success("Full page copied to the clipboard");
-  };
+  }, [sketch]);
 
-  const openExternal = () => {
+  const openExternal = React.useCallback(() => {
     const blob = new Blob([exportSingleFile(sketch)], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank", "noopener");
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  };
+  }, [sketch]);
+
+  const changeFontSize = React.useCallback(
+    (delta: number) =>
+      updateSettings({
+        fontSize: Math.min(24, Math.max(10, merged.fontSize + delta)),
+      }),
+    [merged.fontSize, updateSettings]
+  );
+
+  const paneChangeHandlers = React.useMemo(
+    () => ({
+      html: (code: string) => update("html", code),
+      css: (code: string) => update("css", code),
+      js: (code: string) => update("js", code),
+    }),
+    [update]
+  );
+  const clearConsole = React.useCallback(() => setEntries([]), []);
 
   /* --------------------------------------------------------- shortcuts */
 
@@ -539,16 +569,15 @@ export function LiveEditorTool() {
             >
               <CodePane
                 value={sketch[pane.id]}
-                onChange={(code) => update(pane.id, code)}
+                onChange={paneChangeHandlers[pane.id]}
                 lang={pane.lang}
                 label={`${pane.label} source`}
                 settings={paneSettings}
+                enabledLibraries={sketch.libs}
                 onRun={runCurrent}
                 onSave={saveSketch}
                 onCaretChange={setCaret}
-                onZoom={(delta) =>
-                  updateSettings({ fontSize: Math.min(24, Math.max(10, merged.fontSize + delta)) })
-                }
+                onZoom={changeFontSize}
                 reveal={pane.id === "html" ? reveal : null}
                 className="h-full"
               />
@@ -605,7 +634,7 @@ export function LiveEditorTool() {
         </button>
 
         {consoleOpen && (
-          <ConsolePane entries={entries} onClear={() => setEntries([])} onEvaluate={evaluate} />
+          <ConsolePane entries={entries} onClear={clearConsole} onEvaluate={evaluate} />
         )}
       </div>
     </div>
@@ -653,7 +682,7 @@ export function LiveEditorTool() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">
-              <LibraryIcon /> Libraries
+              <LibraryIcon /> Libraries &amp; IntelliSense
               {sketch.libs.length > 0 && (
                 <span className="bg-primary/15 text-primary rounded-full px-1.5 font-mono text-[10px] font-semibold">
                   {sketch.libs.length}
@@ -662,7 +691,7 @@ export function LiveEditorTool() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-72">
-            <DropdownMenuLabel>Add to the preview&apos;s &lt;head&gt;</DropdownMenuLabel>
+            <DropdownMenuLabel>Add a library and its code suggestions</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {EDITOR_LIBRARIES.map((lib) => (
               <DropdownMenuCheckboxItem
@@ -762,6 +791,20 @@ export function LiveEditorTool() {
             <TooltipContent>{focusMode ? "Leave focus mode" : "Fill the screen"}</TooltipContent>
           </Tooltip>
         </div>
+      </div>
+
+      <div className="border-border/60 bg-muted/20 flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 text-xs">
+        <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 font-semibold">
+          New here?
+        </span>
+        <span className="text-muted-foreground">
+          Start with the complete HTML page. Type <strong className="text-foreground">&lt;</strong> for tags,
+          press <strong className="text-foreground">Ctrl+Space</strong> for suggestions, and enable Tailwind
+          under <strong className="text-foreground">Libraries &amp; IntelliSense</strong> for class completions.
+        </span>
+        <span className="text-muted-foreground/80 ml-auto font-mono text-[10px]">
+          Saved locally in this browser
+        </span>
       </div>
 
       {/* --------------------------------------------------- mobile tabs */}

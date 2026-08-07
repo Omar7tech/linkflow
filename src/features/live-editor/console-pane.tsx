@@ -35,7 +35,7 @@ interface ConsolePaneProps {
   onEvaluate: (code: string) => void;
 }
 
-export function ConsolePane({ entries, onClear, onEvaluate }: ConsolePaneProps) {
+function ConsolePaneImpl({ entries, onClear, onEvaluate }: ConsolePaneProps) {
   const [draft, setDraft] = React.useState("");
   const [history, setHistory] = React.useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = React.useState(-1);
@@ -136,3 +136,5 @@ export function ConsolePane({ entries, onClear, onEvaluate }: ConsolePaneProps) 
     </div>
   );
 }
+
+export const ConsolePane = React.memo(ConsolePaneImpl);

@@ -35,7 +35,7 @@ interface PreviewPaneProps {
   onOpenExternal: () => void;
 }
 
-export function PreviewPane({
+function PreviewPaneImpl({
   frameRef,
   srcDoc,
   runKey,
@@ -180,3 +180,5 @@ export function PreviewPane({
     </div>
   );
 }
+
+export const PreviewPane = React.memo(PreviewPaneImpl);
