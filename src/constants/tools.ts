@@ -54,6 +54,7 @@ import {
   DnaIcon,
   AnvilIcon,
   SmartphoneIcon,
+  TabletSmartphoneIcon,
   SignpostIcon,
   FrameIcon,
   GalleryHorizontalEndIcon,
@@ -1011,6 +1012,24 @@ export const TOOLS = [
     ],
     icon: RocketIcon,
     category: "utilities",
+  },
+  {
+    id: "appshots",
+    slug: "/tools/app-screenshots",
+    name: "App Store Screenshot Studio",
+    shortName: "App Screenshots",
+    description:
+      "Turn raw app screenshots into a store-ready set — device frame, headline and background — exported at the exact sizes Apple and Google require, every size in one ZIP.",
+    keywords: [
+      "app store screenshot generator",
+      "play store screenshot maker",
+      "app screenshot mockup",
+      "ios screenshot sizes",
+      "app store listing images",
+      "feature graphic generator",
+    ],
+    icon: TabletSmartphoneIcon,
+    category: "studio",
   },
   {
     id: "slugify",
