@@ -838,7 +838,7 @@ export function LiveEditorTool() {
   );
 
   return (
-    <GeneratorLayout tool={tool} output={null}>
+    <GeneratorLayout tool={tool} output={null} fullBleed>
       {workspace}
     </GeneratorLayout>
   );

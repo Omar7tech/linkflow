@@ -9,13 +9,32 @@ interface GeneratorLayoutProps {
   output: React.ReactNode;
   /** Give the output column most of the width — for visual tools where the preview is the star. */
   wideOutput?: boolean;
+  /**
+   * Drop the 7xl cap and run to the window edges. For workspace tools — an
+   * editor or a canvas — where the extra width on a large display is the point,
+   * and centring a column just wastes it.
+   */
+  fullBleed?: boolean;
   /** Full-width content below the grid — history, tips, FAQ. */
   footer?: React.ReactNode;
 }
 
-export function GeneratorLayout({ tool, children, output, wideOutput, footer }: GeneratorLayoutProps) {
+export function GeneratorLayout({
+  tool,
+  children,
+  output,
+  wideOutput,
+  fullBleed,
+  footer,
+}: GeneratorLayoutProps) {
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:py-12">
+    <div
+      className={
+        fullBleed
+          ? "w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
+          : "mx-auto w-full max-w-7xl px-4 py-8 sm:py-12"
+      }
+    >
       <header className="mb-8 max-w-2xl">
         <div className="mb-3 flex items-center gap-3">
           <span className="border-border bg-card flex size-11 items-center justify-center rounded-xl border">
