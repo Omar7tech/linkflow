@@ -56,6 +56,7 @@ import {
   SmartphoneIcon,
   TabletSmartphoneIcon,
   Repeat2Icon,
+  RouteIcon,
   SignpostIcon,
   FrameIcon,
   GalleryHorizontalEndIcon,
@@ -1066,6 +1067,24 @@ export const TOOLS = [
       "algorithm animation",
     ],
     icon: BarChart3Icon,
+    category: "playground",
+  },
+  {
+    id: "pathfinding",
+    slug: "/tools/pathfinding-visualizer",
+    name: "Pathfinding & Maze Visualizer",
+    shortName: "Pathfinding Lab",
+    description:
+      "Draw walls and swamps, generate a maze, then watch A*, Dijkstra, breadth-first and greedy search hunt for a route — scrub the search, step backwards, and run two algorithms side by side on the same board.",
+    keywords: [
+      "pathfinding visualizer",
+      "a star algorithm visualizer",
+      "dijkstra visualizer",
+      "maze generator",
+      "bfs dfs visualization",
+      "shortest path animation",
+    ],
+    icon: RouteIcon,
     category: "playground",
   },
   {
