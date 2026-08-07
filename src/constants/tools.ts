@@ -58,6 +58,7 @@ import {
   FrameIcon,
   GalleryHorizontalEndIcon,
   RocketIcon,
+  PenToolIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -973,6 +974,24 @@ export const TOOLS = [
       "identicon generator",
     ],
     icon: SmileIcon,
+    category: "studio",
+  },
+  {
+    id: "vectorforge",
+    slug: "/tools/vector-forge",
+    name: "VectorForge Image to SVG",
+    shortName: "VectorForge",
+    description:
+      "Turn PNG and JPG artwork into clean, editable SVG paths in your browser — compare the trace, remove flat backgrounds, tune detail, recolor every layer and export production-ready SVG or PNG without uploading a file.",
+    keywords: [
+      "image to svg converter",
+      "png to svg",
+      "jpg to vector",
+      "vectorize image free",
+      "logo vectorizer",
+      "raster to vector",
+    ],
+    icon: PenToolIcon,
     category: "studio",
   },
   {
