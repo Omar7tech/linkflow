@@ -42,7 +42,7 @@ const SPOTLIGHTS: readonly Spotlight[] = [
     ],
     cta: "Open the background remover",
     secondary: { href: "/tools#cat-image", label: "Browse image tools" },
-    image: "/tools/bg-remover.webp",
+    image: "/tools/background-remover.webp",
   },
   {
     id: "whatsapp",
