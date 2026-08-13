@@ -9,6 +9,7 @@ import type { ToolId } from "@/constants/tools";
  */
 export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   editor: dynamic(() => import("./live-editor/live-editor-tool").then((m) => m.LiveEditorTool)),
+  cyberlab: dynamic(() => import("./cyber-lab/cyber-lab-tool").then((m) => m.CyberLabTool)),
   whatsapp: dynamic(() => import("./whatsapp/whatsapp-tool").then((m) => m.WhatsAppTool)),
   qr: dynamic(() => import("./qr/qr-tool").then((m) => m.QrTool)),
   share: dynamic(() => import("./share/share-tool").then((m) => m.ShareTool)),

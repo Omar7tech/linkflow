@@ -33,6 +33,7 @@ import {
   SunIcon,
   WandSparklesIcon,
   ScanEyeIcon,
+  ShieldAlertIcon,
   Code2Icon,
   ShapesIcon,
   BoxSelectIcon,
@@ -86,6 +87,17 @@ export const TOOLS = [
       "emmet online",
     ],
     icon: CodeXmlIcon,
+    category: "playground",
+  },
+  {
+    id: "cyberlab",
+    slug: "/tools/cybersecurity-lab",
+    name: "Cybersecurity Visual Lab",
+    shortName: "Cyber Lab",
+    description:
+      "Learn attacks by operating safe visual simulations — type into vulnerable inputs, inspect how systems interpret data, trigger incidents, and activate the defense that stops each one.",
+    keywords: ["cybersecurity lab", "attack simulator", "sql injection visualizer", "cybersecurity education"],
+    icon: ShieldAlertIcon,
     category: "playground",
   },
   {
