@@ -63,7 +63,7 @@ export function MaterialForgeTool() {
   const [presetId, setPresetId] = React.useState(MATERIAL_PRESETS[0].id);
   const [shape, setShape] = React.useState<MaterialShape>("slab");
   const [light, setLight] = React.useState({ x: 34, y: 24 });
-  const stageRef = React.useRef<HTMLDivElement>(null);
+  const specimenRef = React.useRef<HTMLDivElement>(null);
 
   const set = <K extends keyof MaterialConfig>(key: K, value: MaterialConfig[K]) => {
     setPresetId("custom");
@@ -79,7 +79,7 @@ export function MaterialForgeTool() {
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!config.reactive) return;
-    const rect = stageRef.current?.getBoundingClientRect();
+    const rect = specimenRef.current?.getBoundingClientRect();
     if (!rect) return;
     setLight({
       x: Math.max(4, Math.min(96, ((event.clientX - rect.left) / rect.width) * 100)),
@@ -111,9 +111,6 @@ export function MaterialForgeTool() {
     ...materialStyle(config),
     "--light-x": `${light.x}%`,
     "--light-y": `${light.y}%`,
-    transform: config.reactive
-      ? `rotateX(${((50 - light.y) / 10).toFixed(2)}deg) rotateY(${((light.x - 50) / 10).toFixed(2)}deg)`
-      : "none",
   } as MaterialStyle;
 
   const commit = () => history.add(`${config.name} · ${SHAPE_LABELS[shape]}`, css);
@@ -176,7 +173,7 @@ export function MaterialForgeTool() {
                 <div className="flex flex-col gap-1">
                   <CardTitle className="text-base">Response chamber</CardTitle>
                   <CardDescription>
-                    Move across the chamber to inspect highlight, depth, and spectral response.
+                    Hover the material to inspect its highlight and spectral response.
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
@@ -212,12 +209,7 @@ export function MaterialForgeTool() {
               </div>
             </CardHeader>
             <CardContent>
-              <div
-                ref={stageRef}
-                className={styles.stage}
-                onPointerMove={handlePointerMove}
-                onPointerLeave={() => config.reactive && setLight({ x: 34, y: 24 })}
-              >
+              <div className={styles.stage}>
                 <div className={styles.readout} aria-hidden>
                   <span>R {config.roughness.toString().padStart(3, "0")}</span>
                   <span>M {config.metallic.toString().padStart(3, "0")}</span>
@@ -225,6 +217,7 @@ export function MaterialForgeTool() {
                 </div>
                 <div className={styles.specimenWrap}>
                   <div
+                    ref={specimenRef}
                     className={cn(
                       styles.specimen,
                       shape === "orb" && styles.orb,
@@ -232,6 +225,8 @@ export function MaterialForgeTool() {
                       config.animate && styles.animated
                     )}
                     style={specimenStyle}
+                    onPointerMove={handlePointerMove}
+                    onPointerLeave={() => config.reactive && setLight({ x: 34, y: 24 })}
                   >
                     {shape === "slab" && (
                       <div className={styles.materialMark}>
@@ -244,13 +239,6 @@ export function MaterialForgeTool() {
                     </div>
                   </div>
                 </div>
-                {config.reactive && (
-                  <span
-                    className={styles.lightCursor}
-                    style={{ left: `${light.x}%`, top: `${light.y}%` }}
-                    aria-hidden
-                  />
-                )}
               </div>
             </CardContent>
           </Card>
