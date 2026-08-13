@@ -28,6 +28,9 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   ),
   grid: dynamic(() => import("./grid/grid-tool").then((m) => m.GridTool)),
   glass: dynamic(() => import("./glass/glass-tool").then((m) => m.GlassTool)),
+  materialforge: dynamic(() =>
+    import("./material-forge/material-forge-tool").then((m) => m.MaterialForgeTool)
+  ),
   gradient: dynamic(() => import("./gradient/gradient-tool").then((m) => m.GradientTool)),
   palette: dynamic(() => import("./palette/palette-tool").then((m) => m.PaletteTool)),
   neumorphism: dynamic(() =>

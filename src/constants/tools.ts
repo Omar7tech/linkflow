@@ -62,6 +62,7 @@ import {
   GalleryHorizontalEndIcon,
   RocketIcon,
   PenToolIcon,
+  FlaskConicalIcon,
   type LucideIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
@@ -357,6 +358,24 @@ export const TOOLS = [
       "glassmorphism tailwind",
     ],
     icon: BlendIcon,
+    category: "css",
+  },
+  {
+    id: "materialforge",
+    slug: "/tools/material-forge",
+    name: "CSS Material Forge",
+    shortName: "Material Forge",
+    description:
+      "Invent responsive digital materials from light, roughness, refraction, metallic response, spectral film and grain. Test them under a movable studio light, mutate new specimens, and export the layered CSS recipe.",
+    keywords: [
+      "css material generator",
+      "liquid chrome css",
+      "iridescent css",
+      "interactive material design",
+      "css texture generator",
+      "holographic card css",
+    ],
+    icon: FlaskConicalIcon,
     category: "css",
   },
   {
