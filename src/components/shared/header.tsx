@@ -61,7 +61,20 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="hidden min-w-fit flex-1 justify-center md:flex">
+          <Link
+            href="/tools/qr"
+            aria-current={pathname === "/tools/qr" ? "page" : undefined}
+            className={cn(
+              "bg-primary/10 text-primary hover:bg-primary/15 inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+              pathname === "/tools/qr" && "bg-primary text-primary-foreground hover:bg-primary"
+            )}
+          >
+            QR Code
+          </Link>
+        </div>
+
+        <div className="ml-auto flex items-center gap-2 md:ml-0">
           <nav className="mr-1 hidden items-center gap-1 md:flex" aria-label="Secondary">
             {SECONDARY_LINKS.map((link) => (
               <NavItem key={link.href} link={link} active={pathname === link.href} />
