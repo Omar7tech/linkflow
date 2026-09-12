@@ -14,6 +14,7 @@ import { FreeReceipt } from "@/components/home/free-receipt";
 import { CategoryWheel } from "@/components/home/category-wheel";
 import { Hero } from "@/components/home/hero";
 import { HowItWorks } from "@/components/home/how-it-works";
+import { IconMarquee } from "@/components/home/icon-marquee";
 import { QrSpotlight } from "@/components/home/qr-spotlight";
 import { Reveal } from "@/components/home/reveal";
 import { JsonLd, faqJsonLd, webAppJsonLd } from "@/components/shared/json-ld";
@@ -181,6 +182,8 @@ export default function HomePage() {
           </Button>
         </Reveal>
       </section>
+
+      <IconMarquee />
 
       <HowItWorks />
 

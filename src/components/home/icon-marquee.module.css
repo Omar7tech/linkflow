@@ -1,0 +1,42 @@
+.viewport {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  animation: marquee 52s linear infinite;
+}
+
+.reverse {
+  animation-direction: reverse;
+}
+
+/*
+ * Each copy carries its own trailing gap, so the track is exactly two equal
+ * halves and translating by -50% lands on a seamless loop. Putting the gap on
+ * the track instead would leave a half-gap of drift every cycle.
+ */
+.group {
+  display: flex;
+  gap: 0.625rem;
+  padding-right: 0.625rem;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.viewport:hover .track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}
