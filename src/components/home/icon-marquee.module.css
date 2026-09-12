@@ -7,7 +7,7 @@
 .track {
   display: flex;
   width: max-content;
-  animation: marquee 52s linear infinite;
+  animation: marquee var(--marquee-duration, 52s) linear infinite;
 }
 
 .reverse {
@@ -38,5 +38,35 @@
 @media (prefers-reduced-motion: reduce) {
   .track {
     animation: none;
+  }
+}
+
+/* Brand row keeps its own rhythm: wider tiles, so a slower sweep reads calmer
+   next to the glyph rows above it. */
+.brandGroup {
+  display: flex;
+  gap: 0.625rem;
+  padding-right: 0.625rem;
+}
+
+/* Colour on demand. Fourteen logos at full saturation fight each other and the
+   page; desaturated at rest they read as one row, and the one under the cursor
+   comes forward. Not a recolour, so brand marks stay intact. */
+.brandMark {
+  filter: grayscale(1);
+  opacity: 0.55;
+  transition:
+    filter 250ms ease,
+    opacity 250ms ease;
+}
+
+.brandTile:hover .brandMark {
+  filter: grayscale(0);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brandMark {
+    transition: none;
   }
 }

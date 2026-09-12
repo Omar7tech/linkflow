@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import {
   ArrowRightIcon,
@@ -79,6 +80,98 @@ const ROW_TWO: readonly Glyph[] = [
   { icon: MessageCircleIcon, query: "chat" },
 ];
 
+
+/**
+ * Official marks, served by svgl (the same source the icon library itself
+ * uses), so nothing here is a redrawn or approximated logo. Brands whose mark
+ * is monochrome ship a second route for the opposite theme; the rest are
+ * legible on both grounds as they are.
+ */
+type Brand = { title: string; query: string; light: string; dark?: string };
+
+const LIB = "https://svgl.app/library";
+
+const BRANDS: readonly Brand[] = [
+  { title: "Figma", query: "figma", light: `${LIB}/figma.svg` },
+  { title: "GitHub", query: "github", light: `${LIB}/github_light.svg`, dark: `${LIB}/github_dark.svg` },
+  { title: "React", query: "react", light: `${LIB}/react_light.svg`, dark: `${LIB}/react_dark.svg` },
+  { title: "Vercel", query: "vercel", light: `${LIB}/vercel.svg`, dark: `${LIB}/vercel_dark.svg` },
+  { title: "Tailwind CSS", query: "tailwind", light: `${LIB}/tailwindcss.svg` },
+  { title: "TypeScript", query: "typescript", light: `${LIB}/typescript.svg` },
+  { title: "Node.js", query: "node", light: `${LIB}/nodejs.svg` },
+  { title: "Vite", query: "vite", light: `${LIB}/vite.svg` },
+  { title: "Supabase", query: "supabase", light: `${LIB}/supabase.svg` },
+  { title: "Stripe", query: "stripe", light: `${LIB}/stripe.svg` },
+  { title: "Slack", query: "slack", light: `${LIB}/slack.svg` },
+  { title: "Discord", query: "discord", light: `${LIB}/discord.svg` },
+  { title: "Cloudflare", query: "cloudflare", light: `${LIB}/cloudflare.svg` },
+  { title: "Framer", query: "framer", light: `${LIB}/framer.svg`, dark: `${LIB}/framer_dark.svg` },
+];
+
+/**
+ * Plain <img> on purpose: next/image refuses remote SVG unless the optimiser is
+ * opened up to it, and these are already the smallest possible payload. Fixed
+ * dimensions keep the row from shifting while they arrive.
+ */
+function Mark({ src, alt, hiddenInDark }: { src: string; alt: string; hiddenInDark?: boolean }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- remote SVG, see above
+    <img
+      src={src}
+      alt={alt}
+      width={26}
+      height={26}
+      loading="lazy"
+      decoding="async"
+      className={`${styles.brandMark} size-6.5 object-contain ${
+        hiddenInDark === true ? "dark:hidden" : hiddenInDark === false ? "hidden dark:block" : ""
+      }`}
+    />
+  );
+}
+
+function BrandTile({ brand, decorative }: { brand: Brand; decorative: boolean }) {
+  return (
+    <Link
+      href={`/icons?q=${encodeURIComponent(brand.query)}`}
+      aria-label={decorative ? undefined : `Find the ${brand.title} logo`}
+      title={brand.title}
+      aria-hidden={decorative || undefined}
+      tabIndex={decorative ? -1 : undefined}
+      className={`${styles.brandTile} border-border/60 bg-card hover:border-primary/40 grid h-13 w-20 shrink-0 place-items-center rounded-xl border transition-colors duration-200`}
+    >
+      {brand.dark ? (
+        <>
+          <Mark src={brand.light} alt={brand.title} hiddenInDark />
+          <Mark src={brand.dark} alt="" hiddenInDark={false} />
+        </>
+      ) : (
+        <Mark src={brand.light} alt={brand.title} />
+      )}
+    </Link>
+  );
+}
+
+function BrandRow() {
+  return (
+    <div className={styles.viewport}>
+      <div className={styles.track} style={{ "--marquee-duration": "68s" } as CSSProperties}>
+        {[false, true].map((decorative) => (
+          <div
+            key={String(decorative)}
+            className={styles.brandGroup}
+            aria-hidden={decorative || undefined}
+          >
+            {BRANDS.map((brand) => (
+              <BrandTile key={brand.title} brand={brand} decorative={decorative} />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Tile({ glyph, decorative }: { glyph: Glyph; decorative: boolean }) {
   const { icon: Icon, query } = glyph;
   return (
@@ -154,6 +247,19 @@ export function IconMarquee() {
         <div className="mt-8 space-y-2.5">
           <Row glyphs={ROW_ONE} />
           <Row glyphs={ROW_TWO} reverse />
+        </div>
+
+        {/* Labelled rule: says what the second half is without a heading */}
+        <div className="mt-8 flex items-center gap-4">
+          <span className="bg-border h-px flex-1" aria-hidden />
+          <span className="text-muted-foreground/70 font-mono text-[10px] tracking-[0.22em] uppercase">
+            Brand logos
+          </span>
+          <span className="bg-border h-px flex-1" aria-hidden />
+        </div>
+
+        <div className="mt-5">
+          <BrandRow />
         </div>
       </div>
     </section>
