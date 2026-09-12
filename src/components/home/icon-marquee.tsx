@@ -34,6 +34,7 @@ import {
   ZapIcon,
   type LucideIcon,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/home/reveal";
 import styles from "./icon-marquee.module.css";
 
@@ -215,8 +216,10 @@ export function IconMarquee() {
   return (
     <section className="border-border/70 border-t" aria-labelledby="icons-heading">
       <div className="mx-auto max-w-7xl px-6 py-14 sm:py-16">
-        <Reveal className="flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
-          <div>
+        <div className="grid gap-10 lg:grid-cols-12 lg:items-center lg:gap-14">
+          {/* Copy sits beside the library rather than above it: shorter section,
+              and the motion gets a frame instead of running loose full width. */}
+          <Reveal className="lg:col-span-4">
             <p className="text-muted-foreground flex items-center gap-2 font-mono text-[11px] tracking-[0.22em] uppercase">
               <span className="bg-primary inline-block size-1.5 rounded-full" aria-hidden />
               SVG Library
@@ -225,41 +228,55 @@ export function IconMarquee() {
               id="icons-heading"
               className="font-heading mt-3 text-3xl font-bold tracking-tight sm:text-4xl"
             >
-              Every icon, one search<span className="text-primary">.</span>
+              Every icon,
+              <br className="hidden lg:block" /> one search<span className="text-primary">.</span>
             </h2>
-            <p className="text-muted-foreground mt-3 max-w-md text-sm leading-relaxed">
+            <p className="text-muted-foreground mt-4 max-w-md text-sm leading-relaxed">
               Open-source icon sets and brand logos in one place. Recolor it, copy the SVG, done.
             </p>
-          </div>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="group/cta mt-6 h-11 rounded-full px-7 font-semibold"
+            >
+              <Link href="/icons">
+                Open the library
+                <ArrowRightIcon
+                  className="size-4 transition-transform group-hover/cta:translate-x-0.5"
+                  aria-hidden
+                />
+              </Link>
+            </Button>
+          </Reveal>
 
-          <Link
-            href="/icons"
-            className="group/cta text-foreground inline-flex items-center gap-2 text-sm font-medium underline-offset-4 hover:underline"
-          >
-            Open the icon library
-            <ArrowRightIcon
-              className="size-3.5 transition-transform group-hover/cta:translate-x-0.5"
-              aria-hidden
-            />
-          </Link>
-        </Reveal>
+          <Reveal delay={0.1} className="lg:col-span-8">
+            <div className="border-border/60 bg-muted/30 relative overflow-hidden rounded-2xl border p-4 sm:p-5">
+              {/* Faint plate behind the tiles, same dot grid the hero uses */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[size:16px_16px] opacity-70"
+              />
 
-        <div className="mt-8 space-y-2.5">
-          <Row glyphs={ROW_ONE} />
-          <Row glyphs={ROW_TWO} reverse />
-        </div>
+              <div className="relative space-y-2.5">
+                <Row glyphs={ROW_ONE} />
+                <Row glyphs={ROW_TWO} reverse />
+              </div>
 
-        {/* Labelled rule: says what the second half is without a heading */}
-        <div className="mt-8 flex items-center gap-4">
-          <span className="bg-border h-px flex-1" aria-hidden />
-          <span className="text-muted-foreground/70 font-mono text-[10px] tracking-[0.22em] uppercase">
-            Brand logos
-          </span>
-          <span className="bg-border h-px flex-1" aria-hidden />
-        </div>
+              {/* Labelled rule: says what the second half is without a heading */}
+              <div className="relative mt-5 flex items-center gap-4">
+                <span className="bg-border h-px flex-1" aria-hidden />
+                <span className="text-muted-foreground/70 font-mono text-[10px] tracking-[0.22em] uppercase">
+                  Brand logos
+                </span>
+                <span className="bg-border h-px flex-1" aria-hidden />
+              </div>
 
-        <div className="mt-5">
-          <BrandRow />
+              <div className="relative mt-5">
+                <BrandRow />
+              </div>
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>
