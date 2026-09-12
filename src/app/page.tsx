@@ -121,7 +121,7 @@ export default function HomePage() {
                 key={category.id}
                 data-cat
                 style={{ "--cat-h": category.hue } as CSSProperties}
-                className="group border-border/60 bg-card relative flex flex-col overflow-hidden rounded-xl border p-5 transition-colors duration-200 hover:border-[var(--cat)]/45"
+                className="group border-border/60 bg-card relative flex flex-col overflow-hidden rounded-xl border p-5 transition-colors duration-200 hover:border-[var(--cat)]/45 lg:p-6"
               >
                 <span
                   aria-hidden
@@ -129,22 +129,22 @@ export default function HomePage() {
                 />
 
                 <div className="relative flex items-center gap-2.5">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-[var(--cat)]/25 bg-[var(--cat)]/10 text-[var(--cat)]">
-                    <Icon className="size-4" aria-hidden strokeWidth={1.75} />
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-[var(--cat)]/25 bg-[var(--cat)]/10 text-[var(--cat)] lg:size-9">
+                    <Icon className="size-4 lg:size-4.5" aria-hidden strokeWidth={1.75} />
                   </span>
-                  <h3 className="font-heading text-base font-semibold tracking-tight">
+                  <h3 className="font-heading text-base font-semibold tracking-tight lg:text-lg">
                     <Link href={`/tools#cat-${category.id}`} className="after:absolute after:inset-0">
                       {category.label}
                     </Link>
                     <span className="text-[var(--cat)]">.</span>
                   </h3>
                   <ArrowRightIcon
-                    className="text-muted-foreground/40 ml-auto size-3.5 shrink-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--cat)]"
+                    className="text-muted-foreground/40 ml-auto size-3.5 shrink-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--cat)] lg:size-4"
                     aria-hidden
                   />
                 </div>
 
-                <p className="text-muted-foreground relative mt-2.5 text-[13px] leading-relaxed">
+                <p className="text-muted-foreground relative mt-2.5 text-[13px] leading-relaxed lg:text-sm">
                   {category.description}
                 </p>
 
@@ -153,7 +153,7 @@ export default function HomePage() {
                     <Link
                       key={tool.id}
                       href={tool.slug}
-                      className="border-border/60 text-muted-foreground hover:border-[var(--cat)]/50 hover:text-[var(--cat)] relative z-10 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors"
+                      className="border-border/60 text-muted-foreground hover:border-[var(--cat)]/50 hover:text-[var(--cat)] relative z-10 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors lg:px-3 lg:py-1 lg:text-xs"
                     >
                       {tool.shortName}
                     </Link>
