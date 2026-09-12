@@ -6,7 +6,6 @@ import {
   ImageIcon,
   LinkIcon,
   PaletteIcon,
-  QrCodeIcon,
   WifiIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,33 +25,37 @@ const CAPABILITIES = [
 export function QrSpotlight() {
   return (
     <section aria-labelledby="qr-spotlight-heading" className="border-border/70 border-t">
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-16 sm:py-20 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
+      <div className="mx-auto grid w-full max-w-7xl gap-14 px-6 py-20 sm:py-28 lg:grid-cols-12 lg:items-center lg:gap-x-16">
         {/* Copy */}
-        <Reveal className="order-2 lg:order-1">
-          <p className="text-emerald-700 dark:text-emerald-400 flex items-center gap-2 font-mono text-xs font-medium tracking-[0.2em] uppercase">
-            <QrCodeIcon className="size-3.5" aria-hidden />
+        <Reveal className="order-2 lg:order-1 lg:col-span-6">
+          <p className="text-muted-foreground flex items-center gap-4 font-mono text-[11px] tracking-[0.22em] uppercase">
             QR Code Generator
-          </p>
-          <h2
-            id="qr-spotlight-heading"
-            className="font-heading mt-4 text-4xl font-bold tracking-tight text-balance sm:text-5xl"
-          >
-            QR codes, crafted to match your brand
-            <span className="text-primary">.</span>
-          </h2>
-          <p className="text-muted-foreground mt-4 max-w-md text-sm leading-relaxed">
-            Style every module, finder eye and color, drop your logo in the middle, then export
-            razor-sharp SVG or PNG. Each code is static — no redirects, no expiry, scanning forever.
+            <span className="bg-border h-px flex-1" aria-hidden />
           </p>
 
-          <ul className="mt-7 flex max-w-lg flex-wrap gap-2">
+          <h2
+            id="qr-spotlight-heading"
+            className="font-heading mt-6 text-4xl leading-[1.02] font-bold tracking-tight sm:text-5xl lg:text-[3.4rem]"
+          >
+            Your logo. Your colors.
+            <br />
+            Still scans<span className="text-primary">.</span>
+          </h2>
+
+          <p className="text-muted-foreground mt-6 max-w-lg text-base leading-relaxed">
+            Shape the modules, recolor the finder eyes, drop a logo through the middle, then export
+            SVG or PNG at whatever size the print shop asks for. Every code is static — the data
+            lives in the pattern itself, so nothing expires and nothing redirects.
+          </p>
+
+          <ul className="mt-10 grid max-w-lg gap-x-10 sm:grid-cols-2">
             {CAPABILITIES.map(({ icon: Icon, label }) => (
               <li
                 key={label}
-                className="border-border/60 bg-card/50 flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium"
+                className="border-border/60 flex items-center gap-3 border-t py-3 font-mono text-[11px] tracking-[0.14em] uppercase"
               >
                 <Icon
-                  className="size-3.5 text-emerald-600 dark:text-emerald-400"
+                  className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
                   aria-hidden
                   strokeWidth={1.75}
                 />
@@ -61,10 +64,10 @@ export function QrSpotlight() {
             ))}
           </ul>
 
-          <div className="mt-8 flex flex-wrap items-center gap-5">
+          <div className="mt-10 flex flex-wrap items-center gap-6">
             <Button asChild size="lg" className="group h-12 rounded-full px-8 text-base font-semibold">
               <Link href="/tools/qr">
-                Open the QR generator
+                Open the generator
                 <ArrowRightIcon
                   className="size-4 transition-transform group-hover:translate-x-0.5"
                   aria-hidden
@@ -80,8 +83,11 @@ export function QrSpotlight() {
           </div>
         </Reveal>
 
-        {/* Flagship 3D QR visual */}
-        <Reveal delay={0.1} className="order-1 flex justify-center lg:order-2 lg:justify-end">
+        {/* Flagship QR visual */}
+        <Reveal
+          delay={0.1}
+          className="order-1 flex justify-center lg:order-2 lg:col-span-5 lg:col-start-8 lg:justify-end"
+        >
           <QrShowcase />
         </Reveal>
       </div>
