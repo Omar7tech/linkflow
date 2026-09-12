@@ -43,9 +43,13 @@ const INKS: readonly Ink[] = [
 
 const DEBOUNCE_MS = 180;
 
-/** 3x3 miniature of the module shape — shows the option instead of naming it. */
+/**
+ * 3×3 miniature of the module shape — shows the option instead of naming it.
+ * Cells are 2 units on a 2.5 step, so the 7×7 viewBox holds the full grid with
+ * a hairline gutter between modules and nothing clipped at the edges.
+ */
 function ShapeGlyph({ shape }: { shape: QrModuleStyle }) {
-  const rx = shape === "dots" ? 1 : shape === "rounded" ? 0.6 : 0;
+  const rx = shape === "dots" ? 1 : shape === "rounded" ? 0.65 : 0;
   const cells = [
     [0, 0],
     [2, 0],
@@ -54,12 +58,12 @@ function ShapeGlyph({ shape }: { shape: QrModuleStyle }) {
     [2, 2],
   ];
   return (
-    <svg viewBox="0 0 5 5" className="size-4" aria-hidden>
+    <svg viewBox="0 0 7 7" className="size-4.5 overflow-visible" aria-hidden>
       {cells.map(([x, y]) => (
         <rect
           key={`${x}-${y}`}
-          x={x * 2}
-          y={y * 2}
+          x={x * 2.5}
+          y={y * 2.5}
           width={2}
           height={2}
           rx={rx}
