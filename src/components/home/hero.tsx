@@ -5,8 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LinkLoadingIndicator } from "@/components/shared/link-indicator";
 import SideRays from "./side-rays";
 
 gsap.registerPlugin(useGSAP);
@@ -116,17 +116,20 @@ export function Hero() {
             <br />
             and designers.
           </p>
-          <div className="flex flex-wrap items-center gap-6 sm:col-span-5 sm:justify-end">
-            <Button asChild size="lg" className="h-11 rounded-full px-7 font-semibold">
-              <Link href="/tools">Browse all tools</Link>
-            </Button>
-            <Link
-              href="/tools/whatsapp"
-              className="text-foreground inline-flex items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline"
+          <div className="flex items-center sm:col-span-5 sm:justify-end">
+            <Button
+              asChild
+              size="lg"
+              className="group shadow-primary/25 hover:shadow-primary/35 h-14 w-full rounded-full px-9 text-base font-semibold shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 sm:w-auto"
             >
-              WhatsApp
-              <LinkLoadingIndicator />
-            </Link>
+              <Link href="/tools">
+                Browse all tools
+                <ArrowRightIcon
+                  className="size-4.5 transition-transform duration-200 group-hover:translate-x-1"
+                  aria-hidden
+                />
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
