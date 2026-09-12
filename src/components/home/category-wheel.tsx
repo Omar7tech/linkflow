@@ -31,6 +31,34 @@ const PICKS_BY_CATEGORY = Object.fromEntries(
   ])
 );
 
+/** One piece of the mosaic. Dims when a sibling row is the one being hovered. */
+function Tile({
+  tool,
+  dim,
+  className,
+}: {
+  tool: (typeof TOOLS)[number];
+  dim: boolean;
+  className: string;
+}) {
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      {/* Accent plate behind the shot, so no piece is blank while its banner
+          is still loading. */}
+      <span aria-hidden className="absolute inset-0 bg-[var(--cat-active)] opacity-[0.07]" />
+      <Image
+        src={shotFor(tool.slug)}
+        alt={`${tool.name} preview`}
+        fill
+        sizes="(max-width: 1024px) 0px, 280px"
+        className={`object-cover transition-all duration-300 ease-out ${
+          dim ? "scale-100 opacity-35" : "scale-[1.02] opacity-100"
+        }`}
+      />
+    </div>
+  );
+}
+
 /**
  * Desktop-only category browser: the ten categories ride a wheel that curves
  * around the left edge, and the panel on the right redraws in the selected
@@ -40,19 +68,16 @@ const PICKS_BY_CATEGORY = Object.fromEntries(
  */
 export function CategoryWheel() {
   const [index, setIndex] = useState(0);
-  const [hovered, setHovered] = useState(0);
+  const [hovered, setHovered] = useState<number | null>(null);
 
   const category = TOOL_CATEGORIES[index];
   const accent = accentFor(category.id);
   const picks = PICKS_BY_CATEGORY[category.id];
   const Icon = category.icon;
-  // The row under the cursor drives the preview; the first pick is the resting
-  // state, so the panel is never empty.
-  const preview = picks[Math.min(hovered, picks.length - 1)];
 
   const selectCategory = (i: number) => {
     setIndex(i);
-    setHovered(0);
+    setHovered(null);
   };
 
   return (
@@ -93,38 +118,42 @@ export function CategoryWheel() {
       {/* Result. Keyed on the category so the whole panel remounts and the
           cascade replays on every change. No divider: the gap does that job. */}
       <div key={category.id} className="max-w-md">
-        {/* Preview of whichever tool the cursor is on */}
+        {/* One frame, every tool inside it. Flex rather than fixed grid spans
+            so a category with three tools composes as cleanly as one with
+            four. Hairline seams keep it reading as a single plate. */}
         <div
-          className={`${styles.item} border-border/60 relative aspect-[2/1] overflow-hidden rounded-xl border`}
+          className={`${styles.item} border-border/60 bg-border/70 relative flex aspect-[2/1] gap-px overflow-hidden rounded-xl border`}
           style={{ animationDelay: "0ms" }}
         >
-          {/* Accent plate behind the shot, so the frame is never blank while
-              a banner is still loading. */}
-          <span
-            aria-hidden
-            className="absolute inset-0 bg-[var(--cat-active)] opacity-[0.07]"
-          />
-          <Image
-            key={preview.id}
-            src={shotFor(preview.slug)}
-            alt={`${preview.name} preview`}
-            fill
-            sizes="(max-width: 1024px) 0px, 420px"
-            className={`${styles.shot} object-cover`}
-          />
+          <Tile tool={picks[0]} dim={hovered !== null && hovered !== 0} className="flex-[1.7]" />
+          <div className="flex flex-1 flex-col gap-px">
+            {picks.slice(1).map((tool, j) => (
+              <Tile
+                key={tool.id}
+                tool={tool}
+                dim={hovered !== null && hovered !== j + 1}
+                className="flex-1"
+              />
+            ))}
+          </div>
         </div>
 
         <div className={styles.item} style={{ animationDelay: "60ms" }}>
-          <div className="mt-5 flex items-center gap-3">
-            <Icon className="size-4 shrink-0 text-[var(--cat-active)]" aria-hidden strokeWidth={2} />
+          <div className="mt-5 flex items-start gap-3">
+            <Icon
+              className="mt-0.5 size-4 shrink-0 text-[var(--cat-active)]"
+              aria-hidden
+              strokeWidth={2}
+            />
             <p className="text-muted-foreground text-[13px] leading-relaxed">
               {category.description}
             </p>
           </div>
         </div>
 
-        {/* The tools themselves, as rows you can jump straight into. */}
-        <ul className="mt-6">
+        {/* The tools themselves, as rows you can jump straight into. Hovering
+            a row lights its piece of the mosaic above. */}
+        <ul className="mt-6" onMouseLeave={() => setHovered(null)}>
           {picks.map((tool, j) => (
             <li
               key={tool.id}
