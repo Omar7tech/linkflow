@@ -5,10 +5,13 @@ import { useRef, useState, useCallback, useEffect, type CSSProperties } from "re
 /**
  * OptionWheel from React Bits (reactbits.dev), adapted for this project.
  *
- * Local change: the wheel handler releases the page scroll once the selection
- * is parked at either end (see `onWheel`). Upstream swallows every wheel event,
- * which traps the page as soon as the cursor crosses the component — fatal for
- * something sitting mid-page rather than in a dedicated viewport.
+ * Local change: `onWheel` gives the page its scroll back instead of swallowing
+ * every event, which upstream does. That traps the page the moment the cursor
+ * crosses the component, which is fine in a dedicated viewport but not for
+ * something sitting mid-page. Two release rules, see the handler:
+ *   - not looping: release once parked at the end being pushed toward;
+ *   - looping: release after one full revolution in a single gesture, with the
+ *     budget refilling after a short pause.
  */
 
 type Side = "left" | "right";
@@ -92,6 +95,7 @@ const OptionWheel = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef("");
   const lastTickRef = useRef(0);
+  const gestureRef = useRef({ used: 0, at: 0 });
   const [selectedIndex, setSelectedIndex] = useState(defaultSelected);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -226,10 +230,19 @@ const OptionWheel = ({
     const onWheel = (e: WheelEvent) => {
       const cfg = cfgRef.current;
       const delta = e.deltaMode === 1 ? e.deltaY * 24 : e.deltaY;
+      const now = performance.now();
 
-      // Hand the gesture back to the page once the wheel is parked at the end
-      // it is being pushed toward, so the section never traps the scroll.
-      if (!cfg.loop) {
+      // A pause ends the gesture and refills the budget below.
+      const gesture = gestureRef.current;
+      if (now - gesture.at > 320) gesture.used = 0;
+      gesture.at = now;
+
+      if (cfg.loop) {
+        // A looping wheel has no end to park against, so cap one continuous
+        // gesture at a single revolution: scroll over it and you see every
+        // option once, then the page carries on. Pause to spin again.
+        if (gesture.used >= cfg.count) return;
+      } else {
         const at = targetRef.current;
         if ((delta < 0 && at <= 0.001) || (delta > 0 && at >= cfg.count - 1.001)) return;
       }
@@ -238,6 +251,7 @@ const OptionWheel = ({
       // Cap each event at one step so notchy mouse wheels move exactly one
       // option per click, while touchpads still scroll continuously.
       const step = Math.max(-1, Math.min(1, delta / cfg.rowH));
+      gesture.used += Math.abs(step);
       applyTarget(targetRef.current + step, false);
       if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
       wheelTimerRef.current = setTimeout(() => applyTarget(targetRef.current, true), 140);

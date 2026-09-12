@@ -70,8 +70,10 @@ export function CategoryWheel() {
           // screen swing at most ~56px left of centre. The inset keeps that
           // swing inside the box instead of clipping it against the edge.
           inset={72}
-          loop={false}
+          loop
           draggable
+          soundUrl="/sounds/wheel-tick.wav"
+          soundVolume={0.35}
         />
       </div>
 
