@@ -120,12 +120,12 @@ export function Hero() {
             <Button
               asChild
               size="lg"
-              className="group shadow-primary/25 hover:shadow-primary/35 h-14 w-full rounded-full px-9 text-base font-semibold shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 sm:w-auto"
+              className="group h-12 w-full rounded-full px-8 text-base font-semibold sm:w-auto"
             >
               <Link href="/tools">
                 Browse all tools
                 <ArrowRightIcon
-                  className="size-4.5 transition-transform duration-200 group-hover:translate-x-1"
+                  className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"
                   aria-hidden
                 />
               </Link>
