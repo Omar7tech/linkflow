@@ -54,7 +54,7 @@ export function QrArtboard({ value, options, label }: QrArtboardProps) {
   }, [value, optionsKey]);
 
   return (
-    <figure className="w-full max-w-md">
+    <figure className="w-full max-w-[15rem] sm:max-w-xs lg:max-w-sm">
       {/* A white plate in both themes: real codes are printed dark-on-light,
           and an inverted code is unreliable on a fair share of scanners. */}
       <div className="relative">
@@ -78,15 +78,15 @@ export function QrArtboard({ value, options, label }: QrArtboardProps) {
         </div>
       </div>
 
-      <figcaption className="text-muted-foreground/80 mt-4 flex items-center justify-between gap-4 font-mono text-[11px] tracking-[0.16em] uppercase tabular-nums">
+      <figcaption className="text-muted-foreground/80 mt-3 flex items-center justify-between gap-3 font-mono text-[10px] tracking-[0.14em] uppercase tabular-nums sm:text-[11px]">
         {failed ? (
           <span className="text-destructive normal-case">Too much data for one code</span>
         ) : (
           <span>
-            {modules ? `${modules} × ${modules} modules` : "Rendering"} · ECC {options.errorLevel}
+            {modules ? `${modules} × ${modules}` : "···"} · ECC {options.errorLevel}
           </span>
         )}
-        <span className="shrink-0">Scan to test</span>
+        <span className="shrink-0">Scan it</span>
       </figcaption>
     </figure>
   );

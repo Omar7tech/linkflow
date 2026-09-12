@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Reveal } from "@/components/home/reveal";
@@ -54,7 +54,7 @@ function ShapeGlyph({ shape }: { shape: QrModuleStyle }) {
     [2, 2],
   ];
   return (
-    <svg viewBox="0 0 5 5" className="size-4.5" aria-hidden>
+    <svg viewBox="0 0 5 5" className="size-4" aria-hidden>
       {cells.map(([x, y]) => (
         <rect
           key={`${x}-${y}`}
@@ -70,16 +70,24 @@ function ShapeGlyph({ shape }: { shape: QrModuleStyle }) {
   );
 }
 
+const SWATCH_BASE =
+  "focus-visible:ring-ring/50 flex size-11 cursor-pointer items-center justify-center rounded-lg border transition-colors duration-200 focus-visible:ring-3 focus-visible:outline-none";
+
 /**
  * Flagship section: a working QR generator rather than a picture of one.
  * Whatever is typed here renders as a real scannable code and carries over to
  * the full tool through the query string.
+ *
+ * Source order is copy → code → controls, which is the right reading order on a
+ * phone and keeps the code above the keyboard while typing. On large screens
+ * explicit grid placement pulls the code into its own column.
  */
 export function QrSpotlight() {
   const [draft, setDraft] = React.useState("");
   const [value, setValue] = React.useState("");
   const [shapeId, setShapeId] = React.useState<QrModuleStyle>("rounded");
   const [inkId, setInkId] = React.useState("emerald");
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   // Keep typing latency off the render path; the code catches up a beat later.
   React.useEffect(() => {
@@ -111,9 +119,9 @@ export function QrSpotlight() {
 
   return (
     <section aria-labelledby="qr-spotlight-heading" className="border-border/70 border-t">
-      <div className="mx-auto grid w-full max-w-7xl gap-14 px-6 py-20 sm:py-28 lg:grid-cols-12 lg:gap-x-16">
-        {/* Copy + controls */}
-        <Reveal className="order-2 lg:order-1 lg:col-span-5">
+      <div className="mx-auto grid w-full max-w-7xl gap-y-8 px-6 py-14 sm:py-20 lg:grid-cols-12 lg:gap-x-14">
+        {/* Copy */}
+        <Reveal className="lg:col-span-5 lg:row-start-1 lg:self-end">
           <p className="text-muted-foreground flex items-center gap-4 font-mono text-[11px] tracking-[0.22em] uppercase">
             QR Code Generator
             <span className="bg-border h-px flex-1" aria-hidden />
@@ -121,51 +129,74 @@ export function QrSpotlight() {
 
           <h2
             id="qr-spotlight-heading"
-            className="font-heading mt-6 text-4xl leading-[1.03] font-bold tracking-tight sm:text-5xl"
+            className="font-heading mt-5 text-[2rem] leading-[1.05] font-bold tracking-tight sm:text-4xl lg:text-[2.75rem]"
           >
             Type a link.
             <br />
             Style the square<span className="text-primary">.</span>
           </h2>
 
-          <p className="text-muted-foreground mt-5 max-w-[54ch] leading-relaxed">
-            The code beside this is real and scannable, not a mockup. Pick a shape and a fill, then
-            carry it into the full generator for logos, WiFi and vCard payloads.
+          <p className="text-muted-foreground mt-4 max-w-[48ch] text-sm leading-relaxed sm:text-base">
+            Real and scannable, generated right here. Pick a shape and a fill, then take it into the
+            full generator for logos, WiFi and vCards.
           </p>
+        </Reveal>
 
-          {/* Live input */}
-          <div className="mt-9">
-            <label
-              htmlFor="qr-spotlight-input"
-              className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase"
-            >
-              Link or text
-            </label>
+        {/* Live code */}
+        <Reveal
+          delay={0.05}
+          className="flex justify-center lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1 lg:justify-end lg:self-center"
+        >
+          <QrArtboard value={payload} options={options} label={payload} />
+        </Reveal>
+
+        {/* Controls */}
+        <Reveal delay={0.1} className="lg:col-span-5 lg:row-start-2 lg:self-start">
+          <label
+            htmlFor="qr-spotlight-input"
+            className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase"
+          >
+            Link or text
+          </label>
+          <div className="relative mt-2">
             <Input
               id="qr-spotlight-input"
+              ref={inputRef}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               inputMode="url"
               autoComplete="url"
+              autoCapitalize="none"
+              enterKeyHint="done"
               spellCheck={false}
               placeholder={SITE.url}
               aria-describedby="qr-spotlight-hint"
-              className="mt-2 h-12 rounded-xl px-4 md:text-base"
+              className="h-12 rounded-xl px-4 pr-12 md:text-base"
             />
-            <p id="qr-spotlight-hint" className="text-muted-foreground/80 mt-2 text-xs">
-              {usingFallback
-                ? "Empty, so it encodes this site — start typing to replace it."
-                : "Encoded exactly as written, character for character."}
-            </p>
+            {draft.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDraft("");
+                  inputRef.current?.focus();
+                }}
+                aria-label="Clear the field"
+                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 absolute inset-y-0 right-0 flex w-12 cursor-pointer items-center justify-center rounded-r-xl transition-colors focus-visible:ring-3 focus-visible:outline-none"
+              >
+                <XIcon className="size-4" aria-hidden />
+              </button>
+            )}
           </div>
+          <p id="qr-spotlight-hint" className="text-muted-foreground/80 mt-2 text-xs">
+            {usingFallback ? "Encoding this site until you type." : "Encoded exactly as written."}
+          </p>
 
-          {/* Real style controls */}
-          <div className="mt-7 flex flex-wrap items-end gap-x-10 gap-y-5">
+          <div className="mt-5 flex flex-wrap items-end gap-x-6 gap-y-4">
             <fieldset>
               <legend className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase">
                 Shape
               </legend>
-              <div className="mt-2 flex gap-1.5" role="radiogroup" aria-label="Module shape">
+              <div className="mt-1.5 flex gap-1.5" role="radiogroup" aria-label="Module shape">
                 {SHAPES.map((s) => {
                   const on = s.id === shapeId;
                   return (
@@ -177,7 +208,7 @@ export function QrSpotlight() {
                       aria-label={s.label}
                       title={s.label}
                       onClick={() => setShapeId(s.id)}
-                      className={`focus-visible:ring-ring/50 flex size-11 cursor-pointer items-center justify-center rounded-lg border transition-colors duration-200 focus-visible:ring-3 focus-visible:outline-none ${
+                      className={`${SWATCH_BASE} ${
                         on
                           ? "border-primary/60 bg-primary/10 text-primary"
                           : "border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground"
@@ -194,7 +225,7 @@ export function QrSpotlight() {
               <legend className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase">
                 Fill
               </legend>
-              <div className="mt-2 flex gap-1.5" role="radiogroup" aria-label="Module fill">
+              <div className="mt-1.5 flex gap-1.5" role="radiogroup" aria-label="Module fill">
                 {INKS.map((i) => {
                   const on = i.id === inkId;
                   return (
@@ -206,13 +237,13 @@ export function QrSpotlight() {
                       aria-label={i.label}
                       title={i.label}
                       onClick={() => setInkId(i.id)}
-                      className={`focus-visible:ring-ring/50 flex size-11 cursor-pointer items-center justify-center rounded-lg border transition-colors duration-200 focus-visible:ring-3 focus-visible:outline-none ${
+                      className={`${SWATCH_BASE} ${
                         on
                           ? "border-primary/60 bg-primary/10"
                           : "border-border hover:border-foreground/30"
                       }`}
                     >
-                      <span className={`size-4.5 rounded-full ${i.swatch}`} aria-hidden />
+                      <span className={`size-4 rounded-full ${i.swatch}`} aria-hidden />
                     </button>
                   );
                 })}
@@ -223,7 +254,7 @@ export function QrSpotlight() {
           <Button
             asChild
             size="lg"
-            className="group mt-9 h-12 rounded-full px-8 text-base font-semibold"
+            className="group mt-6 h-12 w-full rounded-full px-8 font-semibold sm:w-auto"
           >
             <Link href={href}>
               Open in the generator
@@ -233,14 +264,6 @@ export function QrSpotlight() {
               />
             </Link>
           </Button>
-        </Reveal>
-
-        {/* Live code */}
-        <Reveal
-          delay={0.1}
-          className="order-1 flex justify-center lg:order-2 lg:col-span-6 lg:col-start-7 lg:justify-end lg:self-center"
-        >
-          <QrArtboard value={payload} options={options} label={payload} />
         </Reveal>
       </div>
     </section>
