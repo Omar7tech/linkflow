@@ -1152,16 +1152,9 @@ export const TOOL_CATEGORIES: readonly {
   label: string;
   icon: LucideIcon;
   description: string;
-  /**
-   * OKLCH hue for the category accent. Lightness and chroma are fixed in
-   * globals.css, so the ten categories read as one calibrated set instead of a
-   * rainbow, and each still stays legible in both themes.
-   */
-  hue: number;
 }[] = [
   {
     id: "studio",
-    hue: 300,
     label: "Design Studio",
     icon: WandSparklesIcon,
     description:
@@ -1169,63 +1162,54 @@ export const TOOL_CATEGORIES: readonly {
   },
   {
     id: "links",
-    hue: 160,
     label: "Links & QR",
     icon: LinkIcon,
     description: "Click-to-chat links, QR codes, share buttons, contact cards and campaign URLs.",
   },
   {
     id: "image",
-    hue: 240,
     label: "Image Lab",
     icon: ImageIcon,
     description: "Remove backgrounds, upscale, split and stylize. Retouch any picture in place.",
   },
   {
     id: "color",
-    hue: 30,
     label: "Color",
     icon: PaletteIcon,
     description: "Palettes, Pantone matching, image color extraction and accessible contrast.",
   },
   {
     id: "backgrounds",
-    hue: 190,
     label: "Backgrounds & Shapes",
     icon: ShapesIcon,
     description: "Gradients, meshes, seamless patterns, blobs and custom clip shapes.",
   },
   {
     id: "css",
-    hue: 270,
     label: "CSS Effects",
     icon: PaintbrushIcon,
     description: "Glass, shadows, glows, grids and 3D tilts, tuned live and exported as clean CSS.",
   },
   {
     id: "type",
-    hue: 75,
     label: "Type & Text",
     icon: TypeIcon,
     description: "Type scales, fluid sizing, placeholder text and reading-time stats.",
   },
   {
     id: "brandlab",
-    hue: 335,
     label: "Brand Lab",
     icon: FingerprintIcon,
     description: "Extract, define and stress-test a visual identity, from any site or your own.",
   },
   {
     id: "utilities",
-    hue: 212,
     label: "Utilities",
     icon: Code2Icon,
     description: "Passwords, hashes, data converters and a professional invoice maker.",
   },
   {
     id: "playground",
-    hue: 130,
     label: "Playground",
     icon: VenetianMaskIcon,
     description:

@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { Fragment } from "react";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import {
@@ -17,6 +17,7 @@ import { JsonLd, faqJsonLd, webAppJsonLd } from "@/components/shared/json-ld";
 import { FAQ_ITEMS } from "@/constants/faq";
 import { SITE } from "@/constants/site";
 import { TOOLS, TOOL_CATEGORIES } from "@/constants/tools";
+import { accentFor } from "@/lib/tool-accent";
 
 const HOME_FAQ = FAQ_ITEMS.slice(0, 5);
 
@@ -102,9 +103,13 @@ export default function HomePage() {
             </p>
           </Reveal>
         </div>
-        <Reveal stagger className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+        {/* Display-scale rows rather than a grid of boxes: the category name is
+            the object, everything else hangs off it. Colour comes from the same
+            CATEGORY_ACCENT map the /tools pages use. */}
+        <Reveal stagger className="border-border/60 flex flex-col border-b">
           {TOOL_CATEGORIES.map((category) => {
             const Icon = category.icon;
+            const accent = accentFor(category.id);
             const featured = ["mockup", "logo3d", "codeshot", "invoice", "qr", "bgremover"];
             const picks = TOOLS.filter((t) => t.category === category.id)
               .slice()
@@ -115,49 +120,63 @@ export default function HomePage() {
               })
               .slice(0, 4);
             return (
-              /* --cat-h drives every accent on the card; the lightness and
-                 chroma around it live in globals.css. */
               <div
                 key={category.id}
-                data-cat
-                style={{ "--cat-h": category.hue } as CSSProperties}
-                className="group border-border/60 bg-card relative flex flex-col overflow-hidden rounded-xl border p-5 transition-colors duration-200 hover:border-[var(--cat)]/45 lg:p-6"
+                className="group border-border/60 relative isolate border-t py-6 lg:py-7"
               >
+                {/* Wash bleeds past the container so the whole band lights up. */}
                 <span
                   aria-hidden
-                  className="cat-wash pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  className={`pointer-events-none absolute inset-y-0 -inset-x-6 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${accent.tint}`}
                 />
 
-                <div className="relative flex items-center gap-2.5">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-[var(--cat)]/25 bg-[var(--cat)]/10 text-[var(--cat)] lg:size-9">
-                    <Icon className="size-4 lg:size-4.5" aria-hidden strokeWidth={1.75} />
-                  </span>
-                  <h3 className="font-heading text-base font-semibold tracking-tight lg:text-lg">
-                    <Link href={`/tools#cat-${category.id}`} className="after:absolute after:inset-0">
-                      {category.label}
-                    </Link>
-                    <span className="text-[var(--cat)]">.</span>
-                  </h3>
-                  <ArrowRightIcon
-                    className="text-muted-foreground/40 ml-auto size-3.5 shrink-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--cat)] lg:size-4"
-                    aria-hidden
-                  />
-                </div>
+                <div className="flex flex-col gap-x-10 gap-y-4 lg:flex-row lg:items-center">
+                  <div className="lg:w-[42%] lg:shrink-0">
+                    <div className="flex items-center gap-3">
+                      <span
+                        aria-hidden
+                        className={`h-2.5 w-2.5 shrink-0 rounded-full ${accent.rule}`}
+                      />
+                      <h3 className="font-heading text-3xl leading-[1.05] font-bold tracking-tight sm:text-4xl lg:text-[2.75rem]">
+                        <Link
+                          href={`/tools#cat-${category.id}`}
+                          className="after:absolute after:inset-0"
+                        >
+                          {category.label}
+                        </Link>
+                        <span className={accent.text}>.</span>
+                      </h3>
+                    </div>
+                  </div>
 
-                <p className="text-muted-foreground relative mt-2.5 text-[13px] leading-relaxed lg:text-sm">
-                  {category.description}
-                </p>
+                  <p className="text-muted-foreground max-w-md text-[13px] leading-relaxed lg:flex-1 lg:text-sm">
+                    {category.description}
+                  </p>
 
-                <div className="relative mt-auto flex flex-wrap gap-1.5 pt-4">
-                  {picks.map((tool) => (
-                    <Link
-                      key={tool.id}
-                      href={tool.slug}
-                      className="border-border/60 text-muted-foreground hover:border-[var(--cat)]/50 hover:text-[var(--cat)] relative z-10 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors lg:px-3 lg:py-1 lg:text-xs"
-                    >
-                      {tool.shortName}
-                    </Link>
-                  ))}
+                  <div className="flex items-center gap-4 lg:shrink-0">
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 font-mono text-[11px] tracking-[0.08em]">
+                      {picks.map((tool, j) => (
+                        <Fragment key={tool.id}>
+                          {j > 0 && (
+                            <span className="text-border" aria-hidden>
+                              /
+                            </span>
+                          )}
+                          <Link
+                            href={tool.slug}
+                            className={`text-muted-foreground relative z-10 transition-colors ${accent.linkHover}`}
+                          >
+                            {tool.shortName}
+                          </Link>
+                        </Fragment>
+                      ))}
+                    </div>
+                    <Icon
+                      className={`hidden size-5 shrink-0 transition-all duration-300 group-hover:translate-x-1 lg:block ${accent.text}`}
+                      aria-hidden
+                      strokeWidth={1.5}
+                    />
+                  </div>
                 </div>
               </div>
             );
