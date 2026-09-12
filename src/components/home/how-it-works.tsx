@@ -222,7 +222,6 @@ export function HowItWorks() {
       aria-labelledby="how-heading"
     >
       <span aria-hidden className={`${styles.texture} pointer-events-none absolute inset-0 -z-10`} />
-      <span aria-hidden className={`${styles.wash} pointer-events-none absolute inset-0 -z-10`} />
 
       <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
         <Reveal>
