@@ -239,3 +239,23 @@
     0 0 24px var(--glow),
     0 0 64px var(--glow);
 }
+
+/* Category accents. Each category supplies only a hue (--cat-h); lightness and
+   chroma are fixed here so the ten colors read as one calibrated set and every
+   one of them clears contrast in both themes. */
+[data-cat] {
+  --cat: oklch(0.55 0.14 var(--cat-h));
+}
+
+.dark [data-cat] {
+  --cat: oklch(0.8 0.15 var(--cat-h));
+}
+
+/* Corner wash that fades in behind a category card on hover. */
+@utility cat-wash {
+  background-image: radial-gradient(
+    100% 90% at 100% 0%,
+    color-mix(in oklab, var(--cat) 16%, transparent),
+    transparent 62%
+  );
+}

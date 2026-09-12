@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import {
@@ -91,8 +92,8 @@ export default function HomePage() {
       <FavoritesSection />
 
       {/* Tools — browse by craft */}
-      <section className="mx-auto w-full max-w-7xl px-4 py-24" aria-labelledby="tools-heading">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
+      <section className="mx-auto w-full max-w-7xl px-6 py-16 sm:py-20" aria-labelledby="tools-heading">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-6">
           <SectionHeader label="The toolkit" title="Find it by craft" id="tools-heading" />
           <Reveal>
             <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">
@@ -101,7 +102,7 @@ export default function HomePage() {
             </p>
           </Reveal>
         </div>
-        <Reveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Reveal stagger className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {TOOL_CATEGORIES.map((category) => {
             const Icon = category.icon;
             const featured = ["mockup", "logo3d", "codeshot", "invoice", "qr", "bgremover"];
@@ -114,42 +115,55 @@ export default function HomePage() {
               })
               .slice(0, 4);
             return (
+              /* --cat-h drives every accent on the card; the lightness and
+                 chroma around it live in globals.css. */
               <div
                 key={category.id}
-                className="group border-border/60 bg-card hover:border-primary/40 relative flex flex-col rounded-2xl border p-6 transition-colors"
+                data-cat
+                style={{ "--cat-h": category.hue } as CSSProperties}
+                className="group border-border/60 bg-card relative flex flex-col overflow-hidden rounded-xl border p-5 transition-colors duration-200 hover:border-[var(--cat)]/45"
               >
-                <div className="flex items-center gap-3">
-                  <span className="border-border bg-background flex size-9 shrink-0 items-center justify-center rounded-lg border transition-colors group-hover:border-emerald-500/40">
-                    <Icon className="size-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                <span
+                  aria-hidden
+                  className="cat-wash pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                />
+
+                <div className="relative flex items-center gap-2.5">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-[var(--cat)]/25 bg-[var(--cat)]/10 text-[var(--cat)]">
+                    <Icon className="size-4" aria-hidden strokeWidth={1.75} />
                   </span>
-                  <h3 className="font-heading text-lg font-semibold tracking-tight">
+                  <h3 className="font-heading text-base font-semibold tracking-tight">
                     <Link href={`/tools#cat-${category.id}`} className="after:absolute after:inset-0">
                       {category.label}
                     </Link>
+                    <span className="text-[var(--cat)]">.</span>
                   </h3>
+                  <ArrowRightIcon
+                    className="text-muted-foreground/40 ml-auto size-3.5 shrink-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--cat)]"
+                    aria-hidden
+                  />
                 </div>
-                <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
+
+                <p className="text-muted-foreground relative mt-2.5 text-[13px] leading-relaxed">
                   {category.description}
                 </p>
-                <div className="mt-4 flex flex-wrap gap-1.5 pt-1">
+
+                <div className="relative mt-auto flex flex-wrap gap-1.5 pt-4">
                   {picks.map((tool) => (
                     <Link
                       key={tool.id}
                       href={tool.slug}
-                      className="border-border/60 text-muted-foreground hover:border-emerald-500/50 hover:text-foreground relative z-10 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
+                      className="border-border/60 text-muted-foreground hover:border-[var(--cat)]/50 hover:text-[var(--cat)] relative z-10 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors"
                     >
                       {tool.shortName}
                     </Link>
                   ))}
                 </div>
-                <span className="text-muted-foreground/50 group-hover:text-primary mt-auto flex items-center gap-1 pt-4 text-xs font-medium transition-colors">
-                  Explore <ArrowRightIcon className="size-3" aria-hidden />
-                </span>
               </div>
             );
           })}
         </Reveal>
-        <Reveal className="mt-12 flex justify-center">
+        <Reveal className="mt-10 flex justify-center">
           <Button asChild size="lg" variant="outline" className="h-11 rounded-full px-7 font-semibold">
             <Link href="/tools">
               Show all tools
@@ -161,7 +175,7 @@ export default function HomePage() {
 
       {/* How it works — editorial numbered rows */}
       <section className="border-border/70 border-t" aria-labelledby="how-heading">
-        <div className="mx-auto max-w-7xl px-4 py-24">
+        <div className="mx-auto max-w-7xl px-6 py-24">
           <SectionHeader
             label="How it works"
             title="From input to output in seconds"
@@ -189,7 +203,7 @@ export default function HomePage() {
 
       {/* Principles — cards */}
       <section className="border-border/70 border-t" aria-labelledby="principles-heading">
-        <div className="mx-auto max-w-7xl px-4 py-24">
+        <div className="mx-auto max-w-7xl px-6 py-24">
           <SectionHeader
             label="Why Forma"
             title="Private by design, not by promise"
@@ -215,7 +229,7 @@ export default function HomePage() {
 
       {/* FAQ */}
       <section className="border-border/70 border-t" aria-labelledby="faq-heading">
-        <div className="mx-auto max-w-7xl gap-12 px-4 py-24 lg:grid lg:grid-cols-[1fr_1.6fr]">
+        <div className="mx-auto max-w-7xl gap-12 px-6 py-24 lg:grid lg:grid-cols-[1fr_1.6fr]">
           <SectionHeader
             label="FAQ"
             title="Good questions, honest answers"
@@ -249,7 +263,7 @@ export default function HomePage() {
 
       {/* CTA — Swiss closing statement */}
       <section className="border-border/70 border-t">
-        <Reveal className="mx-auto grid max-w-7xl gap-10 px-4 py-28 sm:grid-cols-12 sm:items-end">
+        <Reveal className="mx-auto grid max-w-7xl gap-10 px-6 py-28 sm:grid-cols-12 sm:items-end">
           <h2 className="font-heading text-5xl font-bold tracking-tight sm:col-span-8 sm:text-7xl">
             Pick a tool<span className="text-primary">.</span>
             <br />
