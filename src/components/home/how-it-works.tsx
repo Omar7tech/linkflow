@@ -217,7 +217,13 @@ export function HowItWorks() {
   }, [paused, active]);
 
   return (
-    <section className="border-border/70 border-t" aria-labelledby="how-heading">
+    <section
+      className="border-border/70 relative isolate overflow-hidden border-t"
+      aria-labelledby="how-heading"
+    >
+      <span aria-hidden className={`${styles.texture} pointer-events-none absolute inset-0 -z-10`} />
+      <span aria-hidden className={`${styles.wash} pointer-events-none absolute inset-0 -z-10`} />
+
       <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
         <Reveal>
           <p className="text-muted-foreground/70 text-xs font-medium tracking-wide">How it works</p>

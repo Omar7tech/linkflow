@@ -49,3 +49,31 @@
     animation: none;
   }
 }
+
+/* Fine rule grid, faded out at the edges so it never reads as a table. */
+.texture {
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 56px 56px;
+  opacity: 0.55;
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 45%, black, transparent 78%);
+  mask-image: radial-gradient(ellipse 85% 75% at 50% 45%, black, transparent 78%);
+}
+
+/* Soft brand light falling on the side the demo panel sits. */
+.wash {
+  background-image: radial-gradient(
+    58% 62% at 82% 16%,
+    color-mix(in oklab, var(--primary) 12%, transparent),
+    transparent 70%
+  );
+}
+
+:global(.dark) .wash {
+  background-image: radial-gradient(
+    58% 62% at 82% 16%,
+    color-mix(in oklab, var(--primary) 8%, transparent),
+    transparent 70%
+  );
+}
