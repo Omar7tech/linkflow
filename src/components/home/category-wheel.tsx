@@ -1,8 +1,8 @@
 "use client";
 
-import { Fragment, useState, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import Link from "next/link";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, ArrowUpRightIcon } from "lucide-react";
 import OptionWheel from "@/components/reactbits/option-wheel";
 import { TOOLS, TOOL_CATEGORIES } from "@/constants/tools";
 import { accentFor } from "@/lib/tool-accent";
@@ -44,7 +44,7 @@ export function CategoryWheel() {
 
   return (
     <div
-      className={`${styles.stage} relative grid grid-cols-[1.15fr_1fr] items-center gap-16`}
+      className={`${styles.stage} relative grid grid-cols-[1.15fr_1fr] items-center gap-20`}
       style={
         { "--cat-light": accent.value.light, "--cat-dark": accent.value.dark } as CSSProperties
       }
@@ -77,59 +77,60 @@ export function CategoryWheel() {
         />
       </div>
 
-      {/* Hairline between the two halves, sitting on the grid seam */}
-      <span aria-hidden className="bg-border absolute inset-y-6 left-[57%] w-px" />
-
-      {/* Panel */}
-      <div key={category.id} className={`${styles.panel} relative`}>
-        <Icon
-          className="size-7 text-[var(--cat-active)]"
-          aria-hidden
-          strokeWidth={1.5}
-        />
-
-        <span
-          aria-hidden
-          className="mt-5 block h-0.5 w-12 bg-[var(--cat-active)] transition-all"
-        />
-
-        <p className="text-foreground mt-5 max-w-sm text-lg leading-relaxed">
-          {category.description}
-        </p>
-
-        <div className="mt-7 flex flex-wrap items-center gap-x-3 gap-y-1.5 font-mono text-xs tracking-[0.08em]">
-          {picks.map((tool, j) => (
-            <Fragment key={tool.id}>
-              {j > 0 && (
-                <span className="text-border" aria-hidden>
-                  /
-                </span>
-              )}
-              <Link
-                href={tool.slug}
-                className={`text-muted-foreground transition-colors ${accent.linkHover}`}
-              >
-                {tool.shortName}
-              </Link>
-            </Fragment>
-          ))}
+      {/* Result. Keyed on the category so the whole panel remounts and the
+          cascade replays on every change. No divider: the gap does that job. */}
+      <div key={category.id} className="max-w-sm">
+        <div className={styles.item} style={{ animationDelay: "0ms" }}>
+          <div className="flex items-center gap-3">
+            <Icon className="size-5 text-[var(--cat-active)]" aria-hidden strokeWidth={1.75} />
+            <span
+              aria-hidden
+              className="h-px flex-1 bg-[var(--cat-active)] opacity-30"
+            />
+          </div>
+          <p className="text-muted-foreground mt-5 text-[15px] leading-relaxed">
+            {category.description}
+          </p>
         </div>
 
-        <Link
-          href={`/tools#cat-${category.id}`}
-          className="group/cta mt-8 inline-flex items-center gap-2 text-sm font-medium text-[var(--cat-active)]"
-        >
-          Open {category.label}
-          <ArrowRightIcon
-            className="size-4 transition-transform group-hover/cta:translate-x-0.5"
-            aria-hidden
-          />
-        </Link>
+        {/* The tools themselves, as rows you can jump straight into. */}
+        <ul className="mt-8">
+          {picks.map((tool, j) => (
+            <li key={tool.id} className={styles.item} style={{ animationDelay: `${80 + j * 55}ms` }}>
+              <Link
+                href={tool.slug}
+                className="group/row flex items-center justify-between gap-4 py-2.5 transition-colors"
+              >
+                <span className="text-foreground group-hover/row:text-[var(--cat-active)] text-lg font-medium tracking-tight transition-colors">
+                  {tool.shortName}
+                </span>
+                <ArrowUpRightIcon
+                  className="text-muted-foreground/30 group-hover/row:text-[var(--cat-active)] size-4 shrink-0 transition-all duration-200 group-hover/row:-translate-y-0.5 group-hover/row:translate-x-0.5"
+                  aria-hidden
+                />
+              </Link>
+            </li>
+          ))}
+        </ul>
 
-        <p className="text-muted-foreground/50 mt-10 font-mono text-[10px] tracking-[0.2em] uppercase">
-          Scroll, drag or arrow the wheel
-        </p>
+        <div className={styles.item} style={{ animationDelay: `${80 + picks.length * 55}ms` }}>
+          <Link
+            href={`/tools#cat-${category.id}`}
+            className="group/cta mt-6 inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.18em] text-[var(--cat-active)] uppercase"
+          >
+            All of {category.label}
+            <ArrowRightIcon
+              className="size-3.5 transition-transform group-hover/cta:translate-x-1"
+              aria-hidden
+            />
+          </Link>
+        </div>
       </div>
+
+      {/* Affordance sits under the thing it describes, not in the result. */}
+      <p className="text-muted-foreground/45 absolute bottom-0 left-0 font-mono text-[10px] tracking-[0.2em] uppercase">
+        Scroll, drag or arrow
+      </p>
     </div>
   );
 }
