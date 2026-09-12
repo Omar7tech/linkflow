@@ -126,23 +126,18 @@ export function QrSpotlight() {
       <div className="mx-auto grid w-full max-w-7xl gap-y-8 px-6 py-14 sm:py-20 lg:grid-cols-12 lg:gap-x-14">
         {/* Copy */}
         <Reveal className="lg:col-span-5 lg:row-start-1 lg:self-end">
-          <p className="text-muted-foreground flex items-center gap-4 font-mono text-[11px] tracking-[0.22em] uppercase">
-            QR Code Generator
-            <span className="bg-border h-px flex-1" aria-hidden />
-          </p>
-
           <h2
             id="qr-spotlight-heading"
-            className="font-heading mt-5 text-[2rem] leading-[1.05] font-bold tracking-tight sm:text-4xl lg:text-[2.75rem]"
+            className="font-heading text-[2rem] leading-[1.05] font-bold tracking-tight sm:text-4xl lg:text-[2.75rem]"
           >
-            Type a link.
+            Make a QR code
             <br />
-            Style the square<span className="text-primary">.</span>
+            you&rsquo;d actually print<span className="text-primary">.</span>
           </h2>
 
           <p className="text-muted-foreground mt-4 max-w-[48ch] text-sm leading-relaxed sm:text-base">
-            Real and scannable, generated right here. Pick a shape and a fill, then take it into the
-            full generator for logos, WiFi and vCards.
+            Type below and it becomes a working code as you go — scan it off the screen to check.
+            Pick a shape and a fill, then continue in the full generator for logos, WiFi and vCards.
           </p>
         </Reveal>
 
@@ -192,7 +187,9 @@ export function QrSpotlight() {
             )}
           </div>
           <p id="qr-spotlight-hint" className="text-muted-foreground/80 mt-2 text-xs">
-            {usingFallback ? "Encoding this site until you type." : "Encoded exactly as written."}
+            {usingFallback
+              ? "Showing this site as an example — type to replace it."
+              : "Encoded exactly as written. Static, so it never expires."}
           </p>
 
           <div className="mt-5 flex flex-wrap items-end gap-x-6 gap-y-4">
@@ -261,7 +258,7 @@ export function QrSpotlight() {
             className="group mt-6 h-12 w-full rounded-full px-8 font-semibold sm:w-auto"
           >
             <Link href={href}>
-              Open in the generator
+              Continue in the generator
               <ArrowRightIcon
                 className="size-4 transition-transform group-hover:translate-x-0.5"
                 aria-hidden
