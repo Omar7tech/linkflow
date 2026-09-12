@@ -23,6 +23,17 @@ import { accentFor } from "@/lib/tool-accent";
 
 const HOME_FAQ = FAQ_ITEMS.slice(0, 5);
 
+/** Things you never have to do here. Each one is checked against the codebase:
+    no auth library, no analytics or tracker scripts, no paywalled routes. */
+const NEVER = [
+  "sign-up",
+  "credit card",
+  "watermark",
+  "expiring links",
+  "ads or trackers",
+  "locked features",
+];
+
 const PRINCIPLES = [
   {
     title: "Private by design",
@@ -31,10 +42,6 @@ const PRINCIPLES = [
   {
     title: "Fast by architecture",
     text: "Every tool ships as its own tiny bundle and loads only when you open it, so pages stay light and first paint stays instant.",
-  },
-  {
-    title: "Free, with no catch",
-    text: "No sign-ups, no watermarks, no expiring links. Static QR codes encode your data directly and keep working forever.",
   },
 ];
 
@@ -187,26 +194,55 @@ export default function HomePage() {
 
       <HowItWorks />
 
-      {/* Principles — cards */}
+      {/* Why Forma. Free leads; privacy and speed support it. Deliberately not
+          three equal cards: the whole point is that one of them matters most. */}
       <section className="border-border/70 border-t" aria-labelledby="principles-heading">
-        <div className="mx-auto max-w-7xl px-6 py-24">
-          <SectionHeader
-            label="Why Forma"
-            title="Private by design, not by promise"
-            id="principles-heading"
-            className="mb-14"
-          />
-          <Reveal stagger className="grid gap-4 sm:grid-cols-3">
-            {PRINCIPLES.map((item) => (
-              <div
-                key={item.title}
-                className="border-border/60 bg-card hover:border-primary/30 rounded-2xl border p-7 transition-colors"
+        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+          <div className="grid gap-x-16 gap-y-10 lg:grid-cols-12">
+            <Reveal className="lg:col-span-5">
+              <p className="text-muted-foreground/70 text-xs font-medium tracking-wide">
+                Why Forma
+              </p>
+              <h2
+                id="principles-heading"
+                className="font-heading mt-2 text-4xl font-bold tracking-tight sm:text-5xl"
               >
-                <span className="bg-primary inline-block size-2 rounded-full" aria-hidden />
-                <h3 className="font-heading mt-5 text-xl font-semibold tracking-tight">
-                  {item.title}
-                </h3>
-                <p className="text-muted-foreground mt-2.5 text-sm leading-relaxed">{item.text}</p>
+                It&rsquo;s free. That&rsquo;s the whole model
+                <span className="text-primary">.</span>
+              </h2>
+              <p className="text-muted-foreground mt-5 max-w-sm leading-relaxed">
+                There is no upgrade page, because there is no upgrade. Forma is lean to run, so
+                there is no cost to pass on to you.
+              </p>
+              <Link
+                href="/faq"
+                className="group/faq text-foreground mt-6 inline-flex items-center gap-2 text-sm font-medium underline-offset-4 hover:underline"
+              >
+                Read the FAQ
+                <ArrowRightIcon
+                  className="size-3.5 transition-transform group-hover/faq:translate-x-0.5"
+                  aria-hidden
+                />
+              </Link>
+            </Reveal>
+
+            {/* The repeated emerald "No" is the ornament: no icons needed. */}
+            <Reveal stagger className="grid gap-x-10 gap-y-3.5 sm:grid-cols-2 lg:col-span-6 lg:col-start-7 lg:self-center">
+              {NEVER.map((item) => (
+                <p key={item} className="font-heading text-xl font-medium tracking-tight sm:text-2xl">
+                  <span className="text-primary">No</span> {item}
+                </p>
+              ))}
+            </Reveal>
+          </div>
+
+          <Reveal stagger className="border-border/60 mt-14 grid gap-x-16 gap-y-8 border-t pt-8 sm:grid-cols-2">
+            {PRINCIPLES.map((item) => (
+              <div key={item.title}>
+                <h3 className="font-heading text-base font-semibold tracking-tight">{item.title}</h3>
+                <p className="text-muted-foreground mt-2 max-w-md text-[13px] leading-relaxed">
+                  {item.text}
+                </p>
               </div>
             ))}
           </Reveal>
