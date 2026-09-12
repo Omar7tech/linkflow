@@ -1,18 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ArrowRightIcon,
-  BinaryIcon,
-  BoxSelectIcon,
-  MessageSquareTextIcon,
-  QrCodeIcon,
-  ScissorsIcon,
-  SparklesIcon,
-  UsersIcon,
-  UploadIcon,
-  type LucideIcon,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowRightIcon } from "lucide-react";
 import { TOOL_BY_ID } from "@/constants/tools";
 import type { ToolId } from "@/constants/tools";
 
@@ -21,9 +9,7 @@ type Spotlight = {
   eyebrow: string;
   title: string;
   description: string;
-  capabilities: readonly { icon: LucideIcon; label: string }[];
-  cta: string;
-  secondary: { href: string; label: string };
+  capabilities: readonly string[];
   image: string;
 };
 
@@ -33,15 +19,8 @@ const SPOTLIGHTS: readonly Spotlight[] = [
     eyebrow: "Background Remover",
     title: "Erase any background, keep clean edges",
     description:
-      "AI segmentation for photos, instant color-matching for flat graphics — with feathered edges and auto-trim. Drop in an image and get a crisp transparent PNG.",
-    capabilities: [
-      { icon: SparklesIcon, label: "AI segmentation" },
-      { icon: BoxSelectIcon, label: "Feathered edges" },
-      { icon: ScissorsIcon, label: "Auto-trim" },
-      { icon: BinaryIcon, label: "Transparent PNG" },
-    ],
-    cta: "Open the background remover",
-    secondary: { href: "/tools#cat-image", label: "Browse image tools" },
+      "AI segmentation for photos, instant color matching for flat graphics. Drop in an image, get a crisp transparent PNG.",
+    capabilities: ["AI segmentation", "Feathered edges", "Auto-trim", "Transparent PNG"],
     image: "/tools/background-remover.webp",
   },
   {
@@ -49,15 +28,8 @@ const SPOTLIGHTS: readonly Spotlight[] = [
     eyebrow: "WhatsApp Link Generator",
     title: "Click-to-chat links that open a conversation",
     description:
-      "Create wa.me links with a prefilled message, format group invites, and bulk-generate links from a CSV of numbers — ready to paste anywhere or share as a QR.",
-    capabilities: [
-      { icon: MessageSquareTextIcon, label: "Prefilled message" },
-      { icon: UsersIcon, label: "Group invites" },
-      { icon: UploadIcon, label: "Bulk from CSV" },
-      { icon: QrCodeIcon, label: "QR code" },
-    ],
-    cta: "Open the WhatsApp generator",
-    secondary: { href: "/tools#cat-links", label: "Browse link tools" },
+      "wa.me links with a prefilled message, formatted group invites, and bulk generation from a CSV of numbers.",
+    capabilities: ["Prefilled message", "Group invites", "Bulk from CSV", "QR code"],
     image: "/tools/whatsapp.webp",
   },
 ];
@@ -65,82 +37,62 @@ const SPOTLIGHTS: readonly Spotlight[] = [
 export function FeaturedPair() {
   return (
     <section aria-label="Featured tools" className="border-border/70 border-t">
-      <div className="mx-auto w-full max-w-7xl px-6 py-16 sm:py-20">
-        <div className="grid gap-6 md:grid-cols-2">
+      <div className="mx-auto w-full max-w-7xl px-6 py-14 sm:py-20">
+        <div className="grid gap-4 sm:gap-5 md:grid-cols-2">
           {SPOTLIGHTS.map((s) => {
             const tool = TOOL_BY_ID[s.id];
             const Icon = tool.icon;
             const headingId = `spotlight-${s.id}-heading`;
             return (
+              /* The whole card is the target — one tap area instead of a small
+                 button inside something that already looks tappable. */
               <article
                 key={s.id}
                 aria-labelledby={headingId}
-                className="group border-border/60 bg-card flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/5"
+                className="group border-border/60 bg-card hover:border-primary/40 relative flex flex-col overflow-hidden rounded-2xl border transition-colors duration-200 hover:shadow-lg hover:shadow-emerald-500/5"
               >
-                {/* Banner image */}
-                <div className="border-border/60 relative aspect-[16/9] w-full overflow-hidden border-b">
+                <div className="border-border/60 relative aspect-[16/10] w-full overflow-hidden border-b lg:aspect-[2/1]">
                   <Image
                     src={s.image}
-                    alt={`${tool.name} illustration`}
+                    alt=""
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
                   />
                 </div>
 
-                <div className="flex flex-1 flex-col p-8">
-                  <p className="flex items-center gap-2 font-mono text-xs font-medium tracking-[0.2em] text-emerald-700 uppercase dark:text-emerald-400">
-                    <Icon className="size-3.5" aria-hidden />
+                <div className="flex flex-1 flex-col p-5 sm:p-6">
+                  <p className="text-muted-foreground flex items-center gap-2 font-mono text-[11px] tracking-[0.18em] uppercase">
+                    <Icon className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
                     {s.eyebrow}
                   </p>
+
                   <h2
                     id={headingId}
-                    className="font-heading mt-3 text-2xl font-bold tracking-tight text-balance sm:text-3xl"
+                    className="font-heading mt-2.5 text-xl font-bold tracking-tight text-balance sm:text-2xl"
                   >
-                    {s.title}
+                    <Link href={tool.slug} className="after:absolute after:inset-0">
+                      {s.title}
+                    </Link>
                     <span className="text-primary">.</span>
                   </h2>
-                  <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
+
+                  <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
                     {s.description}
                   </p>
 
-                  <ul className="mt-6 flex flex-wrap gap-2">
-                    {s.capabilities.map(({ icon: CapIcon, label }) => (
-                      <li
-                        key={label}
-                        className="border-border/60 bg-card/50 flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium"
-                      >
-                        <CapIcon
-                          className="size-3.5 text-emerald-600 dark:text-emerald-400"
-                          aria-hidden
-                          strokeWidth={1.75}
-                        />
-                        {label}
-                      </li>
-                    ))}
-                  </ul>
+                  {/* Spec line rather than a chip grid — same information, one row. */}
+                  <p className="text-muted-foreground/70 mt-4 font-mono text-[10px] leading-relaxed tracking-[0.14em] uppercase sm:text-[11px]">
+                    {s.capabilities.join(" · ")}
+                  </p>
 
-                  <div className="mt-8 flex flex-wrap items-center gap-5 pt-2">
-                    <Button
-                      asChild
-                      size="lg"
-                      className="group/btn h-11 rounded-full px-7 font-semibold"
-                    >
-                      <Link href={tool.slug}>
-                        {s.cta}
-                        <ArrowRightIcon
-                          className="size-4 transition-transform group-hover/btn:translate-x-0.5"
-                          aria-hidden
-                        />
-                      </Link>
-                    </Button>
-                    <Link
-                      href={s.secondary.href}
-                      className="text-foreground text-sm font-medium underline-offset-4 hover:underline"
-                    >
-                      {s.secondary.label}
-                    </Link>
-                  </div>
+                  <span className="text-foreground group-hover:text-primary mt-auto flex items-center gap-1.5 pt-5 text-sm font-medium transition-colors">
+                    Open {tool.shortName}
+                    <ArrowRightIcon
+                      className="size-3.5 transition-transform group-hover:translate-x-0.5"
+                      aria-hidden
+                    />
+                  </span>
                 </div>
               </article>
             );
