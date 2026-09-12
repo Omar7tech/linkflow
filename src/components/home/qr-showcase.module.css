@@ -1,60 +1,41 @@
-/* Flagship QR visual — morphing module matrix.
-   Preset values arrive as custom properties on .artboard so the whole
-   matrix retargets with one style write instead of ~300 React updates. */
+/* Live QR artboard — print-plate framing for the real generated code. */
 
-.artboard {
-  --m-rx: 0.28;
-  --m-scale: 0.86;
-  --e-outer: 2;
-  --e-mid: 1.4;
-  --e-dot: 0.9;
-  --qr-a: #34d399;
-  --qr-b: #0d9488;
+.qr {
+  animation: qr-in 260ms ease-out both;
 }
 
-.stopA {
-  stop-color: var(--qr-a);
-  transition: stop-color 700ms ease;
+.qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
-.stopB {
-  stop-color: var(--qr-b);
-  transition: stop-color 700ms ease;
+@keyframes qr-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
 }
 
-.module {
-  rx: calc(var(--m-rx) * 1px);
-  transform-box: fill-box;
-  transform-origin: center;
-  transform: scale(var(--m-scale));
-  transition:
-    transform 620ms cubic-bezier(0.22, 1, 0.36, 1),
-    rx 620ms cubic-bezier(0.22, 1, 0.36, 1);
+/* Skeleton matches the plate's exact footprint, so nothing shifts. */
+.skeleton {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 0.25rem;
+  background: linear-gradient(100deg, #ececec 30%, #f6f6f6 50%, #ececec 70%);
+  background-size: 220% 100%;
+  animation: qr-shimmer 1.4s linear infinite;
 }
 
-.eyeOuter {
-  rx: calc(var(--e-outer) * 1px);
-  transition: rx 620ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.eyeMid {
-  rx: calc(var(--e-mid) * 1px);
-  transition: rx 620ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.eyeDot {
-  rx: calc(var(--e-dot) * 1px);
-  transition: rx 620ms cubic-bezier(0.22, 1, 0.36, 1);
+@keyframes qr-shimmer {
+  to {
+    background-position: -220% 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .module,
-  .eyeOuter,
-  .eyeMid,
-  .eyeDot,
-  .stopA,
-  .stopB {
-    transition-duration: 1ms;
-    transition-delay: 0ms !important;
+  .qr,
+  .skeleton {
+    animation: none;
   }
 }

@@ -128,6 +128,33 @@ export function QrTool() {
   const [options, setOptions] = React.useState<QrOptions>(DEFAULT_QR_OPTIONS);
   const patch = (p: Partial<QrOptions>) => setOptions((prev) => ({ ...prev, ...p }));
 
+  // Pick up whatever was typed and styled in the homepage spotlight so the
+  // visitor lands here mid-flow instead of on an empty form. This has to run
+  // after hydration — seeding from the URL during render would desync the
+  // server-rendered markup from the client.
+  /* eslint-disable react-hooks/set-state-in-effect -- one-time handoff, see above */
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const handoff = params.get("v");
+    if (handoff) {
+      setType("url");
+      setUrl(handoff);
+    }
+    const next: Partial<QrOptions> = {};
+    const module_ = params.get("m");
+    const eye = params.get("e");
+    const fill = params.get("c");
+    if (MODULE_STYLES.some((s) => s.id === module_)) next.moduleStyle = module_ as QrModuleStyle;
+    if (EYE_STYLES.some((s) => s.id === eye)) next.eyeStyle = eye as QrEyeStyle;
+    if (fill === "emerald") next.fgColor = "#059669";
+    if (fill === "fade") {
+      next.fgColor = "#10b981";
+      next.gradient = { type: "linear", from: "#10b981", to: "#047857", angle: 45 };
+    }
+    if (Object.keys(next).length > 0) setOptions((prev) => ({ ...prev, ...next }));
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   const isGradient = !!options.gradient;
   const eyeMatch = !options.eyeColor;
   const scanWarning = qrScanWarning(options);
