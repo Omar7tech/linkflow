@@ -219,7 +219,7 @@ export function IconMarquee() {
         <div className="grid gap-10 lg:grid-cols-12 lg:items-center lg:gap-14">
           {/* Copy sits beside the library rather than above it: shorter section,
               and the motion gets a frame instead of running loose full width. */}
-          <Reveal className="lg:col-span-4">
+          <Reveal className="min-w-0 lg:col-span-4">
             <p className="text-muted-foreground flex items-center gap-2 font-mono text-[11px] tracking-[0.22em] uppercase">
               <span className="bg-primary inline-block size-1.5 rounded-full" aria-hidden />
               SVG Library
@@ -250,7 +250,7 @@ export function IconMarquee() {
             </Button>
           </Reveal>
 
-          <Reveal delay={0.1} className="lg:col-span-8">
+          <Reveal delay={0.1} className="min-w-0 lg:col-span-8">
             <div className="border-border/60 bg-muted/30 relative overflow-hidden rounded-2xl border p-4 sm:p-5">
               {/* Faint plate behind the tiles, same dot grid the hero uses */}
               <span

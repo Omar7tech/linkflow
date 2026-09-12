@@ -1,5 +1,8 @@
 .viewport {
   overflow: hidden;
+  /* Without this the max-content track sets the min-content width of every
+     ancestor, and a grid or flex item will refuse to shrink past it. */
+  min-width: 0;
   -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
   mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
 }
