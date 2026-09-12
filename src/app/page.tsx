@@ -22,7 +22,7 @@ const HOME_FAQ = FAQ_ITEMS.slice(0, 5);
 const STEPS = [
   {
     title: "Pick a tool",
-    text: "Generators, converters, color and image editors — every tool shares one consistent, instant workflow.",
+    text: "Generators, converters, color and image editors. Every tool shares one consistent, instant workflow.",
   },
   {
     title: "Type, and it's done",
@@ -41,7 +41,7 @@ const PRINCIPLES = [
   },
   {
     title: "Fast by architecture",
-    text: "Every tool ships as its own tiny bundle and loads only when you open it — pages stay light, first paint stays instant.",
+    text: "Every tool ships as its own tiny bundle and loads only when you open it, so pages stay light and first paint stays instant.",
   },
   {
     title: "Free, with no catch",
@@ -96,7 +96,7 @@ export default function HomePage() {
           <SectionHeader label="The toolkit" title="Find it by craft" id="tools-heading" />
           <Reveal>
             <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">
-              Ten small studios, one instant workflow — input on one side, results on the other,
+              Ten small studios, one instant workflow. Input on one side, results on the other,
               live with every keystroke.
             </p>
           </Reveal>

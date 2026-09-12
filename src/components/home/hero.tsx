@@ -53,7 +53,7 @@ export function Hero() {
   return (
     <section
       ref={sectionRef}
-      aria-label="Forma — The everyday tool studio"
+      aria-label="Forma, the everyday tool studio"
       className="relative overflow-hidden"
     >
       {/* Faded dot grid, weighted to the top-left like the composition */}

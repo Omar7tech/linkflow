@@ -136,7 +136,7 @@ export function QrSpotlight() {
           </h2>
 
           <p className="text-muted-foreground mt-4 max-w-[48ch] text-sm leading-relaxed sm:text-base">
-            Type below and it becomes a working code as you go — scan it off the screen to check.
+            Type below and it becomes a working code as you go. Scan it off the screen to check.
             Pick a shape and a fill, then continue in the full generator for logos, WiFi and vCards.
           </p>
         </Reveal>
@@ -188,7 +188,7 @@ export function QrSpotlight() {
           </div>
           <p id="qr-spotlight-hint" className="text-muted-foreground/80 mt-2 text-xs">
             {usingFallback
-              ? "Showing this site as an example — type to replace it."
+              ? "Showing this site as an example. Type to replace it."
               : "Encoded exactly as written. Static, so it never expires."}
           </p>
 
