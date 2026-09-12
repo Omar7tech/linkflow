@@ -1,0 +1,51 @@
+/* Rail that fills over one step's dwell, so the auto-advance is legible
+   instead of surprising. Restarted by keying the element on the step. */
+.rail {
+  transform-origin: top;
+  animation: rail-fill linear forwards;
+}
+
+.paused {
+  animation-play-state: paused;
+}
+
+@keyframes rail-fill {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.stage {
+  animation: stage-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.caret {
+  animation: caret-blink 1.05s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail {
+    animation: none;
+    transform: scaleY(1);
+  }
+  .stage,
+  .caret {
+    animation: none;
+  }
+}

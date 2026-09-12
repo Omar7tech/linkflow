@@ -12,6 +12,7 @@ import { FavoritesSection } from "@/components/home/favorites-section";
 import { FeaturedPair } from "@/components/home/featured-pair";
 import { CategoryWheel } from "@/components/home/category-wheel";
 import { Hero } from "@/components/home/hero";
+import { HowItWorks } from "@/components/home/how-it-works";
 import { QrSpotlight } from "@/components/home/qr-spotlight";
 import { Reveal } from "@/components/home/reveal";
 import { JsonLd, faqJsonLd, webAppJsonLd } from "@/components/shared/json-ld";
@@ -21,21 +22,6 @@ import { TOOLS, TOOL_CATEGORIES } from "@/constants/tools";
 import { accentFor } from "@/lib/tool-accent";
 
 const HOME_FAQ = FAQ_ITEMS.slice(0, 5);
-
-const STEPS = [
-  {
-    title: "Pick a tool",
-    text: "Generators, converters, color and image editors. Every tool shares one consistent, instant workflow.",
-  },
-  {
-    title: "Type, and it's done",
-    text: "No submit buttons, no waiting. Your result renders live with every keystroke, validated as you go.",
-  },
-  {
-    title: "Copy and ship",
-    text: "Copy the result, download your files, or export ready-made CSS, HTML, React and Markdown snippets.",
-  },
-];
 
 const PRINCIPLES = [
   {
@@ -199,33 +185,7 @@ export default function HomePage() {
         </Reveal>
       </section>
 
-      {/* How it works — editorial numbered rows */}
-      <section className="border-border/70 border-t" aria-labelledby="how-heading">
-        <div className="mx-auto max-w-7xl px-6 py-24">
-          <SectionHeader
-            label="How it works"
-            title="From input to output in seconds"
-            id="how-heading"
-            className="mb-14"
-          />
-          <Reveal stagger className="flex flex-col">
-            {STEPS.map((step, i) => (
-              <div
-                key={step.title}
-                className="border-border group grid items-baseline gap-x-8 gap-y-3 border-t py-8 last:border-b sm:grid-cols-[80px_1fr_1.4fr]"
-              >
-                <span className="font-heading text-primary/30 group-hover:text-primary text-4xl font-bold tracking-tight transition-colors sm:text-5xl">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <h3 className="font-heading text-2xl font-semibold tracking-tight">{step.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
-                  {step.text}
-                </p>
-              </div>
-            ))}
-          </Reveal>
-        </div>
-      </section>
+      <HowItWorks />
 
       {/* Principles — cards */}
       <section className="border-border/70 border-t" aria-labelledby="principles-heading">
