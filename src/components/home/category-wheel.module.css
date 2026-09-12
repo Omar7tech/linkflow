@@ -26,3 +26,21 @@
     animation: none;
   }
 }
+
+/* Crossfade as the preview swaps between tools. */
+.shot {
+  animation: shot-in 340ms ease-out both;
+}
+
+@keyframes shot-in {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shot {
+    animation: none;
+  }
+}

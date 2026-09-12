@@ -2,6 +2,7 @@
 
 import { useState, type CSSProperties } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRightIcon, ArrowUpRightIcon } from "lucide-react";
 import OptionWheel from "@/components/reactbits/option-wheel";
 import { TOOLS, TOOL_CATEGORIES } from "@/constants/tools";
@@ -13,6 +14,9 @@ const LABELS = TOOL_CATEGORIES.map((c) => c.label);
 /** Same running order the rest of the site uses to surface flagship tools. */
 const FEATURED = ["mockup", "logo3d", "codeshot", "invoice", "qr", "bgremover"];
 
+/** Every tool ships a banner at /tools/<slug>.webp. */
+const shotFor = (slug: string) => `/tools${slug.replace("/tools", "")}.webp`;
+
 const PICKS_BY_CATEGORY = Object.fromEntries(
   TOOL_CATEGORIES.map((category) => [
     category.id,
@@ -23,7 +27,7 @@ const PICKS_BY_CATEGORY = Object.fromEntries(
         const bi = FEATURED.indexOf(b.id);
         return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
       })
-      .slice(0, 5),
+      .slice(0, 4),
   ])
 );
 
@@ -36,11 +40,20 @@ const PICKS_BY_CATEGORY = Object.fromEntries(
  */
 export function CategoryWheel() {
   const [index, setIndex] = useState(0);
+  const [hovered, setHovered] = useState(0);
 
   const category = TOOL_CATEGORIES[index];
   const accent = accentFor(category.id);
   const picks = PICKS_BY_CATEGORY[category.id];
   const Icon = category.icon;
+  // The row under the cursor drives the preview; the first pick is the resting
+  // state, so the panel is never empty.
+  const preview = picks[Math.min(hovered, picks.length - 1)];
+
+  const selectCategory = (i: number) => {
+    setIndex(i);
+    setHovered(0);
+  };
 
   return (
     <div
@@ -54,7 +67,7 @@ export function CategoryWheel() {
         <OptionWheel
           items={LABELS}
           defaultSelected={0}
-          onChange={setIndex}
+          onChange={selectCategory}
           textColor="var(--muted-foreground)"
           activeColor="var(--cat-active)"
           side="left"
@@ -79,33 +92,55 @@ export function CategoryWheel() {
 
       {/* Result. Keyed on the category so the whole panel remounts and the
           cascade replays on every change. No divider: the gap does that job. */}
-      <div key={category.id} className="max-w-sm">
-        <div className={styles.item} style={{ animationDelay: "0ms" }}>
-          <div className="flex items-center gap-3">
-            <Icon className="size-5 text-[var(--cat-active)]" aria-hidden strokeWidth={1.75} />
-            <span
-              aria-hidden
-              className="h-px flex-1 bg-[var(--cat-active)] opacity-30"
-            />
+      <div key={category.id} className="max-w-md">
+        {/* Preview of whichever tool the cursor is on */}
+        <div
+          className={`${styles.item} border-border/60 relative aspect-[2/1] overflow-hidden rounded-xl border`}
+          style={{ animationDelay: "0ms" }}
+        >
+          {/* Accent plate behind the shot, so the frame is never blank while
+              a banner is still loading. */}
+          <span
+            aria-hidden
+            className="absolute inset-0 bg-[var(--cat-active)] opacity-[0.07]"
+          />
+          <Image
+            key={preview.id}
+            src={shotFor(preview.slug)}
+            alt={`${preview.name} preview`}
+            fill
+            sizes="(max-width: 1024px) 0px, 420px"
+            className={`${styles.shot} object-cover`}
+          />
+        </div>
+
+        <div className={styles.item} style={{ animationDelay: "60ms" }}>
+          <div className="mt-5 flex items-center gap-3">
+            <Icon className="size-4 shrink-0 text-[var(--cat-active)]" aria-hidden strokeWidth={2} />
+            <p className="text-muted-foreground text-[13px] leading-relaxed">
+              {category.description}
+            </p>
           </div>
-          <p className="text-muted-foreground mt-5 text-[15px] leading-relaxed">
-            {category.description}
-          </p>
         </div>
 
         {/* The tools themselves, as rows you can jump straight into. */}
-        <ul className="mt-8">
+        <ul className="mt-6">
           {picks.map((tool, j) => (
-            <li key={tool.id} className={styles.item} style={{ animationDelay: `${80 + j * 55}ms` }}>
+            <li
+              key={tool.id}
+              className={styles.item}
+              style={{ animationDelay: `${110 + j * 55}ms` }}
+              onMouseEnter={() => setHovered(j)}
+            >
               <Link
                 href={tool.slug}
-                className="group/row flex items-center justify-between gap-4 py-2.5 transition-colors"
+                className="group/row flex items-center justify-between gap-4 py-2"
               >
-                <span className="text-foreground group-hover/row:text-[var(--cat-active)] text-lg font-medium tracking-tight transition-colors">
-                  {tool.shortName}
+                <span className="text-muted-foreground group-hover/row:text-foreground text-lg font-medium tracking-tight transition-colors">
+                  {tool.name}
                 </span>
                 <ArrowUpRightIcon
-                  className="text-muted-foreground/30 group-hover/row:text-[var(--cat-active)] size-4 shrink-0 transition-all duration-200 group-hover/row:-translate-y-0.5 group-hover/row:translate-x-0.5"
+                  className="text-muted-foreground/25 group-hover/row:text-[var(--cat-active)] size-4 shrink-0 transition-all duration-200 group-hover/row:-translate-y-0.5 group-hover/row:translate-x-0.5"
                   aria-hidden
                 />
               </Link>
@@ -113,10 +148,10 @@ export function CategoryWheel() {
           ))}
         </ul>
 
-        <div className={styles.item} style={{ animationDelay: `${80 + picks.length * 55}ms` }}>
+        <div className={styles.item} style={{ animationDelay: `${110 + picks.length * 55}ms` }}>
           <Link
             href={`/tools#cat-${category.id}`}
-            className="group/cta mt-6 inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.18em] text-[var(--cat-active)] uppercase"
+            className="group/cta mt-5 inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.18em] text-[var(--cat-active)] uppercase"
           >
             All of {category.label}
             <ArrowRightIcon
