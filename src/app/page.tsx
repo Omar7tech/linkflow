@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { FavoritesSection } from "@/components/home/favorites-section";
 import { FeaturedPair } from "@/components/home/featured-pair";
+import { CategoryWheel } from "@/components/home/category-wheel";
 import { Hero } from "@/components/home/hero";
 import { QrSpotlight } from "@/components/home/qr-spotlight";
 import { Reveal } from "@/components/home/reveal";
@@ -103,10 +104,16 @@ export default function HomePage() {
             </p>
           </Reveal>
         </div>
+        {/* Desktop gets the wheel; narrow screens keep the row list below,
+            which carries the same content without needing a pointer. */}
+        <Reveal className="hidden lg:block">
+          <CategoryWheel />
+        </Reveal>
+
         {/* Display-scale rows rather than a grid of boxes: the category name is
             the object, everything else hangs off it. Colour comes from the same
             CATEGORY_ACCENT map the /tools pages use. */}
-        <Reveal stagger className="border-border/60 flex flex-col border-b">
+        <Reveal stagger className="border-border/60 flex flex-col border-b lg:hidden">
           {TOOL_CATEGORIES.map((category) => {
             const Icon = category.icon;
             const accent = accentFor(category.id);
