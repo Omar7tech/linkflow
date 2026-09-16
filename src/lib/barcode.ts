@@ -31,7 +31,7 @@ export const BARCODE_FORMATS: BarcodeFormatMeta[] = [
     id: "CODE128",
     name: "Code 128",
     hint: "Any letters or numbers — the universal default for labels and logistics.",
-    sample: "FORMA-2026",
+    sample: "TMTOOLS-2026",
   },
   {
     id: "EAN13",

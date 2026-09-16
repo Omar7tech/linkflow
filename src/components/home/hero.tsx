@@ -8,10 +8,9 @@ import { useGSAP } from "@gsap/react";
 import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SideRays from "./side-rays";
+import { TM_GLYPHS, TM_VIEWBOX } from "@/components/shared/logo";
 
 gsap.registerPlugin(useGSAP);
-
-const WORDMARK = ["f", "o", "r", "m", "a", "."];
 
 export function Hero() {
   const sectionRef = React.useRef<HTMLElement>(null);
@@ -22,7 +21,7 @@ export function Hero() {
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         gsap
           .timeline({ defaults: { ease: "power4.out" } })
-          .from("[data-hero-char]", { yPercent: 110, duration: 1.15, stagger: 0.05 }, 0)
+          .from("[data-hero-char]", { y: 170, duration: 1.15, stagger: 0.05 }, 0)
           .from(
             "[data-hero-rule]",
             { scaleX: 0, transformOrigin: "left center", duration: 1, ease: "power3.inOut" },
@@ -53,7 +52,7 @@ export function Hero() {
   return (
     <section
       ref={sectionRef}
-      aria-label="Forma, the everyday tool studio"
+      aria-label="TM TOOLS, the everyday tool studio"
       className="relative overflow-hidden"
     >
       {/* Faded dot grid, weighted to the top-left like the composition */}
@@ -95,17 +94,14 @@ export function Hero() {
         />
 
         {/* Wordmark — flush left, each character rising out of its own mask */}
-        <h1
-          aria-label="forma."
-          className="font-heading flex text-[clamp(4.5rem,15vw,13rem)] leading-[0.85] font-bold tracking-[-0.05em]"
-        >
-          {WORDMARK.map((char, i) => (
-            <span key={i} aria-hidden className="block overflow-hidden pb-[0.08em]">
-              <span data-hero-char className={char === "." ? "text-primary block" : "block"}>
-                {char}
-              </span>
-            </span>
-          ))}
+        <h1 aria-label="TM TOOLS" className="relative z-10 w-[min(100%,56rem)] md:w-[62%]">
+          <svg viewBox={TM_VIEWBOX} aria-hidden className="text-foreground block h-auto w-full overflow-hidden fill-current">
+            {TM_GLYPHS.map((glyph) => (
+              <g key={glyph.key} data-hero-char>
+                {glyph}
+              </g>
+            ))}
+          </svg>
         </h1>
 
         {/* Asymmetric bottom row on a second hairline */}

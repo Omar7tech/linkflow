@@ -439,7 +439,7 @@ export function AttentionTool() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "forma-attention.png";
+        a.download = "tm-tools-attention.png";
         a.click();
         URL.revokeObjectURL(url);
         toast.success("Attention map downloaded");

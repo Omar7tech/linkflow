@@ -100,7 +100,7 @@ export const PRESETS: PresetMeta[] = [
 
 export const DEFAULT_LOOP: LoopConfig = {
   source: "text",
-  text: "FORMA",
+  text: "TM TOOLS",
   font: "--font-space-grotesk",
   weight: 800,
   tracking: 0.02,

@@ -5,12 +5,12 @@ export interface FaqItem {
 
 export const FAQ_ITEMS: FaqItem[] = [
   {
-    question: "Is Forma really free?",
+    question: "Is TM TOOLS really free?",
     answer:
-      "Yes — every tool is free with no usage limits, no accounts and no watermarks. Forma is lean to operate, so there are no costs to pass on to you.",
+      "Yes — every tool is free with no usage limits, no accounts and no watermarks. TM TOOLS is lean to operate, so there are no costs to pass on to you.",
   },
   {
-    question: "Do I need an account to use Forma?",
+    question: "Do I need an account to use TM TOOLS?",
     answer:
       "No. There's no sign-up, login or email required — open any tool and start creating. Your presets and recent history are saved locally in your browser, not to an account.",
   },
@@ -27,7 +27,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Do the QR codes expire?",
     answer:
-      "Never. Forma generates static QR codes that encode your data directly — there's no redirect service in the middle, so they keep working forever and scan faster.",
+      "Never. TM TOOLS generates static QR codes that encode your data directly — there's no redirect service in the middle, so they keep working forever and scan faster.",
   },
   {
     question: "Which QR error-correction level should I use?",
@@ -62,10 +62,10 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Can I use everything I create commercially?",
     answer:
-      "Absolutely. Everything you make with Forma — links, QR codes, images, palettes, code snippets — is yours to use in ads, packaging, apps, client work or anywhere else, with no attribution required.",
+      "Absolutely. Everything you make with TM TOOLS — links, QR codes, images, palettes, code snippets — is yours to use in ads, packaging, apps, client work or anywhere else, with no attribution required.",
   },
   {
-    question: "Does Forma work on mobile and in every browser?",
+    question: "Does TM TOOLS work on mobile and in every browser?",
     answer:
       "Yes. Every tool is responsive-first and runs in any modern browser — Chrome, Safari, Firefox or Edge — on phone, tablet or desktop. Generators, editors and downloads all behave the same everywhere.",
   },

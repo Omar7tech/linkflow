@@ -182,9 +182,9 @@ export const DEFAULT_OG: OgConfig = {
   autoFit: true,
 
   logoSlot: "top",
-  authorName: "Forma",
+  authorName: "TM TOOLS",
   authorHandle: "@formatools",
-  domain: "forma.tools",
+  domain: "tmtools.app",
   showFooter: true,
 
   scale: 2,

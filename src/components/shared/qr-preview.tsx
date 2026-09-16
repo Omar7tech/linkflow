@@ -21,7 +21,7 @@ interface QrPreviewProps {
 export function QrPreview({
   value,
   options = DEFAULT_QR_OPTIONS,
-  filename = "forma-qr",
+  filename = "tm-tools-qr",
   showActions = true,
   className,
   onAction,

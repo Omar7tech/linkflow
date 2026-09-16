@@ -15,7 +15,7 @@ import { SITE } from "@/constants/site";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Answers about Forma's privacy model, accounts, uploaded files, QR code longevity, export formats, WhatsApp link formatting, UTM best practices and more.",
+    "Answers about TM TOOLS's privacy model, accounts, uploaded files, QR code longevity, export formats, WhatsApp link formatting, UTM best practices and more.",
   alternates: { canonical: `${SITE.url}/faq` },
 };
 
@@ -37,7 +37,7 @@ export default function FaqPage() {
             <span className="text-primary">.</span>
           </h1>
           <p className="text-muted-foreground mt-4 max-w-sm text-sm leading-relaxed">
-            Everything worth knowing about how Forma works — what it does with your data, and what it
+            Everything worth knowing about how TM TOOLS works — what it does with your data, and what it
             never does.
           </p>
 

@@ -187,14 +187,14 @@ export default function HomePage() {
 
       <HowItWorks />
 
-      {/* Why Forma. Free leads; privacy and speed support it. Deliberately not
+      {/* Why TM TOOLS. Free leads; privacy and speed support it. Deliberately not
           three equal cards: the whole point is that one of them matters most. */}
       <section className="border-border/70 border-t" aria-labelledby="principles-heading">
         <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
           <div className="grid gap-x-16 gap-y-12 lg:grid-cols-12">
             <Reveal className="lg:col-span-7">
               <p className="text-muted-foreground/70 text-xs font-medium tracking-wide">
-                Why Forma
+                Why TM TOOLS
               </p>
               <h2
                 id="principles-heading"
@@ -204,7 +204,7 @@ export default function HomePage() {
                 <span className="text-primary">.</span>
               </h2>
               <p className="text-muted-foreground mt-5 max-w-lg leading-relaxed">
-                There is no upgrade page, because there is no upgrade. Forma is lean to run, so
+                There is no upgrade page, because there is no upgrade. TM TOOLS is lean to run, so
                 there is no cost to pass on to you.
               </p>
               <Link

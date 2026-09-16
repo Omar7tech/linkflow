@@ -146,7 +146,7 @@ export interface CodeshotConfig {
   scale: number;
 }
 
-export const DEFAULT_CODE = `// forma — code image generator
+export const DEFAULT_CODE = `// tm tools — code image generator
 export function greet(name: string) {
   const hour = new Date().getHours();
   const part = hour < 12 ? "morning" : "evening";

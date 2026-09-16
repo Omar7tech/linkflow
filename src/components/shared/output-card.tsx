@@ -39,7 +39,7 @@ export function OutputCard({
   onAction,
   showQr = true,
   qrOptions,
-  filename = "forma-qr",
+  filename = "tm-tools-qr",
   openable = true,
   showSnippets = true,
   emptyHint = "Fill in the form and your link appears here instantly.",

@@ -217,7 +217,7 @@ export function EnhancerTool() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `forma-converted.${meta.ext}`;
+        a.download = `tm-tools-converted.${meta.ext}`;
         a.click();
         URL.revokeObjectURL(url);
         toast.success(`${meta.name} downloaded (${formatBytes(blob.size)})`);

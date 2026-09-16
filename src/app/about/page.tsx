@@ -15,7 +15,7 @@ import { SITE } from "@/constants/site";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Why Forma exists, who builds it, and why every tool is free — no accounts, no tracking, no paywalls.",
+    "Why TM TOOLS exists, who builds it, and why every tool is free — no accounts, no tracking, no paywalls.",
   alternates: { canonical: `${SITE.url}/about` },
 };
 
@@ -44,14 +44,14 @@ export default function AboutPage() {
       <section className="grid items-center gap-10 py-16 sm:py-20 lg:grid-cols-2 lg:gap-16">
         <div>
           <p className="font-mono text-xs font-medium tracking-[0.2em] text-emerald-700 uppercase dark:text-emerald-400">
-            About Forma
+            About TM TOOLS
           </p>
           <h1 className="font-heading mt-5 text-4xl leading-[1.08] font-bold tracking-tight text-balance sm:text-5xl">
             Built because I remember needing
             <span className="text-primary"> simple tools</span> and not being able to afford them.
           </h1>
           <p className="text-muted-foreground mt-6 max-w-md text-base leading-relaxed">
-            Forma started as tools I built for myself. Today they&apos;re free for everyone.
+            TM TOOLS started as tools I built for myself. Today they&apos;re free for everyone.
           </p>
 
           {/* Byline */}
@@ -113,7 +113,7 @@ export default function AboutPage() {
           </p>
           <p className="text-foreground font-medium">
             So instead of building another subscription site, I decided to share everything I make.
-            Every tool on Forma exists because I needed it first.
+            Every tool on TM TOOLS exists because I needed it first.
           </p>
         </div>
       </section>

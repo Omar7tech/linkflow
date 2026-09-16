@@ -1,10 +1,10 @@
 export const SITE = {
-  name: "Forma",
+  name: "TM TOOLS",
   tagline: "Form follows function.",
   description:
     "A free studio of everyday tools for developers and designers. Generators, converters and visual editors that take you from idea to finished asset in seconds.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://linkflow-pi.vercel.app",
-  author: "Forma",
+  author: "TM TOOLS",
   twitter: "@formatools",
 } as const;
 

@@ -83,7 +83,7 @@ type Opts = {
 
 function avatarUrl(style: string, seed: string, o: Opts = {}): string {
   const p = new URLSearchParams();
-  p.set("seed", seed || "Forma");
+  p.set("seed", seed || "TM TOOLS");
 
   if (o.bgMode === "gradient") {
     const c1 = (o.bg || "#10b981").replace("#", "");
@@ -200,7 +200,7 @@ function AvatarImage({
 
 export function AvatarTool() {
   const [style, setStyle] = React.useState("adventurer");
-  const [seed, setSeed] = React.useState("Forma");
+  const [seed, setSeed] = React.useState("TM TOOLS");
   const [bgMode, setBgMode] = React.useState<"solid" | "gradient">("solid");
   const [bg, setBg] = React.useState<string | null>(null);
   const [bg2, setBg2] = React.useState<string>("#0d9488");
@@ -216,7 +216,7 @@ export function AvatarTool() {
   const mainUrl = avatarUrl(style, seed, opts);
 
   const variations = React.useMemo(
-    () => Array.from({ length: 6 }, (_, i) => `${seed || "Forma"}-${i + 1}`),
+    () => Array.from({ length: 6 }, (_, i) => `${seed || "TM TOOLS"}-${i + 1}`),
     [seed]
   );
 
@@ -263,12 +263,12 @@ export function AvatarTool() {
           <CardHeader>
             <CardTitle className="text-base">Preview</CardTitle>
             <CardDescription>
-              {currentLabel} · {seed || "Forma"}
+              {currentLabel} · {seed || "TM TOOLS"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="border-border grid place-items-center rounded-xl border p-6" style={CHECKER}>
-              <AvatarImage src={mainUrl} alt={`${currentLabel} avatar for “${seed || "Forma"}”`} className="size-48" />
+              <AvatarImage src={mainUrl} alt={`${currentLabel} avatar for “${seed || "TM TOOLS"}”`} className="size-48" />
             </div>
 
             <div className="grid grid-cols-2 gap-2">

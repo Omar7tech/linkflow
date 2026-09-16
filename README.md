@@ -1,15 +1,15 @@
-# forma.
+# TM TOOLS
 
 **Form follows function.** A free, private studio of everyday tools — WhatsApp links, QR codes, vCards, UTM URLs, palettes, gradients, favicons and more. Everything runs in your browser; nothing is ever uploaded.
 
-> Folder is still named `linkflow` from the original brand; the app, package and all UI now use Forma.
+> Folder is still named `linkflow` from the original brand; the app, package and all UI now use TM TOOLS.
 
 ## Brand
 
-- **Name:** Forma — wordmark `forma.` with an emerald period
+- **Name:** TM TOOLS — geometric wordmark with a stretched capsule "OO" (`src/components/shared/logo.tsx`)
 - **Colors:** neutral light/dark surfaces with emerald primary `oklch(0.52 0.13 162)` (dark mode `oklch(0.8 0.16 162)`)
 - **Type:** Space Grotesk (headings), Geist (body), Geist Mono (labels/code)
-- **Mark:** geometric "f" curve with an emerald point on a rounded square
+- **Mark:** "TM" monogram on a dark rounded square (`public/icon.svg`)
 
 ## Getting started
 

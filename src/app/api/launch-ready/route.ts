@@ -16,7 +16,7 @@ const MAX_URL_LENGTH = 2048;
 const MAX_HTML_BYTES = 2 * 1024 * 1024;
 const MAX_REDIRECTS = 4;
 const FETCH_TIMEOUT_MS = 10_000;
-const UA = "Mozilla/5.0 (compatible; FormaLaunchReady/1.0; +https://forma.tools)";
+const UA = "Mozilla/5.0 (compatible; TMToolsLaunchReady/1.0; +https://tmtools.app)";
 
 class AuditError extends Error {
   constructor(message: string, readonly status: number) {

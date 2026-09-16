@@ -40,7 +40,7 @@ interface Page {
 }
 
 const DEFAULT_META: SocialMeta = {
-  title: "Forma — Free, Private Tools for Devs & Designers",
+  title: "TM TOOLS — Free, Private Tools for Devs & Designers",
   description:
     "A lean studio of free generators for links, color, design and images. No sign-up, no limits.",
   url: SITE.url,

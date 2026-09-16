@@ -514,14 +514,14 @@ export function OgStudioTool() {
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Name">
-                    <Input value={cfg.authorName} onChange={(e) => set("authorName", e.target.value)} placeholder="Forma" />
+                    <Input value={cfg.authorName} onChange={(e) => set("authorName", e.target.value)} placeholder="TM TOOLS" />
                   </Field>
                   <Field label="Handle">
                     <Input value={cfg.authorHandle} onChange={(e) => set("authorHandle", e.target.value)} placeholder="@handle" />
                   </Field>
                 </div>
                 <Field label="Domain">
-                  <Input value={cfg.domain} onChange={(e) => set("domain", e.target.value)} placeholder="forma.tools" />
+                  <Input value={cfg.domain} onChange={(e) => set("domain", e.target.value)} placeholder="tmtools.app" />
                 </Field>
                 {cfg.logoSlot !== "footer" && (
                   <UploadField

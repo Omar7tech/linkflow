@@ -63,7 +63,7 @@ export function BarcodeTool() {
     setOptions((prev) => ({ ...prev, [key]: value }));
 
   /* ------------------------------- Single -------------------------------- */
-  const [value, setValue] = React.useState("FORMA-2026");
+  const [value, setValue] = React.useState("TMTOOLS-2026");
   const [auto, setAuto] = React.useState(true);
   const [preview, setPreview] = React.useState<{ svg: string | null; error: string | null }>({
     svg: null,
