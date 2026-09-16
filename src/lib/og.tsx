@@ -21,7 +21,7 @@ export function renderOgImage(title: string, subtitle: string) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center" }}>
-          <svg width="276" height="48" viewBox="0 22 900 158" fill="#fafafa">
+          <svg width="285" height="48" viewBox="0 22 930 158" fill="#fafafa">
             {TM_GLYPHS}
           </svg>
         </div>
