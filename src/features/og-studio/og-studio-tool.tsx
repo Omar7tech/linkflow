@@ -521,7 +521,7 @@ export function OgStudioTool() {
                   </Field>
                 </div>
                 <Field label="Domain">
-                  <Input value={cfg.domain} onChange={(e) => set("domain", e.target.value)} placeholder="tmtools.app" />
+                  <Input value={cfg.domain} onChange={(e) => set("domain", e.target.value)} placeholder="tools.twomindsengine.com" />
                 </Field>
                 {cfg.logoSlot !== "footer" && (
                   <UploadField

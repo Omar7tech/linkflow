@@ -9,7 +9,7 @@ const MAX_BODY_BYTES = 4096;
 const MAX_URL_LENGTH = 2048;
 
 const UA =
-  "Mozilla/5.0 (compatible; TMToolsDesignDNA/1.0; +https://tmtools.app) AppleWebKit/537.36 Chrome/126.0 Safari/537.36";
+  "Mozilla/5.0 (compatible; TMToolsDesignDNA/1.0; +https://tools.twomindsengine.com) AppleWebKit/537.36 Chrome/126.0 Safari/537.36";
 const FETCH_TIMEOUT_MS = 9000;
 const MAX_HTML_BYTES = 2 * 1024 * 1024;
 const MAX_CSS_BYTES = 600 * 1024;

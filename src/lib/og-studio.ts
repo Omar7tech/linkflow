@@ -184,7 +184,7 @@ export const DEFAULT_OG: OgConfig = {
   logoSlot: "top",
   authorName: "TM TOOLS",
   authorHandle: "@formatools",
-  domain: "tmtools.app",
+  domain: "tools.twomindsengine.com",
   showFooter: true,
 
   scale: 2,
