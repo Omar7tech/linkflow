@@ -10,8 +10,19 @@ import { Button } from "@/components/ui/button";
 import SideRays from "./side-rays";
 import { TM_GLYPHS, TM_VIEWBOX } from "@/components/shared/logo";
 import { TwoMindsLogo } from "@/components/shared/two-minds-logo";
+import TextType from "./text-type";
 
 gsap.registerPlugin(useGSAP);
+
+/** Typed after "Free tools" — each reads as one full statement. */
+const HERO_STATEMENTS = [
+  "for every mind.",
+  "for developers.",
+  "for designers.",
+  "for everyone in between.",
+  "with no strings attached.",
+  "built by two minds.",
+];
 
 export function Hero() {
   const sectionRef = React.useRef<HTMLElement>(null);
@@ -164,9 +175,20 @@ export function Hero() {
           className="grid gap-6 pt-7 pb-16 sm:grid-cols-12 sm:items-baseline"
         >
           <p className="font-heading text-xl font-medium tracking-tight sm:col-span-7 sm:text-2xl">
-            Made by two minds.
+            Free tools
             <br />
-            Free for <span className="text-primary">every mind.</span>
+            <span className="sr-only">for every mind.</span>
+            <TextType
+              as="span"
+              aria-hidden
+              text={HERO_STATEMENTS}
+              typingSpeed={55}
+              deletingSpeed={25}
+              pauseDuration={2200}
+              initialDelay={1200}
+              className="text-primary"
+              cursorClassName="text-primary font-normal"
+            />
           </p>
           <div className="flex items-center sm:col-span-5 sm:justify-end">
             <Button
