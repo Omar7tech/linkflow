@@ -84,7 +84,7 @@ export function Hero() {
       {/* Faded dot grid, weighted to the top-left like the composition */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[size:22px_22px] mask-[radial-gradient(ellipse_65%_70%_at_30%_25%,black,transparent)]"
+        className="absolute inset-0 -z-10 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[size:22px_22px] mask-[radial-gradient(ellipse_75%_85%_at_0%_0%,black_10%,transparent_75%)]"
       />
 
       {/* WebGL light rays from the top-right. Dark mode only — additive light
@@ -164,9 +164,9 @@ export function Hero() {
           className="grid gap-6 pt-7 pb-16 sm:grid-cols-12 sm:items-baseline"
         >
           <p className="font-heading text-xl font-medium tracking-tight sm:col-span-7 sm:text-2xl">
-            Tools for developers
+            Made by two minds.
             <br />
-            and designers.
+            Free for <span className="text-primary">every mind.</span>
           </p>
           <div className="flex items-center sm:col-span-5 sm:justify-end">
             <Button
