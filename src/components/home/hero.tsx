@@ -138,9 +138,9 @@ export function Hero() {
           {/* Parent brand byline, right-aligned to the end of the wordmark */}
           <p
             data-hero-byline
-            className="text-muted-foreground mt-4 flex items-center justify-end gap-3 text-sm font-medium sm:mt-6 sm:text-base"
+            className="text-muted-foreground mt-2 flex items-center justify-end gap-2.5 text-[11px] leading-none font-semibold tracking-[0.18em] sm:mt-3 sm:gap-3 sm:text-xs lg:text-sm"
           >
-            By
+            BY
             <TwoMindsLogo className="h-4 sm:h-5 lg:h-6" />
           </p>
         </div>
