@@ -34,7 +34,7 @@ export const TM_GLYPHS = [
 ];
 
 /** Viewbox trimmed to the ink of the master logo. */
-export const TM_VIEWBOX = "0 22 930 158";
+export const TM_VIEWBOX = "12 22 896 158";
 
 /** Compact "TM" mark — the first two glyphs of the wordmark. */
 export function LogoMark({ className }: { className?: string }) {

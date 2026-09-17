@@ -9,6 +9,7 @@ import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SideRays from "./side-rays";
 import { TM_GLYPHS, TM_VIEWBOX } from "@/components/shared/logo";
+import { TwoMindsLogo } from "@/components/shared/two-minds-logo";
 
 gsap.registerPlugin(useGSAP);
 
@@ -21,17 +22,42 @@ export function Hero() {
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         gsap
           .timeline({ defaults: { ease: "power4.out" } })
-          .from("[data-hero-char]", { y: 170, duration: 1.15, stagger: 0.05 }, 0)
+          .from(
+            "[data-hero-char]",
+            { y: 170, duration: 1.15, stagger: 0.05 },
+            0,
+          )
+          .from(
+            "[data-hero-byline]",
+            { y: 8, autoAlpha: 0, duration: 0.7 },
+            0.55,
+          )
           .from(
             "[data-hero-rule]",
-            { scaleX: 0, transformOrigin: "left center", duration: 1, ease: "power3.inOut" },
-            0.35
+            {
+              scaleX: 0,
+              transformOrigin: "left center",
+              duration: 1,
+              ease: "power3.inOut",
+            },
+            0.35,
           )
-          .from("[data-hero-row] > *", { y: 16, autoAlpha: 0, duration: 0.7, stagger: 0.1 }, 0.6)
+          .from(
+            "[data-hero-row] > *",
+            { y: 16, autoAlpha: 0, duration: 0.7, stagger: 0.1 },
+            0.6,
+          )
           .from(
             "[data-hero-art]",
-            { autoAlpha: 0, scale: 0.6, rotate: -12, y: 40, duration: 1, ease: "back.out(1.5)" },
-            0.4
+            {
+              autoAlpha: 0,
+              scale: 0.6,
+              rotate: -12,
+              y: 40,
+              duration: 1,
+              ease: "back.out(1.5)",
+            },
+            0.4,
           );
 
         // Gentle continuous float — transform only, no layout/paint cost.
@@ -46,7 +72,7 @@ export function Hero() {
         });
       });
     },
-    { scope: sectionRef }
+    { scope: sectionRef },
   );
 
   return (
@@ -94,19 +120,41 @@ export function Hero() {
         />
 
         {/* Wordmark — flush left, each character rising out of its own mask */}
-        <h1 aria-label="TM TOOLS" className="relative z-10 w-[min(100%,56rem)] md:w-[62%]">
-          <svg viewBox={TM_VIEWBOX} aria-hidden className="text-foreground block h-auto w-full overflow-hidden fill-current">
-            {TM_GLYPHS.map((glyph) => (
-              <g key={glyph.key} data-hero-char>
-                {glyph}
-              </g>
-            ))}
-          </svg>
-        </h1>
+        <div className="relative z-10 w-[min(100%,56rem)] md:w-[62%]">
+          <h1 aria-label="TM TOOLS">
+            <svg
+              viewBox={TM_VIEWBOX}
+              aria-hidden
+              className="text-foreground block h-auto w-full overflow-hidden fill-current"
+            >
+              {TM_GLYPHS.map((glyph) => (
+                <g key={glyph.key} data-hero-char>
+                  {glyph}
+                </g>
+              ))}
+            </svg>
+          </h1>
+
+          {/* Parent brand byline, right-aligned to the end of the wordmark */}
+          <p
+            data-hero-byline
+            className="text-muted-foreground mt-4 flex items-center justify-end gap-3 text-sm font-medium sm:mt-6 sm:text-base"
+          >
+            By
+            <TwoMindsLogo className="h-4 sm:h-5 lg:h-6" />
+          </p>
+        </div>
 
         {/* Asymmetric bottom row on a second hairline */}
-        <div data-hero-rule className="bg-border mt-12 h-px w-full" aria-hidden />
-        <div data-hero-row className="grid gap-6 pt-7 pb-16 sm:grid-cols-12 sm:items-baseline">
+        <div
+          data-hero-rule
+          className="bg-border mt-12 h-px w-full"
+          aria-hidden
+        />
+        <div
+          data-hero-row
+          className="grid gap-6 pt-7 pb-16 sm:grid-cols-12 sm:items-baseline"
+        >
           <p className="font-heading text-xl font-medium tracking-tight sm:col-span-7 sm:text-2xl">
             Tools for developers
             <br />
