@@ -141,7 +141,15 @@ export function Hero() {
             className="text-muted-foreground mt-2 flex items-center justify-end gap-2.5 text-[11px] leading-none font-semibold tracking-[0.18em] sm:mt-3 sm:gap-3 sm:text-xs lg:text-sm"
           >
             BY
-            <TwoMindsLogo className="h-4 sm:h-5 lg:h-6" />
+            <a
+              href="https://twomindsengine.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Two Minds Engine (opens in a new tab)"
+              className="hover:text-foreground focus-visible:ring-ring rounded-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <TwoMindsLogo className="block h-4 sm:h-5 lg:h-6" />
+            </a>
           </p>
         </div>
 
