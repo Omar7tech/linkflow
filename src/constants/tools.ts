@@ -71,6 +71,16 @@ import type { ToolCategory, ToolMeta } from "@/types";
 
 export const TOOLS = [
   {
+    id: "promptworkbench",
+    slug: "/tools/prompt-workbench",
+    name: "Prompt Workbench",
+    shortName: "Prompt Workbench",
+    description: "Give your thoughts room to breathe. Capture a brain dump, organize ideas into a clear brief, review repetition and missing details, then copy a structured prompt for any AI. Private local drafts, templates and version snapshots included.",
+    keywords: ["ai prompt builder", "prompt organizer", "prompt editor", "chatgpt prompt maker", "prompt workbench", "structured prompts"],
+    icon: FlaskConicalIcon,
+    category: "type",
+  },
+  {
     id: "markdown",
     slug: "/tools/markdown-studio",
     name: "Visual Markdown Studio",

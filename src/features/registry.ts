@@ -97,4 +97,5 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   sorting: dynamic(() => import("./sorting/sorting-tool").then((m) => m.SortingTool)),
   slugify: dynamic(() => import("./slugify/slugify-tool").then((m) => m.SlugifyTool)),
   markdown: dynamic(() => import("./markdown/markdown-tool").then((m) => m.MarkdownTool)),
+  promptworkbench: dynamic(() => import("./prompt-workbench/prompt-workbench-tool").then((m) => m.PromptWorkbenchTool)),
 };
