@@ -71,6 +71,16 @@ import type { ToolCategory, ToolMeta } from "@/types";
 
 export const TOOLS = [
   {
+    id: "markdown",
+    slug: "/tools/markdown-studio",
+    name: "Visual Markdown Studio",
+    shortName: "Markdown Studio",
+    description: "Write Markdown with a live visual preview, keep documents organized in a private browser library, start from templates, and export Markdown, styled HTML or print-ready PDF.",
+    keywords: ["visual markdown editor", "markdown maker", "markdown preview", "markdown to html", "markdown to pdf", "markdown notes"],
+    icon: BookOpenIcon,
+    category: "type",
+  },
+  {
     id: "editor",
     slug: "/tools/live-editor",
     name: "Live Code Editor",
