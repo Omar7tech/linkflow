@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Footer } from "@/components/shared/footer";
 import { Header } from "@/components/shared/header";
+import { SiteFrame } from "@/components/shared/site-frame";
 import { SwRegister } from "@/components/shared/sw-register";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { SITE } from "@/constants/site";
@@ -81,9 +82,7 @@ export default function RootLayout({
       <body className="flex min-h-screen flex-col" suppressHydrationWarning>
         <ThemeProvider>
           <TooltipProvider>
-            <Header />
-            <main className="flex flex-1 flex-col">{children}</main>
-            <Footer />
+            <SiteFrame header={<Header />} footer={<Footer />}>{children}</SiteFrame>
           </TooltipProvider>
           <Toaster position="bottom-center" />
         </ThemeProvider>
