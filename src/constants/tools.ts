@@ -71,6 +71,16 @@ import type { ToolCategory, ToolMeta } from "@/types";
 
 export const TOOLS = [
   {
+    id: "sitebuilder",
+    slug: "/tools/website-builder",
+    name: "Visual Website Builder",
+    shortName: "Website Builder",
+    description: "Build a complete one-page website by clicking and typing on the page itself. Start from a business template, edit text straight on the design, change colours and fonts with one control, then export clean HTML and CSS you can upload anywhere.",
+    keywords: ["website builder", "no code website maker", "html website generator", "landing page builder", "free website builder", "export html css"],
+    icon: LayoutTemplateIcon,
+    category: "studio",
+  },
+  {
     id: "markdown",
     slug: "/tools/markdown-studio",
     name: "Visual Markdown Studio",

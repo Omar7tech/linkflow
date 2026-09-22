@@ -8,6 +8,7 @@ import type { ToolId } from "@/constants/tools";
  * TypeScript errors if an id is missing.
  */
 export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
+  sitebuilder: dynamic(() => import("./site-builder/site-builder-tool").then((m) => m.SiteBuilderTool)),
   editor: dynamic(() => import("./live-editor/live-editor-tool").then((m) => m.LiveEditorTool)),
   cyberlab: dynamic(() => import("./cyber-lab/cyber-lab-tool").then((m) => m.CyberLabTool)),
   whatsapp: dynamic(() => import("./whatsapp/whatsapp-tool").then((m) => m.WhatsAppTool)),
