@@ -14,6 +14,7 @@
 
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { clone as cloneRigged } from "three/examples/jsm/utils/SkeletonUtils.js";
 import {
   drawContent,
   paintPlaceholder,
@@ -35,6 +36,8 @@ export interface GLSceneConfig {
   lighting: LightingId;
   /** Average backdrop color (0..255) that bleeds into the reflections. */
   tint: [number, number, number] | null;
+  /** 0..1 along the model's pose animation (ignored by models without one). */
+  pose: number;
 }
 
 /* ------------------------------------------------------------------ models */
@@ -46,18 +49,26 @@ interface Rect {
   h: number;
 }
 
+interface LoadedScreen {
+  mesh: string;
+  /** Size in millimetres. */
+  w: number;
+  h: number;
+  back: boolean;
+  /** Island hardware on the panel, as fractions of the screen from its top-left. */
+  island: Rect | null;
+}
+
 interface LoadedModel {
   def: DeviceModel;
   scene: THREE.Group;
   /** Bounding-box center, in model units. */
   center: THREE.Vector3;
-  /** Overall and screen size, in millimetres. */
+  /** Overall size, in millimetres. */
   w: number;
   h: number;
-  screenW: number;
-  screenH: number;
-  /** Island hardware on the panel, in millimetres from the screen's top-left. */
-  island: Rect | null;
+  screens: LoadedScreen[];
+  clip: THREE.AnimationClip | null;
   /** Luminance of the reference materials finishes are scaled against. */
   frameLum: number;
   bodyLum: number;
@@ -65,8 +76,10 @@ interface LoadedModel {
 
 /** What the UI needs to know about a device once its model has loaded. */
 export interface DeviceInfo {
-  /** Screen height ÷ width, upright. */
+  /** Main screen height ÷ width, upright. */
   screenRatio: number;
+  /** One label per screen, in slot order. */
+  screens: string[];
 }
 
 const luminance = (c: THREE.Color) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
@@ -83,41 +96,56 @@ export function loadDeviceModel(def: DeviceModel): Promise<DeviceInfo | null> {
       .then((gltf) => {
         const scene = gltf.scene;
         scene.updateMatrixWorld(true);
-        const screen = scene.getObjectByName(def.parts.screen);
-        if (!(screen instanceof THREE.Mesh)) return null;
-
         const k = def.scale;
         const box = new THREE.Box3().setFromObject(scene);
         const size = box.getSize(new THREE.Vector3());
-        const panel = new THREE.Box3().setFromObject(screen);
-        const panelSize = panel.getSize(new THREE.Vector3());
 
-        // Remap the panel's UVs to its own bounds, so any canvas fills it edge to edge.
-        const geo = screen.geometry as THREE.BufferGeometry;
-        const pos = geo.attributes.position;
-        const uv = new Float32Array(pos.count * 2);
-        const v = new THREE.Vector3();
-        for (let i = 0; i < pos.count; i++) {
-          v.fromBufferAttribute(pos, i).applyMatrix4(screen.matrixWorld);
-          uv[i * 2] = (v.x - panel.min.x) / panelSize.x;
-          uv[i * 2 + 1] = (v.y - panel.min.y) / panelSize.y;
-        }
-        geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+        const screens: LoadedScreen[] = [];
+        for (const sd of def.screens) {
+          const mesh = scene.getObjectByName(sd.mesh);
+          if (!(mesh instanceof THREE.Mesh)) return null;
+          const panel = new THREE.Box3().setFromObject(mesh);
+          const span = panel.getSize(new THREE.Vector3());
+          // A back-facing panel is seen mirrored, so its U runs the other way.
+          const u = (x: number) => (sd.back ? panel.max.x - x : x - panel.min.x) / span.x;
+          const vOf = (y: number) => (y - panel.min.y) / span.y;
 
-        const hardware = new THREE.Box3();
-        for (const name of def.parts.island) {
-          const part = scene.getObjectByName(name);
-          if (part) hardware.expandByObject(part);
+          // Remap the panel's UVs to its own bounds, so any canvas fills it edge to edge.
+          const geo = mesh.geometry as THREE.BufferGeometry;
+          const pos = geo.attributes.position;
+          const uv = new Float32Array(pos.count * 2);
+          const p = new THREE.Vector3();
+          for (let i = 0; i < pos.count; i++) {
+            p.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
+            uv[i * 2] = u(p.x);
+            uv[i * 2 + 1] = vOf(p.y);
+          }
+          geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+
+          const hardware = new THREE.Box3();
+          for (const name of sd.island) {
+            const part = scene.getObjectByName(name);
+            if (part) hardware.expandByObject(part);
+          }
+          const padU = 0.2 / (span.x * k); // 0.2 mm of black around the hardware
+          const padV = 0.2 / (span.y * k);
+          const u0 = Math.min(u(hardware.min.x), u(hardware.max.x));
+          const u1 = Math.max(u(hardware.min.x), u(hardware.max.x));
+          screens.push({
+            mesh: sd.mesh,
+            w: span.x * k,
+            h: span.y * k,
+            back: !!sd.back,
+            island: hardware.isEmpty()
+              ? null
+              : {
+                  x: u0 - padU,
+                  y: 1 - vOf(hardware.max.y) - padV,
+                  w: u1 - u0 + padU * 2,
+                  h: vOf(hardware.max.y) - vOf(hardware.min.y) + padV * 2,
+                },
+          });
         }
-        const pad = 0.2; // mm of black around the hardware
-        const island = hardware.isEmpty()
-          ? null
-          : {
-              x: (hardware.min.x - panel.min.x) * k - pad,
-              y: (panel.max.y - hardware.max.y) * k - pad,
-              w: (hardware.max.x - hardware.min.x) * k + pad * 2,
-              h: (hardware.max.y - hardware.min.y) * k + pad * 2,
-            };
 
         let frameLum = 0.1;
         let bodyLum = 0.1;
@@ -134,13 +162,12 @@ export function loadDeviceModel(def: DeviceModel): Promise<DeviceInfo | null> {
           center: box.getCenter(new THREE.Vector3()),
           w: size.x * k,
           h: size.y * k,
-          screenW: panelSize.x * k,
-          screenH: panelSize.y * k,
-          island,
+          screens,
+          clip: (def.pose && gltf.animations.find((c) => c.name === def.pose?.clip)) || null,
           frameLum,
           bodyLum,
         });
-        return { screenRatio: panelSize.y / panelSize.x };
+        return { screenRatio: screens[0].h / screens[0].w, screens: def.screens.map((sd) => sd.label) };
       })
       .catch(() => null);
     loading.set(def.id, task);
@@ -243,7 +270,8 @@ interface Surface {
   /** Upright (visual) dims — swapped from texture dims when the device is rotated. */
   upW: number;
   upH: number;
-  rotated: boolean;
+  /** Quarter turns the content is painted at to stay upright (0 in portrait). */
+  turn: number;
   /** Island hardware to black out, in texture pixels. */
   island: Rect | null;
   src: ScreenSource | null;
@@ -252,7 +280,11 @@ interface Surface {
 
 interface Built {
   group: THREE.Group;
-  surface: Surface;
+  body: THREE.Object3D;
+  surfaces: Surface[];
+  rigged: THREE.SkinnedMesh[];
+  mixer: THREE.AnimationMixer | null;
+  poseLength: number;
   /** Visual footprint, for laying several devices out. */
   w: number;
   h: number;
@@ -284,6 +316,7 @@ export class GLMockupRenderer {
   private envTarget: THREE.WebGLRenderTarget | null = null;
   private envKey = "";
   private sceneKey = "";
+  private pose = -1;
   private trash: { dispose(): void }[] = [];
   private built: Built[] = [];
   private glassMats: { mat: THREE.MeshPhysicalMaterial; gain: number }[] = [];
@@ -349,20 +382,35 @@ export class GLMockupRenderer {
       return false;
     }
     const key = `${cfg.model.id}|${cfg.orientation}|${cfg.finish.id}|${cfg.layout}`;
-    if (key === this.sceneKey) return true;
-    this.sceneKey = key;
-    this.clear();
-    const content = new THREE.Group();
-    for (const slot of SLOTS[cfg.layout]) {
-      const b = this.build(model, cfg.finish, cfg.orientation === "landscape");
-      b.group.position.set(slot.x * b.w, slot.y * b.h, slot.z * b.w);
-      content.add(b.group);
-      this.built.push(b);
+    if (key !== this.sceneKey) {
+      this.sceneKey = key;
+      this.clear();
+      const content = new THREE.Group();
+      for (const slot of SLOTS[cfg.layout]) {
+        const b = this.build(model, cfg.finish, cfg.orientation === "landscape");
+        b.group.position.set(slot.x * b.w, slot.y * b.h, slot.z * b.w);
+        content.add(b.group);
+        this.built.push(b);
+      }
+      this.content = content;
+      this.rig.add(content);
+      for (const b of this.built) for (const s of b.surfaces) this.paint(s);
+      this.pose = -1;
     }
-    this.content = content;
-    this.rig.add(content);
-    for (const b of this.built) this.paint(b.surface);
-    this.measure();
+    if (cfg.pose !== this.pose) {
+      this.pose = cfg.pose;
+      for (const b of this.built) {
+        if (!b.mixer) continue;
+        // Stop a hair short of the end: the clip's last instant wraps to its first.
+        b.mixer.setTime(Math.min(cfg.pose, 0.9999) * b.poseLength);
+        b.body.updateMatrixWorld(true);
+        for (const m of b.rigged) {
+          m.skeleton.update();
+          m.computeBoundingBox();
+        }
+      }
+      this.measure();
+    }
     return true;
   }
 
@@ -410,20 +458,20 @@ export class GLMockupRenderer {
     return mat;
   }
 
-  private makeSurface(model: LoadedModel, rotated: boolean, showIsland: boolean): Surface {
-    const px = 2600 / Math.max(model.screenW, model.screenH);
+  private makeSurface(screen: LoadedScreen, rotated: boolean, showIsland: boolean): Surface {
+    const px = 2600 / Math.max(screen.w, screen.h);
     const canvas = document.createElement("canvas");
-    canvas.width = Math.round(model.screenW * px);
-    canvas.height = Math.round(model.screenH * px);
+    canvas.width = Math.round(screen.w * px);
+    canvas.height = Math.round(screen.h * px);
     const texture = this.track(new THREE.CanvasTexture(canvas));
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
     const material = this.track(new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }));
-    // Island hardware is coplanar with the panel — push the panel back so it wins.
+    // Island hardware and the cover glass share the panel's plane — push the panel back so they win.
     material.polygonOffset = true;
     material.polygonOffsetFactor = 2;
     material.polygonOffsetUnits = 2;
-    const i = model.island;
+    const i = screen.island;
     return {
       canvas,
       ctx: canvas.getContext("2d")!,
@@ -431,8 +479,12 @@ export class GLMockupRenderer {
       material,
       upW: rotated ? canvas.height : canvas.width,
       upH: rotated ? canvas.width : canvas.height,
-      rotated,
-      island: showIsland && i ? { x: i.x * px, y: i.y * px, w: i.w * px, h: i.h * px } : null,
+      // Seen from behind, the device's quarter turn runs the other way.
+      turn: rotated ? (screen.back ? -1 : 1) : 0,
+      island:
+        showIsland && i
+          ? { x: i.x * canvas.width, y: i.y * canvas.height, w: i.w * canvas.width, h: i.h * canvas.height }
+          : null,
       src: null,
       scroll: 0,
     };
@@ -446,10 +498,10 @@ export class GLMockupRenderer {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, tw, th);
     ctx.save();
-    if (s.rotated) {
+    if (s.turn) {
       // The mesh is turned with the device, so content is painted turned back.
       ctx.translate(tw / 2, th / 2);
-      ctx.rotate(Math.PI / 2);
+      ctx.rotate((s.turn * Math.PI) / 2);
       ctx.translate(-s.upW / 2, -s.upH / 2);
     }
     if (s.src) drawContent(ctx, s.src, 0, 0, s.upW, s.upH, s.scroll);
@@ -471,12 +523,12 @@ export class GLMockupRenderer {
     const rules = def.materials;
     const clay = !!finish.clay;
     const g = new THREE.Group();
-    const body = model.scene.clone(true);
+    const body = cloneRigged(model.scene); // keeps skinned parts bound to their own bones
     body.scale.setScalar(def.scale);
     body.position.copy(model.center).multiplyScalar(-def.scale);
     g.add(body);
 
-    const surface = this.makeSurface(model, landscape, !clay);
+    const surfaces = model.screens.map((sc) => this.makeSurface(sc, landscape, !clay));
 
     // Finishes recolor the model: frame parts follow the frame color, the rest
     // follow the back glass, each keeping its original tone relative to its reference.
@@ -504,15 +556,21 @@ export class GLMockupRenderer {
     const clayDark = clay ? this.track(new THREE.MeshStandardMaterial({ color: finish.dark, roughness: 0.82 })) : null;
 
     const faces: THREE.Mesh[] = [];
+    const rigged: THREE.SkinnedMesh[] = [];
     body.traverse((o) => {
       if (!(o instanceof THREE.Mesh)) return;
+      if (o instanceof THREE.SkinnedMesh) {
+        rigged.push(o);
+        o.frustumCulled = false; // its bounds move with the pose
+      }
       const src = o.material as THREE.MeshStandardMaterial;
-      if (o.name === def.parts.screen) {
-        o.material = surface.material;
+      const screen = model.screens.findIndex((sc) => sc.mesh === o.name);
+      if (screen >= 0) {
+        o.material = surfaces[screen].material;
         faces.push(o);
         return;
       }
-      if (def.parts.face.includes(o.name)) faces.push(o);
+      if (def.face.includes(o.name)) faces.push(o);
       if (rules.clearGlass.includes(src.name)) {
         o.material = this.glassMaterial(clay ? 0.1 : 0.3);
         o.renderOrder = 2;
@@ -524,38 +582,64 @@ export class GLMockupRenderer {
         o.material = mat;
       }
     });
-    // Cover glass: the face again, a hair forward, carrying only reflections.
+    // Cover glass: the face drawn a second time, carrying only reflections.
     const cover = this.glassMaterial(clay ? 0.35 : 1);
     for (const face of faces) {
-      const layer = new THREE.Mesh(face.geometry, cover);
+      let layer: THREE.Mesh;
+      if (face instanceof THREE.SkinnedMesh) {
+        const skinned = new THREE.SkinnedMesh(face.geometry, cover);
+        skinned.bind(face.skeleton, face.bindMatrix);
+        skinned.frustumCulled = false;
+        rigged.push(skinned); // its bounds must follow the pose too
+        layer = skinned;
+      } else {
+        layer = new THREE.Mesh(face.geometry, cover);
+      }
       layer.position.copy(face.position);
       layer.quaternion.copy(face.quaternion);
       layer.scale.copy(face.scale);
-      layer.position.z += 0.04 / def.scale;
       layer.renderOrder = 2;
       face.parent?.add(layer);
     }
 
+    let mixer: THREE.AnimationMixer | null = null;
+    if (model.clip) {
+      mixer = new THREE.AnimationMixer(body);
+      mixer.clipAction(model.clip).play();
+    }
+
     g.rotation.z = landscape ? Math.PI / 2 : 0;
-    return { group: g, surface, w: landscape ? model.h : model.w, h: landscape ? model.w : model.h };
+    return {
+      group: g,
+      body,
+      surfaces,
+      rigged,
+      mixer,
+      poseLength: model.clip?.duration ?? 0,
+      w: landscape ? model.h : model.w,
+      h: landscape ? model.w : model.h,
+    };
   }
 
   /* ------------------------------------------------------------- per frame */
 
   /**
-   * Screen content, one source per device. Fewer sources than devices repeat;
-   * videos repaint every call, images only when they or the scroll change.
+   * Screen content, one source per screen: device by device, each device's
+   * screens in catalog order. Missing sources repeat the first one; videos
+   * repaint every call, images only when they or the scroll change.
    */
   setScreens(srcs: (ScreenSource | null)[], scroll: number) {
     const first = srcs.find((s) => s) ?? null;
-    this.built.forEach((b, i) => {
-      const s = b.surface;
-      const src = srcs[i] ?? first;
-      const changed = src !== s.src || (scroll !== s.scroll && src !== null);
-      s.src = src;
-      s.scroll = scroll;
-      if (changed || src instanceof HTMLVideoElement) this.paint(s);
-    });
+    let slot = 0;
+    for (const b of this.built) {
+      for (const s of b.surfaces) {
+        const src = srcs[slot++] ?? first;
+        const changed = src !== s.src || (scroll !== s.scroll && src !== null);
+        s.src = src;
+        s.scroll = scroll;
+        if (changed || src instanceof HTMLVideoElement) this.paint(s);
+      }
+    }
   }
 
   setView(rotX: number, rotY: number, camDist: number, zoom: number, glare: number) {
@@ -564,7 +648,8 @@ export class GLMockupRenderer {
     for (const { mat, gain } of this.glassMats) mat.envMapIntensity = glare * 0.9 * gain;
     // Panels lose apparent brightness as they turn away from the viewer.
     const facing = Math.max(0, Math.cos(rotX) * Math.cos(rotY));
-    for (const b of this.built) b.surface.material.color.setScalar(1 - (1 - facing) * 0.16);
+    const dim = 1 - (1 - facing) * 0.16;
+    for (const b of this.built) for (const s of b.surfaces) s.material.color.setScalar(dim);
 
     // Same lens feel for every device: camera distance scales with subject size.
     const dist = camDist * (Math.max(this.spanW, this.spanH) / 156);

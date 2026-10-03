@@ -42,10 +42,10 @@ const KIND_ICON: Record<DeviceModel["kind"], typeof SmartphoneIcon> = {
   laptop: LaptopIcon,
 };
 
-const LAYOUTS: { id: LayoutId; label: string; screens: number }[] = [
-  { id: "single", label: "Single", screens: 1 },
-  { id: "duo", label: "Duo", screens: 2 },
-  { id: "trio", label: "Trio", screens: 3 },
+const LAYOUTS: { id: LayoutId; label: string; devices: number }[] = [
+  { id: "single", label: "Single", devices: 1 },
+  { id: "duo", label: "Duo", devices: 2 },
+  { id: "trio", label: "Trio", devices: 3 },
 ];
 
 const LIGHTINGS: { id: LightingId; label: string }[] = [
@@ -74,13 +74,14 @@ const ASPECTS: { id: string; label: string; w: number; h: number }[] = [
 
 const EXPORT_SCALES = [1, 2, 4] as const;
 
-type Anim = "off" | "orbit" | "float" | "reveal" | "scroll";
+type Anim = "off" | "orbit" | "float" | "reveal" | "scroll" | "pose";
 const ANIMS: { id: Anim; label: string; ms: number }[] = [
   { id: "off", label: "Off", ms: 0 },
   { id: "orbit", label: "Orbit", ms: 9_000 }, // one full turn
   { id: "float", label: "Float", ms: 12_600 }, // one full drift cycle
   { id: "reveal", label: "Reveal", ms: 5_500 },
   { id: "scroll", label: "Scroll", ms: 8_000 },
+  { id: "pose", label: "Pose", ms: 6_000 }, // labelled by the model (e.g. "Fold")
 ];
 
 /** Curated one-click scene looks: camera, light, effects, backdrop and finish together. */
@@ -207,13 +208,14 @@ export function MockupTool() {
   const [glow, setGlow] = React.useState(0.3);
   const [grain, setGrain] = React.useState(0);
   const [scroll, setScroll] = React.useState(0);
+  const [pose, setPose] = React.useState(0); // 0..1 along the model's pose animation
   const [glowRgb, setGlowRgb] = React.useState<[number, number, number]>([16, 185, 129]);
   // Two colors lifted from the screen content — powers the "Match" backdrop.
   const [match, setMatch] = React.useState<[string, string] | null>(null);
   const [customBg, setCustomBg] = React.useState("#10b981");
   const [anim, setAnim] = React.useState<Anim>("off");
   // One slot per device in the layout; empty slots repeat the first screen.
-  const [sources, setSources] = React.useState<(Source | null)[]>([null, null, null]);
+  const [sources, setSources] = React.useState<(Source | null)[]>(() => Array<Source | null>(6).fill(null));
   const [recording, setRecording] = React.useState(false);
   const [recProgress, setRecProgress] = React.useState(0);
   const [dragOver, setDragOver] = React.useState(false);
@@ -322,7 +324,14 @@ export function MockupTool() {
     return [sum[0] / 64, sum[1] / 64, sum[2] / 64];
   }, [background, bgId]);
 
-  const slotCount = LAYOUTS.find((l) => l.id === layout)?.screens ?? 1;
+  // One slot per screen: device by device, each device's screens in order.
+  const deviceCount = LAYOUTS.find((l) => l.id === layout)?.devices ?? 1;
+  const screenLabels = info?.screens ?? ["Screen"];
+  const slotCount = deviceCount * screenLabels.length;
+  const slotLabel = (i: number) =>
+    screenLabels.length > 1
+      ? `${screenLabels[i % screenLabels.length]}${deviceCount > 1 ? ` ${Math.floor(i / screenLabels.length) + 1}` : ""}`
+      : `Screen ${i + 1}`;
   const shown = sources.slice(0, slotCount);
   const hasSource = shown.some(Boolean);
   const hasVideo = shown.some((s) => s?.kind === "video");
@@ -355,7 +364,7 @@ export function MockupTool() {
       const gl = glReady && info ? glRef.current : null;
       if (!gl) return;
       gl.setSize(w, h);
-      if (!gl.prepare({ model, orientation, finish, layout, lighting, tint })) return;
+      if (!gl.prepare({ model, orientation, finish, layout, lighting, tint, pose: model.pose ? pose : 0 })) return;
       gl.setScreens(
         sources.slice(0, slotCount).map((s) => (!s ? null : s.kind === "image" ? s.media : s.el)),
         scroll
@@ -364,7 +373,7 @@ export function MockupTool() {
       gl.render();
       composeScene(ctx, gl.domElement, sceneOpts, gl.floorScreenY());
     },
-    [sceneOpts, sources, slotCount, scroll, glare, glReady, info, model, orientation, finish, layout, lighting, tint]
+    [sceneOpts, sources, slotCount, scroll, glare, glReady, info, model, orientation, finish, layout, lighting, tint, pose]
   );
 
   // Static render on any change; continuous loop while a video is playing.
@@ -401,9 +410,9 @@ export function MockupTool() {
 
   // Animation. Each mode moves the camera from where the user left it; the
   // clock lives in a ref so a recording can restart the move from frame one.
-  const viewRef = React.useRef({ rotX, rotY, zoom, scroll });
+  const viewRef = React.useRef({ rotX, rotY, zoom, scroll, pose });
   React.useEffect(() => {
-    viewRef.current = { rotX, rotY, zoom, scroll };
+    viewRef.current = { rotX, rotY, zoom, scroll, pose };
   });
   const animClock = React.useRef(0);
   React.useEffect(() => {
@@ -429,10 +438,15 @@ export function MockupTool() {
           setRotY(wrap(base.rotY - 150 * (1 - e)));
           setRotX(base.rotX + 26 * (1 - e));
           setZoom(base.zoom * (0.6 + 0.4 * e));
-        } else {
+        } else if (anim === "scroll") {
           const p = (t % 8) / 8;
           setScroll(easeInOut(p < 0.5 ? p * 2 : 2 - p * 2));
           setRotY(base.rotY + Math.sin(t * 0.55) * 3.5);
+        } else {
+          // Run the model's pose there and back while the camera drifts around it.
+          const p = (t % 6) / 6;
+          setPose(easeInOut(p < 0.5 ? p * 2 : 2 - p * 2));
+          setRotY(base.rotY + Math.sin((t / 6) * Math.PI * 2) * 22);
         }
       }
       raf = requestAnimationFrame(loop);
@@ -440,11 +454,12 @@ export function MockupTool() {
     raf = requestAnimationFrame(loop);
     return () => {
       cancelAnimationFrame(raf);
-      if (anim === "reveal" || anim === "scroll") {
+      if (anim === "reveal" || anim === "scroll" || anim === "pose") {
         setRotX(base.rotX);
         setRotY(base.rotY);
         setZoom(base.zoom);
         setScroll(base.scroll);
+        setPose(base.pose);
       }
     };
   }, [anim]);
@@ -923,7 +938,18 @@ export function MockupTool() {
         <Card>
           <CardContent className="space-y-5">
             {DEVICE_MODELS.length > 1 && (
-              <Tabs value={device} onValueChange={setDevice}>
+              <Tabs
+                value={device}
+                onValueChange={(id) => {
+                  // Each model opens in its own colors, unposed.
+                  const next = DEVICE_MODELS.find((d) => d.id === id);
+                  if (!next) return;
+                  if (anim === "pose") setAnim("off");
+                  setDevice(id);
+                  setFinishId(next.originalFinish);
+                  setPose(0);
+                }}
+              >
                 <TabsList className="w-full">
                   {DEVICE_MODELS.map((d) => {
                     const Icon = KIND_ICON[d.kind];
@@ -958,6 +984,18 @@ export function MockupTool() {
                 </TabsList>
               </Tabs>
             </div>
+
+            {model.pose && (
+              <SliderRow
+                label={model.pose.label}
+                value={pose}
+                min={0}
+                max={1}
+                step={0.01}
+                display={`${Math.round(pose * 100)}%`}
+                onChange={setPose}
+              />
+            )}
 
             <div className="space-y-2">
               {shown.map((source, i) => (
@@ -1014,9 +1052,9 @@ export function MockupTool() {
                         <ImageIcon className="size-4" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-medium">Screen {i + 1}</span>
+                        <span className="block text-sm font-medium">{slotLabel(i)}</span>
                         <span className="text-muted-foreground block text-xs">
-                          {i > 0 && sources[0] ? "Showing screen 1 · click to add its own" : "Add a screenshot or video"}
+                          {i > 0 && sources[0] ? "Showing the first one · click to add its own" : "Add a screenshot or video"}
                         </span>
                       </span>
                     </>
@@ -1133,14 +1171,14 @@ export function MockupTool() {
               <Label>Animation</Label>
               <Tabs value={anim} onValueChange={(v) => setAnim(v as Anim)}>
                 <TabsList className="w-full">
-                  {ANIMS.map((a) => (
+                  {ANIMS.filter((a) => a.id !== "pose" || model.pose).map((a) => (
                     <TabsTrigger
                       key={a.id}
                       value={a.id}
                       className="flex-1"
                       disabled={a.id === "scroll" && !scrollable}
                     >
-                      {a.label}
+                      {a.id === "pose" ? model.pose?.label : a.label}
                     </TabsTrigger>
                   ))}
                 </TabsList>

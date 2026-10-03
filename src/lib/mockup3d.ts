@@ -180,6 +180,7 @@ export interface FrameFinish {
 
 export const FINISHES: readonly FrameFinish[] = [
   { id: "titanium", label: "Natural Titanium", light: "#b3ada3", dark: "#5f5a53" },
+  { id: "starwhite", label: "Star White", light: "#b3b0a8", dark: "#e9e6e0" },
   { id: "burgundy", label: "Burgundy", light: "#62464b", dark: "#46202a" },
   { id: "black", label: "Space Black", light: "#3c3c3f", dark: "#151517" },
   { id: "silver", label: "Silver", light: "#e2e3e6", dark: "#a2a4a9" },
