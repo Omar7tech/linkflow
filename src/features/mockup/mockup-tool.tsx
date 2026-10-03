@@ -269,6 +269,7 @@ export function MockupTool() {
     };
   }, [model]);
   const info = modelState?.id === model.id ? modelState.info : null;
+  const turned = !model.fixedOrientation && orientation === "landscape";
   const modelFailed = modelState?.id === model.id && !modelState.info;
 
   const finish = FINISHES.find((f) => f.id === finishId) ?? FINISHES[0];
@@ -336,7 +337,7 @@ export function MockupTool() {
   const hasSource = shown.some(Boolean);
   const hasVideo = shown.some((s) => s?.kind === "video");
   // Content taller than the screen can be scrolled inside it.
-  const screenRatio = info ? (orientation === "portrait" ? info.screenRatio : 1 / info.screenRatio) : Infinity;
+  const screenRatio = info ? (turned ? 1 / info.screenRatio : info.screenRatio) : Infinity;
   const scrollable = shown.some((s) => s && s.ratio > screenRatio * 1.05);
   // Camera distance from the lens slider — log scale, ~24mm wide to ~150mm tele.
   const camera = Math.round(320 * Math.pow(6.25, lens));
@@ -364,7 +365,16 @@ export function MockupTool() {
       const gl = glReady && info ? glRef.current : null;
       if (!gl) return;
       gl.setSize(w, h);
-      if (!gl.prepare({ model, orientation, finish, layout, lighting, tint, pose: model.pose ? pose : 0 })) return;
+      const config = {
+        model,
+        orientation: turned ? ("landscape" as const) : ("portrait" as const),
+        finish,
+        layout,
+        lighting,
+        tint,
+        pose: model.pose ? pose : 0,
+      };
+      if (!gl.prepare(config)) return;
       gl.setScreens(
         sources.slice(0, slotCount).map((s) => (!s ? null : s.kind === "image" ? s.media : s.el)),
         scroll
@@ -373,7 +383,7 @@ export function MockupTool() {
       gl.render();
       composeScene(ctx, gl.domElement, sceneOpts, gl.floorScreenY());
     },
-    [sceneOpts, sources, slotCount, scroll, glare, glReady, info, model, orientation, finish, layout, lighting, tint, pose]
+    [sceneOpts, sources, slotCount, scroll, glare, glReady, info, model, turned, finish, layout, lighting, tint, pose]
   );
 
   // Static render on any change; continuous loop while a video is playing.
@@ -963,15 +973,17 @@ export function MockupTool() {
               </Tabs>
             )}
 
-            <div className="flex items-center justify-between">
-              <Label>Orientation</Label>
-              <Tabs value={orientation} onValueChange={(v) => setOrientation(v as Orientation)}>
-                <TabsList>
-                  <TabsTrigger value="portrait">Portrait</TabsTrigger>
-                  <TabsTrigger value="landscape">Landscape</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
+            {!model.fixedOrientation && (
+              <div className="flex items-center justify-between">
+                <Label>Orientation</Label>
+                <Tabs value={orientation} onValueChange={(v) => setOrientation(v as Orientation)}>
+                  <TabsList>
+                    <TabsTrigger value="portrait">Portrait</TabsTrigger>
+                    <TabsTrigger value="landscape">Landscape</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <Label>Layout</Label>
               <Tabs value={layout} onValueChange={(v) => setLayout(v as LayoutId)}>

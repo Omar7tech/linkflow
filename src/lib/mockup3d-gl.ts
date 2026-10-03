@@ -134,7 +134,8 @@ export function loadDeviceModel(def: DeviceModel): Promise<DeviceInfo | null> {
           screens.push({
             mesh: sd.mesh,
             w: span.x * k,
-            h: span.y * k,
+            // A leaning panel (a laptop lid) is taller than its upright extent.
+            h: Math.hypot(span.y, span.z) * k,
             back: !!sd.back,
             island: hardware.isEmpty()
               ? null
@@ -545,7 +546,7 @@ export class GLMockupRenderer {
           mat.depthWrite = false;
         }
       }
-      if (!original && mat.name.startsWith(rules.colored) && !rules.keep.includes(mat.name)) {
+      if (!original && rules.colored.test(mat.name) && !rules.keep.includes(mat.name)) {
         const isFrame = rules.frame.test(mat.name);
         const ratio = luminance(mat.color) / (isFrame ? model.frameLum : model.bodyLum);
         mat.color.copy(isFrame ? frame : backGlass).multiplyScalar(Math.min(1.5, Math.max(0.45, ratio)));

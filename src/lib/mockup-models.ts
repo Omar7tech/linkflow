@@ -31,13 +31,15 @@ export interface DeviceModel {
   face: string[];
   /** An animation in the file exposed as a slider (a hinge, a lid). */
   pose?: { clip: string; label: string };
+  /** The device only makes sense one way up (a laptop) — no portrait/landscape choice. */
+  fixedOrientation?: boolean;
   materials: {
     /** Materials exported opaque that are really clear glass: they keep only reflections. */
     clearGlass: string[];
     /** Materials whose exported alpha should be ignored. */
     forceOpaque: string[];
-    /** Name prefix of the materials that follow the chosen finish. */
-    colored: string;
+    /** Materials that follow the chosen finish. */
+    colored: RegExp;
     /** Which of those belong to the metal frame; the rest follow the back glass. */
     frame: RegExp;
     /** Reference materials — every colored part keeps its tone relative to these. */
@@ -64,7 +66,7 @@ export const DEVICE_MODELS: readonly DeviceModel[] = [
     materials: {
       clearGlass: ["BASE_Glass"],
       forceOpaque: ["COLOUR_Cherry_Backpanel"],
-      colored: "COLOUR_",
+      colored: /^COLOUR_/,
       frame: /Side_Panel|Aniso|Screws|Border/,
       frameRef: "COLOUR_Cherry_Side_Panel",
       bodyRef: "COLOUR_Cherry_Backpanel",
@@ -88,7 +90,7 @@ export const DEVICE_MODELS: readonly DeviceModel[] = [
     materials: {
       clearGlass: ["BASE_Glass"],
       forceOpaque: [],
-      colored: "C_",
+      colored: /^C_/,
       frame: /Side|Screws|Antenna/,
       frameRef: "C_StarWhite_Side",
       bodyRef: "C_StarWhite_Backpanel",
@@ -96,5 +98,28 @@ export const DEVICE_MODELS: readonly DeviceModel[] = [
     },
     originalFinish: "starwhite",
     clayBody: /^(Side_Panel|Back_Panel|Antenna|Side_Buttons|Screws|Axle|Back_Cam_Border$|Back_Cam_Detail)/,
+  },
+  {
+    // Exported with scrambled part names; each was identified by material and position.
+    id: "macbook-pro-14",
+    label: "MacBook Pro",
+    kind: "laptop",
+    url: "/models/macbook-pro-14.glb",
+    scale: 1000,
+    screens: [{ mesh: "tfTbkkzhxqpKRgC", label: "Screen", island: [] }],
+    face: ["nAIWMiVEtSYdjdZ"], // display glass around the panel
+    fixedOrientation: true,
+    materials: {
+      clearGlass: [],
+      forceOpaque: [],
+      // The four anodized-aluminium materials: base, lid, underside, trackpad.
+      colored: /^(zNRfbdNyoCOxSDD|HdeQgqDhVRltuvQ|XvtJEVWVvyDeJRR|WiyOPYJEeiHNVjF)$/,
+      frame: /./,
+      frameRef: "HdeQgqDhVRltuvQ",
+      bodyRef: "HdeQgqDhVRltuvQ",
+      keep: [],
+    },
+    originalFinish: "black",
+    clayBody: /^(AQdtiiJfiakvCKx|cdsXAgNBwwCPrIE|UcEDhfwzyyGMEfj|KjpcUkkMjGYeXkV|qbFEMXRbwPWbFTN|WzbwnVztmigkRgn|mTDvrHXNRqkIrBd|WZqbfOdYdlPMpRs|lzNeOaWQWAReGok|IJeReHnhQHJFtgB)$/,
   },
 ];

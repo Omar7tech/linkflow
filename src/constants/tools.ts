@@ -272,11 +272,12 @@ export const TOOLS = [
     name: "3D Device Mockups",
     shortName: "3D Mockup",
     description:
-      "Put your screenshot or video on true-to-life 3D models of the iPhone and a folding iPhone you can open and close. Orbit all the way around to the back, light it with studio softboxes, pair up to three screens, and scroll a full page inside the display. Export a crisp PNG up to 4×, or a WebM clip of a cinematic reveal.",
+      "Put your screenshot or video on true-to-life 3D models: an iPhone, a folding iPhone you can open and close, and a MacBook Pro. Orbit all the way around to the back, light it with studio softboxes, pair up to three screens, and scroll a full page inside the display. Export a crisp PNG up to 4×, or a WebM clip of a cinematic reveal.",
     keywords: [
       "3d device mockup",
       "iphone mockup generator",
       "foldable phone mockup",
+      "macbook mockup",
       "clay device mockup",
       "app screenshot mockup",
       "video mockup generator",
