@@ -2,26 +2,33 @@
 
 import * as React from "react";
 import {
+  BoxIcon,
   CopyIcon,
   DownloadIcon,
   ImageIcon,
   LaptopIcon,
   Loader2Icon,
+  MinusIcon,
+  Move3dIcon,
   PackageIcon,
+  PaletteIcon,
+  PlusIcon,
+  Redo2Icon,
   RotateCcwIcon,
   SmartphoneIcon,
   SparklesIcon,
+  SunIcon,
   TabletIcon,
+  Undo2Icon,
   VideoIcon,
   XIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GeneratorLayout } from "@/components/shared/generator-layout";
+import { FavoriteButton } from "@/components/shared/favorite-button";
 import { TOOL_BY_ID } from "@/constants/tools";
 import { DEVICE_MODELS, type DeviceModel } from "@/lib/mockup-models";
 import {
@@ -334,7 +341,6 @@ export function MockupTool() {
       ? `${screenLabels[i % screenLabels.length]}${deviceCount > 1 ? ` ${Math.floor(i / screenLabels.length) + 1}` : ""}`
       : `Screen ${i + 1}`;
   const shown = sources.slice(0, slotCount);
-  const hasSource = shown.some(Boolean);
   const hasVideo = shown.some((s) => s?.kind === "video");
   // Content taller than the screen can be scrolled inside it.
   const screenRatio = info ? (turned ? 1 / info.screenRatio : info.screenRatio) : Infinity;
@@ -787,635 +793,753 @@ export function MockupTool() {
     return () => clearTimeout(t);
   }, [anim, device, orientation, layout, lighting, finishId, bgId, aspectId, customBg, rotX, rotY, zoom, lens, reflection, shadow, glare, glow, grain, bgBlur, bgDim, exportScale]);
 
+  // Undo / redo. A snapshot is everything that defines the scene (not the
+  // uploaded media); one is recorded each time the scene comes to rest.
+  const snapshot = React.useMemo(
+    () => ({ device, orientation, layout, lighting, finishId, bgId, aspectId, customBg, rotX, rotY, zoom, lens, reflection, shadow, glare, glow, grain, pose, scroll, bgBlur, bgDim }),
+    [device, orientation, layout, lighting, finishId, bgId, aspectId, customBg, rotX, rotY, zoom, lens, reflection, shadow, glare, glow, grain, pose, scroll, bgBlur, bgDim]
+  );
+  type Snapshot = typeof snapshot;
+  const history = React.useRef<{ stack: Snapshot[]; index: number }>({ stack: [], index: -1 });
+  const [canUndo, setCanUndo] = React.useState(false);
+  const [canRedo, setCanRedo] = React.useState(false);
+  React.useEffect(() => {
+    if (anim !== "off") return;
+    const t = setTimeout(() => {
+      const h = history.current;
+      if (h.index >= 0 && JSON.stringify(h.stack[h.index]) === JSON.stringify(snapshot)) return;
+      h.stack = [...h.stack.slice(0, h.index + 1), snapshot].slice(-80);
+      h.index = h.stack.length - 1;
+      setCanUndo(h.index > 0);
+      setCanRedo(false);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [snapshot, anim]);
+  const travel = (step: -1 | 1) => {
+    const h = history.current;
+    const s = h.stack[h.index + step];
+    if (!s) return;
+    h.index += step;
+    setAnim("off");
+    setDevice(s.device);
+    setOrientation(s.orientation);
+    setLayout(s.layout);
+    setLighting(s.lighting);
+    setFinishId(s.finishId);
+    // A backdrop that depended on media which has since been removed falls back.
+    setBgId((s.bgId === "photo" && !bgPhoto) || (s.bgId === "match" && !match) ? "emerald" : s.bgId);
+    setAspectId(s.aspectId);
+    setCustomBg(s.customBg);
+    setRotX(s.rotX);
+    setRotY(s.rotY);
+    setZoom(s.zoom);
+    setLens(s.lens);
+    setReflection(s.reflection);
+    setShadow(s.shadow);
+    setGlare(s.glare);
+    setGlow(s.glow);
+    setGrain(s.grain);
+    setPose(s.pose);
+    setScroll(s.scroll);
+    setBgBlur(s.bgBlur);
+    setBgDim(s.bgDim);
+    setCanUndo(h.index > 0);
+    setCanRedo(h.index < h.stack.length - 1);
+  };
+
+  const nudgeZoom = (factor: number) => setZoom((z) => Math.max(0.55, Math.min(1.6, z * factor)));
+  const resetView = () => {
+    setRotX(8);
+    setRotY(-26);
+    setZoom(1);
+  };
+
+  // Page-wide shortcuts: undo, redo, and pasting a screenshot straight in.
+  const actions = React.useRef({ travel, loadFiles });
+  React.useEffect(() => {
+    actions.current = { travel, loadFiles };
+  });
+  React.useEffect(() => {
+    const typing = (t: EventTarget | null) =>
+      t instanceof HTMLElement && !!t.closest("input, textarea, select, [contenteditable=true]");
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || typing(e.target)) return;
+      const k = e.key.toLowerCase();
+      if (k !== "z" && k !== "y") return;
+      e.preventDefault();
+      actions.current.travel(k === "y" || e.shiftKey ? 1 : -1);
+    };
+    const onPaste = (e: ClipboardEvent) => {
+      if (typing(e.target)) return;
+      const files = Array.from(e.clipboardData?.files ?? []).filter((f) => /^(image|video)\//.test(f.type));
+      if (!files.length) return;
+      e.preventDefault();
+      void actions.current.loadFiles(files);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("paste", onPaste);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("paste", onPaste);
+    };
+  }, []);
+
+  // With the stage focused: arrows orbit, + and - zoom, 0 resets the view.
+  const onStageKey = (e: React.KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const step = e.shiftKey ? 15 : 5;
+    if (e.key === "ArrowLeft") setRotY(wrap(rotY - step));
+    else if (e.key === "ArrowRight") setRotY(wrap(rotY + step));
+    else if (e.key === "ArrowUp") setRotX(Math.max(-60, rotX - step));
+    else if (e.key === "ArrowDown") setRotX(Math.min(80, rotX + step));
+    else if (e.key === "+" || e.key === "=") nudgeZoom(1.08);
+    else if (e.key === "-" || e.key === "_") nudgeZoom(1 / 1.08);
+    else if (e.key === "0") resetView();
+    else return;
+    e.preventDefault();
+  };
+
+  // Pinch, or Ctrl + scroll, zooms the stage. Plain scrolling is left to the page.
+  const stageRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      setZoom((z) => Math.max(0.55, Math.min(1.6, z * Math.exp(-e.deltaY * 0.004))));
+    };
+    stage.addEventListener("wheel", onWheel, { passive: false });
+    return () => stage.removeEventListener("wheel", onWheel);
+  }, []);
+
+  const [panel, setPanel] = React.useState<PanelId>("device");
+  const tool = TOOL_BY_ID.mockup;
+  const busy = glFailed || modelFailed;
+
   return (
-    <GeneratorLayout
-      tool={TOOL_BY_ID.mockup}
-      wideOutput
-      output={
-        <Card>
-          <CardContent className="space-y-3">
-            <div
-              className={cn(
-                "relative overflow-hidden rounded-xl border transition-colors",
-                dragOver ? "border-emerald-500 ring-2 ring-emerald-500/30" : "border-border"
-              )}
-              style={
-                bgId === "transparent"
-                  ? {
-                      backgroundImage:
-                        "repeating-conic-gradient(#d4d4d833 0% 25%, transparent 0% 50%)",
-                      backgroundSize: "16px 16px",
-                    }
-                  : undefined
-              }
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOver(false);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOver(false);
-                void loadFiles(Array.from(e.dataTransfer.files ?? []));
+    <div className="mx-auto w-full max-w-[1680px] px-4 py-5 sm:px-6 lg:px-8">
+      {/* A slim title bar: the stage, not the copy, gets the first screen. */}
+      <header className="mb-4 flex items-center gap-3">
+        <span className="border-border bg-card flex size-10 items-center justify-center rounded-xl border">
+          <tool.icon className="text-foreground/80 size-5" aria-hidden />
+        </span>
+        <h1 className="font-heading text-xl font-bold tracking-tight sm:text-2xl">{tool.name}</h1>
+        <FavoriteButton toolId={tool.id} className="[&>svg]:size-5" />
+      </header>
+
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
+        {/* ------------------------------------------------------- viewport */}
+        <section className="border-border bg-card overflow-hidden rounded-2xl border lg:sticky lg:top-20">
+          <div className="border-border flex flex-wrap items-center gap-2 border-b px-3 py-2">
+            <Tabs
+              value={device}
+              onValueChange={(id) => {
+                // Each model opens in its own colors, unposed.
+                const next = DEVICE_MODELS.find((d) => d.id === id);
+                if (!next) return;
+                if (anim === "pose") setAnim("off");
+                setDevice(id);
+                setFinishId(next.originalFinish);
+                setPose(0);
               }}
             >
-              <canvas
-                ref={canvasRef}
-                className="mx-auto block h-auto max-h-[72vh] w-auto max-w-full cursor-grab touch-none active:cursor-grabbing"
-                onPointerDown={onPointerDown}
-                onPointerMove={onPointerMove}
-                onPointerUp={onPointerUp}
-                onPointerCancel={onPointerUp}
-              />
-              {dragOver && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-emerald-500/15">
-                  <span className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
-                    Release to place it on the screen
-                  </span>
-                </div>
-              )}
-              {glFailed || modelFailed ? (
-                <div className="bg-muted/80 absolute inset-0 flex items-center justify-center p-6 text-center">
-                  <p className="text-muted-foreground max-w-xs text-sm">
-                    {glFailed
-                      ? "This tool needs WebGL, which your browser has turned off or doesn't support."
-                      : "The device model couldn't be loaded. Check your connection and reload the page."}
-                  </p>
-                </div>
-              ) : (
-                !(glReady && info) && (
-                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
-                    <span className="flex items-center gap-2 rounded-full bg-black/60 px-4 py-2 text-xs font-medium text-white">
-                      <Loader2Icon className="size-3.5 animate-spin" /> Loading the {model.label} model…
-                    </span>
-                  </div>
-                )
-              )}
-              {mediaLoading && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <span className="flex items-center gap-2 rounded-full bg-black/60 px-4 py-2 text-xs font-medium text-white">
-                    <Loader2Icon className="size-3.5 animate-spin" /> Loading media…
-                  </span>
-                </div>
-              )}
-              {recording && (
-                <div className="absolute inset-x-0 top-0 h-1 bg-black/25">
-                  <div
-                    className="h-full bg-emerald-500 transition-[width] duration-200 ease-linear"
-                    style={{ width: `${recProgress * 100}%` }}
-                  />
-                </div>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-muted-foreground min-w-28 flex-1 text-xs">
-                {hasSource
-                  ? "Drag to orbit, all the way around to the back"
-                  : "Drop a screenshot or video on the canvas, then drag to orbit the device"}
-              </p>
-              <Tabs
-                value={String(exportScale)}
-                onValueChange={(v) => setExportScale(Number(v) as 1 | 2 | 4)}
-              >
-                <TabsList>
-                  {EXPORT_SCALES.map((s) => (
-                    <TabsTrigger key={s} value={String(s)}>
-                      {s}×
+              <TabsList>
+                {DEVICE_MODELS.map((d) => {
+                  const Icon = KIND_ICON[d.kind];
+                  return (
+                    <TabsTrigger key={d.id} value={d.id}>
+                      <Icon className="size-4" /> {d.label}
                     </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-              {canRecord && (
-                <Button variant="outline" size="sm" onClick={recordWebm} disabled={recording}>
-                  {recording ? <Loader2Icon className="animate-spin" /> : <VideoIcon />}
-                  {recording ? `${Math.round(recProgress * 100)}%` : "WebM"}
-                </Button>
-              )}
-              <Button variant="outline" size="sm" onClick={copyPng} disabled={busyCopy}>
-                {busyCopy ? <Loader2Icon className="animate-spin" /> : <CopyIcon />}
-                Copy
+                  );
+                })}
+              </TabsList>
+            </Tabs>
+            <div className="ml-auto flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => travel(-1)}
+                disabled={!canUndo}
+                title="Undo (Ctrl Z)"
+                aria-label="Undo"
+              >
+                <Undo2Icon />
               </Button>
               <Button
-                variant="outline"
-                size="sm"
-                onClick={exportAllSizes}
-                disabled={zipProgress !== null}
-                title="Every aspect ratio as one ZIP"
+                variant="ghost"
+                size="icon"
+                onClick={() => travel(1)}
+                disabled={!canRedo}
+                title="Redo (Ctrl Shift Z)"
+                aria-label="Redo"
               >
-                {zipProgress !== null ? <Loader2Icon className="animate-spin" /> : <PackageIcon />}
-                {zipProgress !== null
-                  ? `${Math.round(zipProgress * ASPECTS.length)}/${ASPECTS.length}`
-                  : "All sizes"}
+                <Redo2Icon />
               </Button>
-              <Button size="sm" onClick={downloadPng} disabled={busyPng}>
-                {busyPng ? <Loader2Icon className="animate-spin" /> : <DownloadIcon />}
-                PNG
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      }
-    >
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="space-y-3">
-            <Label className="flex items-center gap-1.5">
-              <SparklesIcon className="size-3.5 text-emerald-500" /> One-click looks
-            </Label>
-            <div className="grid grid-cols-3 gap-2">
-              {PRESETS.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => applyPreset(p)}
-                  className="group space-y-1 text-left"
-                >
-                  <span
-                    className="border-border block aspect-4/3 w-full rounded-lg border transition-transform group-hover:scale-[1.04]"
-                    style={{ background: p.css }}
-                  />
-                  <span className="text-muted-foreground block truncate text-[11px]">
-                    {p.label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="space-y-5">
-            {DEVICE_MODELS.length > 1 && (
-              <Tabs
-                value={device}
-                onValueChange={(id) => {
-                  // Each model opens in its own colors, unposed.
-                  const next = DEVICE_MODELS.find((d) => d.id === id);
-                  if (!next) return;
-                  if (anim === "pose") setAnim("off");
-                  setDevice(id);
-                  setFinishId(next.originalFinish);
-                  setPose(0);
-                }}
-              >
-                <TabsList className="w-full">
-                  {DEVICE_MODELS.map((d) => {
-                    const Icon = KIND_ICON[d.kind];
-                    return (
-                      <TabsTrigger key={d.id} value={d.id} className="flex-1">
-                        <Icon className="size-4" /> {d.label}
-                      </TabsTrigger>
-                    );
-                  })}
-                </TabsList>
-              </Tabs>
-            )}
-
-            {!model.fixedOrientation && (
-              <div className="flex items-center justify-between">
-                <Label>Orientation</Label>
-                <Tabs value={orientation} onValueChange={(v) => setOrientation(v as Orientation)}>
-                  <TabsList>
-                    <TabsTrigger value="portrait">Portrait</TabsTrigger>
-                    <TabsTrigger value="landscape">Landscape</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            )}
-            <div className="flex items-center justify-between">
-              <Label>Layout</Label>
-              <Tabs value={layout} onValueChange={(v) => setLayout(v as LayoutId)}>
-                <TabsList>
-                  {LAYOUTS.map((l) => (
-                    <TabsTrigger key={l.id} value={l.id}>
-                      {l.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-            </div>
-
-            {model.pose && (
-              <SliderRow
-                label={model.pose.label}
-                value={pose}
-                min={0}
-                max={1}
-                step={0.01}
-                display={`${Math.round(pose * 100)}%`}
-                onChange={setPose}
-              />
-            )}
-
-            <div className="space-y-2">
-              {shown.map((source, i) => (
-                <label
-                  key={i}
-                  className={cn(
-                    "border-border hover:bg-muted/50 cursor-pointer rounded-xl border transition-colors",
-                    source || slotCount > 1
-                      ? "flex items-center gap-3 p-2.5"
-                      : "flex flex-col items-center gap-1.5 px-4 py-6 text-center",
-                    !source && "border-dashed"
-                  )}
-                >
-                  {source ? (
-                    <>
-                      {source.kind === "image" ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={source.url}
-                          alt="Uploaded screen content"
-                          className="bg-muted size-12 shrink-0 rounded-lg border object-cover"
-                        />
-                      ) : (
-                        <video
-                          src={source.url}
-                          muted
-                          playsInline
-                          preload="metadata"
-                          className="bg-muted size-12 shrink-0 rounded-lg border object-cover"
-                        />
-                      )}
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium">{source.name}</span>
-                        <span className="text-muted-foreground block text-xs">
-                          {source.kind === "video" ? "Video" : "Image"} · click to replace
-                        </span>
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="shrink-0"
-                        aria-label="Remove screen content"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          removeSource(i);
-                        }}
-                      >
-                        <XIcon />
-                      </Button>
-                    </>
-                  ) : slotCount > 1 ? (
-                    <>
-                      <span className="bg-muted text-muted-foreground flex size-12 shrink-0 items-center justify-center rounded-lg">
-                        <ImageIcon className="size-4" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-medium">{slotLabel(i)}</span>
-                        <span className="text-muted-foreground block text-xs">
-                          {i > 0 && sources[0] ? "Showing the first one · click to add its own" : "Add a screenshot or video"}
-                        </span>
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <ImageIcon className="text-muted-foreground size-5" />
-                      <span className="text-sm font-medium">Drop a screenshot or video</span>
-                      <span className="text-muted-foreground text-xs">PNG, JPG, MP4 or WebM</span>
-                    </>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*,video/mp4,video/webm,video/quicktime"
-                    className="sr-only"
-                    onChange={(e) => {
-                      void loadFiles(Array.from(e.target.files ?? []), i);
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
-              ))}
-            </div>
-
-            {scrollable && (
-              <SliderRow
-                label="Page scroll"
-                value={scroll}
-                min={0}
-                max={1}
-                step={0.01}
-                display={`${Math.round(scroll * 100)}%`}
-                onChange={setScroll}
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="space-y-5">
-            <div className="space-y-1.5">
-              <Label>Camera angle</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {ANGLES.map((a) => (
-                  <button
-                    key={a.label}
-                    type="button"
-                    onClick={() => {
-                      setRotX(a.rotX);
-                      setRotY(a.rotY);
-                    }}
-                    className={cn(
-                      "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                      rotX === a.rotX && rotY === a.rotY
-                        ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                        : "border-border text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {a.label}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRotX(8);
-                    setRotY(-26);
-                    setZoom(1);
-                  }}
-                  className="border-border text-muted-foreground hover:text-foreground rounded-full border px-2.5 py-1 text-xs transition-colors"
-                  aria-label="Reset view"
-                >
-                  <RotateCcwIcon className="size-3" />
-                </button>
-              </div>
-            </div>
-
-            <SliderRow
-              label="Tilt"
-              value={rotX}
-              min={-60}
-              max={80}
-              step={1}
-              display={`${Math.round(rotX)}°`}
-              onChange={setRotX}
-            />
-            <SliderRow
-              label="Turn"
-              value={rotY}
-              min={-180}
-              max={180}
-              step={1}
-              display={`${Math.round(rotY)}°`}
-              onChange={setRotY}
-            />
-            <SliderRow
-              label="Zoom"
-              value={zoom}
-              min={0.55}
-              max={1.6}
-              step={0.01}
-              display={`${Math.round(zoom * 100)}%`}
-              onChange={setZoom}
-            />
-            <SliderRow
-              label="Lens"
-              value={lens}
-              min={0}
-              max={1}
-              step={0.01}
-              display={`${Math.round(camera / 13.3)}mm`}
-              onChange={setLens}
-            />
-
-            <div className="space-y-1.5">
-              <Label>Animation</Label>
-              <Tabs value={anim} onValueChange={(v) => setAnim(v as Anim)}>
-                <TabsList className="w-full">
-                  {ANIMS.filter((a) => a.id !== "pose" || model.pose).map((a) => (
-                    <TabsTrigger
-                      key={a.id}
-                      value={a.id}
-                      className="flex-1"
-                      disabled={a.id === "scroll" && !scrollable}
-                    >
-                      {a.id === "pose" ? model.pose?.label : a.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="space-y-5">
-            <div className="space-y-1.5">
-              <Label>Lighting</Label>
-              <Tabs value={lighting} onValueChange={(v) => setLighting(v as LightingId)}>
-                <TabsList className="w-full">
-                  {LIGHTINGS.map((l) => (
-                    <TabsTrigger key={l.id} value={l.id} className="flex-1">
-                      {l.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-            </div>
-            <SliderRow
-              label="Shadow"
-              value={shadow}
-              min={0}
-              max={1}
-              step={0.05}
-              display={shadow === 0 ? "Off" : `${Math.round(shadow * 100)}%`}
-              onChange={setShadow}
-            />
-            <SliderRow
-              label="Floor reflection"
-              value={reflection}
-              min={0}
-              max={1}
-              step={0.05}
-              display={reflection === 0 ? "Off" : `${Math.round(reflection * 100)}%`}
-              onChange={setReflection}
-            />
-            <SliderRow
-              label="Glass reflections"
-              value={glare}
-              min={0}
-              max={1}
-              step={0.05}
-              display={glare === 0 ? "Off" : `${Math.round(glare * 100)}%`}
-              onChange={setGlare}
-            />
-            <SliderRow
-              label="Screen glow"
-              value={glow}
-              min={0}
-              max={1}
-              step={0.05}
-              display={glow === 0 ? "Off" : `${Math.round(glow * 100)}%`}
-              onChange={setGlow}
-            />
-            <SliderRow
-              label="Grain"
-              value={grain}
-              min={0}
-              max={1}
-              step={0.05}
-              display={grain === 0 ? "Off" : `${Math.round(grain * 100)}%`}
-              onChange={setGrain}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="space-y-5">
-            <div className="space-y-1.5">
-              <Label>Finish</Label>
-              <div className="flex flex-wrap gap-2">
-                {FINISHES.map((f) => (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => setFinishId(f.id)}
-                    title={f.label}
-                    className={cn(
-                      "size-8 rounded-full border-2 transition-transform hover:scale-110",
-                      finishId === f.id ? "border-emerald-500" : "border-border"
-                    )}
-                    style={{
-                      background: f.clay ? f.light : `linear-gradient(135deg, ${f.light}, ${f.dark})`,
-                    }}
-                    aria-label={`${f.label} finish`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>Backdrop</Label>
-              <div className="grid grid-cols-6 gap-2">
-                {match && (
-                  <button
-                    type="button"
-                    onClick={() => setBgId("match")}
-                    title="Matched to your screen"
-                    className={cn(
-                      "relative aspect-square rounded-lg border-2 transition-transform hover:scale-105",
-                      bgId === "match" ? "border-emerald-500" : "border-border"
-                    )}
-                    style={{ background: duotoneBackground(match[0], match[1]).css }}
-                    aria-label="Backdrop matched to your screen"
-                  >
-                    <SparklesIcon className="absolute inset-0 m-auto size-3.5 text-white/90" />
-                  </button>
-                )}
-                {BACKGROUNDS.map((b) => (
-                  <button
-                    key={b.id}
-                    type="button"
-                    onClick={() => setBgId(b.id)}
-                    title={b.label}
-                    className={cn(
-                      "aspect-square rounded-lg border-2 transition-transform hover:scale-105",
-                      bgId === b.id ? "border-emerald-500" : "border-border"
-                    )}
-                    style={{ background: b.css }}
-                    aria-label={`${b.label} backdrop`}
-                  />
-                ))}
-                <label
-                  title="Custom color"
-                  className={cn(
-                    "relative aspect-square cursor-pointer rounded-lg border-2 transition-transform hover:scale-105",
-                    bgId === "custom" ? "border-emerald-500" : "border-border"
-                  )}
-                  style={{
-                    background:
-                      bgId === "custom"
-                        ? background.css
-                        : "conic-gradient(#f87171,#fbbf24,#34d399,#38bdf8,#a78bfa,#f87171)",
-                  }}
-                >
-                  <input
-                    type="color"
-                    value={customBg}
-                    className="absolute inset-0 size-full cursor-pointer opacity-0"
-                    aria-label="Pick a custom backdrop color"
-                    onChange={(e) => {
-                      setCustomBg(e.target.value);
-                      setBgId("custom");
-                    }}
-                  />
-                </label>
-                <label
-                  title="Photo backdrop"
-                  className={cn(
-                    "bg-muted relative aspect-square cursor-pointer overflow-hidden rounded-lg border-2 transition-transform hover:scale-105",
-                    bgId === "photo" ? "border-emerald-500" : "border-border"
-                  )}
-                  style={
-                    bgPhoto ? { background: `url(${bgPhoto.url}) center/cover` } : undefined
-                  }
-                  onClick={(e) => {
-                    // A photo is already loaded — first click selects it;
-                    // click again to replace it with a new file.
-                    if (bgPhoto && bgId !== "photo") {
-                      e.preventDefault();
-                      setBgId("photo");
-                    }
-                  }}
-                >
-                  {!bgPhoto && (
-                    <ImageIcon className="text-muted-foreground absolute inset-0 m-auto size-4" />
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="sr-only"
-                    aria-label="Upload a photo backdrop"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) void loadBgPhoto(file);
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
-              </div>
-              {bgId === "photo" && bgPhoto && (
-                <div className="space-y-4 pt-2">
-                  <SliderRow
-                    label="Backdrop blur"
-                    value={bgBlur}
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    display={bgBlur === 0 ? "Off" : `${Math.round(bgBlur * 100)}%`}
-                    onChange={setBgBlur}
-                  />
-                  <SliderRow
-                    label="Backdrop dim"
-                    value={bgDim}
-                    min={0}
-                    max={0.8}
-                    step={0.05}
-                    display={bgDim === 0 ? "Off" : `${Math.round(bgDim * 100)}%`}
-                    onChange={setBgDim}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label>Canvas</Label>
+              <span className="bg-border mx-1 h-5 w-px" aria-hidden />
               <Tabs value={aspectId} onValueChange={setAspectId}>
                 <TabsList>
                   {ASPECTS.map((a) => (
-                    <TabsTrigger key={a.id} value={a.id}>
+                    <TabsTrigger key={a.id} value={a.id} title={`${a.label} canvas`}>
                       {a.label}
                     </TabsTrigger>
                   ))}
                 </TabsList>
               </Tabs>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          <div
+            ref={stageRef}
+            tabIndex={0}
+            role="application"
+            aria-label="Mockup stage. Arrow keys orbit, plus and minus zoom, zero resets the view."
+            onKeyDown={onStageKey}
+            className={cn(
+              "bg-muted/40 relative flex h-[58vh] min-h-80 items-center justify-center p-4 outline-none transition-shadow sm:p-6 lg:h-[calc(100vh-16.5rem)]",
+              "focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:ring-inset",
+              dragOver && "ring-2 ring-emerald-500 ring-inset"
+            )}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOver(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              void loadFiles(Array.from(e.dataTransfer.files ?? []));
+            }}
+          >
+            <canvas
+              ref={canvasRef}
+              className="block h-auto max-h-full w-auto max-w-full cursor-grab touch-none rounded-lg shadow-xl shadow-black/20 active:cursor-grabbing"
+              style={
+                bgId === "transparent"
+                  ? {
+                      backgroundImage: "repeating-conic-gradient(#d4d4d833 0% 25%, transparent 0% 50%)",
+                      backgroundSize: "16px 16px",
+                    }
+                  : undefined
+              }
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerUp}
+              onDoubleClick={resetView}
+            />
+
+            {/* Output size, top right */}
+            <span className="bg-background/80 text-muted-foreground border-border absolute top-3 right-3 rounded-md border px-2 py-1 font-mono text-[11px] tabular-nums backdrop-blur">
+              {aspect.w * exportScale} × {aspect.h * exportScale} px
+            </span>
+
+            {/* View controls, bottom left */}
+            <div className="bg-background/80 border-border absolute bottom-3 left-3 flex items-center rounded-lg border backdrop-blur">
+              <Button variant="ghost" size="icon" onClick={() => nudgeZoom(1 / 1.1)} title="Zoom out (-)" aria-label="Zoom out">
+                <MinusIcon />
+              </Button>
+              <span className="w-11 text-center font-mono text-[11px] tabular-nums">{Math.round(zoom * 100)}%</span>
+              <Button variant="ghost" size="icon" onClick={() => nudgeZoom(1.1)} title="Zoom in (+)" aria-label="Zoom in">
+                <PlusIcon />
+              </Button>
+              <span className="bg-border h-5 w-px" aria-hidden />
+              <Button variant="ghost" size="icon" onClick={resetView} title="Reset view (0)" aria-label="Reset view">
+                <RotateCcwIcon />
+              </Button>
+            </div>
+
+            {dragOver && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-emerald-500/10">
+                <span className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
+                  Release to place it on the screen
+                </span>
+              </div>
+            )}
+            {busy ? (
+              <div className="bg-muted/90 absolute inset-0 flex items-center justify-center p-6 text-center">
+                <p className="text-muted-foreground max-w-xs text-sm">
+                  {glFailed
+                    ? "This tool needs WebGL, which your browser has turned off or doesn't support."
+                    : "The device model couldn't be loaded. Check your connection and reload the page."}
+                </p>
+              </div>
+            ) : (
+              !(glReady && info) && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <span className="bg-background/90 border-border flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium">
+                    <Loader2Icon className="size-3.5 animate-spin" /> Loading the {model.label} model…
+                  </span>
+                </div>
+              )
+            )}
+            {mediaLoading && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <span className="bg-background/90 border-border flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium">
+                  <Loader2Icon className="size-3.5 animate-spin" /> Loading media…
+                </span>
+              </div>
+            )}
+            {recording && (
+              <div className="absolute inset-x-0 top-0 h-1 bg-black/25">
+                <div
+                  className="h-full bg-emerald-500 transition-[width] duration-200 ease-linear"
+                  style={{ width: `${recProgress * 100}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="border-border flex flex-wrap items-center gap-2 border-t px-3 py-2">
+            <p className="text-muted-foreground mr-auto hidden text-xs xl:block">
+              Drag to orbit <Dot /> <Kbd>Ctrl</Kbd> + scroll to zoom <Dot /> <Kbd>Ctrl</Kbd> <Kbd>V</Kbd> pastes a screenshot
+            </p>
+            <Tabs
+              value={String(exportScale)}
+              onValueChange={(v) => setExportScale(Number(v) as 1 | 2 | 4)}
+              className="mr-auto xl:mr-0"
+            >
+              <TabsList>
+                {EXPORT_SCALES.map((s) => (
+                  <TabsTrigger key={s} value={String(s)} title={`Export at ${s}× resolution`}>
+                    {s}×
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+            {canRecord && (
+              <Button variant="outline" size="sm" onClick={recordWebm} disabled={recording || busy}>
+                {recording ? <Loader2Icon className="animate-spin" /> : <VideoIcon />}
+                {recording ? `${Math.round(recProgress * 100)}%` : "Record"}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={copyPng} disabled={busyCopy || busy}>
+              {busyCopy ? <Loader2Icon className="animate-spin" /> : <CopyIcon />}
+              Copy
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportAllSizes}
+              disabled={zipProgress !== null || busy}
+              title="Every canvas ratio in one ZIP"
+            >
+              {zipProgress !== null ? <Loader2Icon className="animate-spin" /> : <PackageIcon />}
+              {zipProgress !== null ? "Packing…" : "All ratios"}
+            </Button>
+            <Button size="sm" onClick={downloadPng} disabled={busyPng || busy}>
+              {busyPng ? <Loader2Icon className="animate-spin" /> : <DownloadIcon />}
+              Export PNG
+            </Button>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------ inspector */}
+        <aside className="border-border bg-card rounded-2xl border">
+          <Tabs value={panel} onValueChange={(v) => setPanel(v as PanelId)}>
+            <div className="border-border border-b p-2">
+              <TabsList className="w-full">
+                {PANELS.map((p) => (
+                  <TabsTrigger key={p.id} value={p.id} className="flex-1">
+                    <p.icon className="size-3.5" /> {p.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+          </Tabs>
+
+          <div className="divide-border divide-y">
+            {panel === "device" && (
+              <>
+                <Section title="Screens">
+                  <div className="space-y-2">
+                    {shown.map((source, i) => (
+                      <label
+                        key={i}
+                        className={cn(
+                          "border-border hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-xl border p-2.5 transition-colors",
+                          !source && "border-dashed"
+                        )}
+                      >
+                        {source ? (
+                          <>
+                            {source.kind === "image" ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={source.url}
+                                alt="Uploaded screen content"
+                                className="bg-muted size-11 shrink-0 rounded-lg border object-cover"
+                              />
+                            ) : (
+                              <video
+                                src={source.url}
+                                muted
+                                playsInline
+                                preload="metadata"
+                                className="bg-muted size-11 shrink-0 rounded-lg border object-cover"
+                              />
+                            )}
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-medium">{source.name}</span>
+                              <span className="text-muted-foreground block text-xs">
+                                {slotCount > 1 ? `${slotLabel(i)} · ` : ""}click to replace
+                              </span>
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="shrink-0"
+                              aria-label="Remove screen content"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                removeSource(i);
+                              }}
+                            >
+                              <XIcon />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <span className="bg-muted text-muted-foreground flex size-11 shrink-0 items-center justify-center rounded-lg">
+                              <ImageIcon className="size-4" />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm font-medium">
+                                {slotCount > 1 ? slotLabel(i) : "Add a screenshot or video"}
+                              </span>
+                              <span className="text-muted-foreground block text-xs">
+                                {i > 0 && sources[0] ? "Showing the first one until you add its own" : "Click, drop on the stage, or paste"}
+                              </span>
+                            </span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*,video/mp4,video/webm,video/quicktime"
+                          className="sr-only"
+                          onChange={(e) => {
+                            void loadFiles(Array.from(e.target.files ?? []), i);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                  {scrollable && (
+                    <SliderRow
+                      label="Page scroll"
+                      value={scroll}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      reset={0}
+                      display={`${Math.round(scroll * 100)}%`}
+                      onChange={setScroll}
+                    />
+                  )}
+                </Section>
+
+                <Section title="Arrangement">
+                  <Row label="Layout">
+                    <Tabs value={layout} onValueChange={(v) => setLayout(v as LayoutId)}>
+                      <TabsList>
+                        {LAYOUTS.map((l) => (
+                          <TabsTrigger key={l.id} value={l.id}>
+                            {l.label}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </Tabs>
+                  </Row>
+                  {!model.fixedOrientation && (
+                    <Row label="Orientation">
+                      <Tabs value={orientation} onValueChange={(v) => setOrientation(v as Orientation)}>
+                        <TabsList>
+                          <TabsTrigger value="portrait">Portrait</TabsTrigger>
+                          <TabsTrigger value="landscape">Landscape</TabsTrigger>
+                        </TabsList>
+                      </Tabs>
+                    </Row>
+                  )}
+                  {model.pose && (
+                    <SliderRow
+                      label={model.pose.label}
+                      value={pose}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      reset={0}
+                      display={`${Math.round(pose * 100)}%`}
+                      onChange={setPose}
+                    />
+                  )}
+                </Section>
+
+                <Section title="Finish">
+                  <div className="flex flex-wrap gap-2">
+                    {FINISHES.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setFinishId(f.id)}
+                        title={f.label}
+                        className={cn(
+                          "size-8 rounded-full border-2 transition-transform hover:scale-110",
+                          finishId === f.id ? "border-emerald-500" : "border-border"
+                        )}
+                        style={{
+                          background: f.clay ? f.light : `linear-gradient(135deg, ${f.light}, ${f.dark})`,
+                        }}
+                        aria-label={`${f.label} finish`}
+                        aria-pressed={finishId === f.id}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground text-xs">{finish.label}</p>
+                </Section>
+              </>
+            )}
+
+            {panel === "camera" && (
+              <>
+                <Section title="Angle">
+                  <div className="flex flex-wrap gap-1.5">
+                    {ANGLES.map((a) => (
+                      <button
+                        key={a.label}
+                        type="button"
+                        onClick={() => {
+                          setRotX(a.rotX);
+                          setRotY(a.rotY);
+                        }}
+                        className={cn(
+                          "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                          rotX === a.rotX && rotY === a.rotY
+                            ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "border-border text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
+                  <SliderRow label="Tilt" value={rotX} min={-60} max={80} step={1} reset={8} display={`${Math.round(rotX)}°`} onChange={setRotX} />
+                  <SliderRow label="Turn" value={rotY} min={-180} max={180} step={1} reset={-26} display={`${Math.round(rotY)}°`} onChange={setRotY} />
+                </Section>
+                <Section title="Lens">
+                  <SliderRow label="Zoom" value={zoom} min={0.55} max={1.6} step={0.01} reset={1} display={`${Math.round(zoom * 100)}%`} onChange={setZoom} />
+                  <SliderRow label="Focal length" value={lens} min={0} max={1} step={0.01} reset={0.38} display={`${Math.round(camera / 13.3)}mm`} onChange={setLens} />
+                </Section>
+                <Section title="Motion">
+                  <Tabs value={anim} onValueChange={(v) => setAnim(v as Anim)}>
+                    <TabsList className="w-full">
+                      {ANIMS.filter((a) => a.id !== "pose" || model.pose).map((a) => (
+                        <TabsTrigger
+                          key={a.id}
+                          value={a.id}
+                          className="flex-1"
+                          disabled={a.id === "scroll" && !scrollable}
+                        >
+                          {a.id === "pose" ? model.pose?.label : a.label}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+                  <p className="text-muted-foreground text-xs">
+                    {anim === "off"
+                      ? "Pick a move to preview it, then record it as a WebM clip."
+                      : "Playing. Use Record under the stage to save one full pass."}
+                  </p>
+                </Section>
+              </>
+            )}
+
+            {panel === "light" && (
+              <>
+                <Section title="Studio">
+                  <Tabs value={lighting} onValueChange={(v) => setLighting(v as LightingId)}>
+                    <TabsList className="w-full">
+                      {LIGHTINGS.map((l) => (
+                        <TabsTrigger key={l.id} value={l.id} className="flex-1">
+                          {l.label}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+                  <SliderRow label="Glass reflections" value={glare} min={0} max={1} step={0.05} reset={0.6} display={pct(glare)} onChange={setGlare} />
+                </Section>
+                <Section title="Ground">
+                  <SliderRow label="Shadow" value={shadow} min={0} max={1} step={0.05} reset={0.6} display={pct(shadow)} onChange={setShadow} />
+                  <SliderRow label="Floor reflection" value={reflection} min={0} max={1} step={0.05} reset={0.3} display={pct(reflection)} onChange={setReflection} />
+                </Section>
+                <Section title="Finishing">
+                  <SliderRow label="Screen glow" value={glow} min={0} max={1} step={0.05} reset={0.3} display={pct(glow)} onChange={setGlow} />
+                  <SliderRow label="Film grain" value={grain} min={0} max={1} step={0.05} reset={0} display={pct(grain)} onChange={setGrain} />
+                </Section>
+              </>
+            )}
+
+            {panel === "style" && (
+              <>
+                <Section title="Looks">
+                  <div className="grid grid-cols-3 gap-2">
+                    {PRESETS.map((p) => (
+                      <button key={p.id} type="button" onClick={() => applyPreset(p)} className="group space-y-1 text-left">
+                        <span
+                          className="border-border block aspect-4/3 w-full rounded-lg border transition-transform group-hover:scale-[1.04]"
+                          style={{ background: p.css }}
+                        />
+                        <span className="text-muted-foreground block truncate text-[11px]">{p.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    A look sets camera, light, backdrop and finish together. Undo brings your scene back.
+                  </p>
+                </Section>
+                <Section title="Backdrop">
+                  <div className="grid grid-cols-6 gap-2">
+                    {match && (
+                      <button
+                        type="button"
+                        onClick={() => setBgId("match")}
+                        title="Matched to your screen"
+                        className={cn(
+                          "relative aspect-square rounded-lg border-2 transition-transform hover:scale-105",
+                          bgId === "match" ? "border-emerald-500" : "border-border"
+                        )}
+                        style={{ background: duotoneBackground(match[0], match[1]).css }}
+                        aria-label="Backdrop matched to your screen"
+                      >
+                        <SparklesIcon className="absolute inset-0 m-auto size-3.5 text-white/90" />
+                      </button>
+                    )}
+                    {BACKGROUNDS.map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => setBgId(b.id)}
+                        title={b.label}
+                        className={cn(
+                          "aspect-square rounded-lg border-2 transition-transform hover:scale-105",
+                          bgId === b.id ? "border-emerald-500" : "border-border"
+                        )}
+                        style={{ background: b.css }}
+                        aria-label={`${b.label} backdrop`}
+                        aria-pressed={bgId === b.id}
+                      />
+                    ))}
+                    <label
+                      title="Custom color"
+                      className={cn(
+                        "relative aspect-square cursor-pointer rounded-lg border-2 transition-transform hover:scale-105",
+                        bgId === "custom" ? "border-emerald-500" : "border-border"
+                      )}
+                      style={{
+                        background:
+                          bgId === "custom"
+                            ? background.css
+                            : "conic-gradient(#f87171,#fbbf24,#34d399,#38bdf8,#a78bfa,#f87171)",
+                      }}
+                    >
+                      <input
+                        type="color"
+                        value={customBg}
+                        className="absolute inset-0 size-full cursor-pointer opacity-0"
+                        aria-label="Pick a custom backdrop color"
+                        onChange={(e) => {
+                          setCustomBg(e.target.value);
+                          setBgId("custom");
+                        }}
+                      />
+                    </label>
+                    <label
+                      title="Photo backdrop"
+                      className={cn(
+                        "bg-muted relative aspect-square cursor-pointer overflow-hidden rounded-lg border-2 transition-transform hover:scale-105",
+                        bgId === "photo" ? "border-emerald-500" : "border-border"
+                      )}
+                      style={bgPhoto ? { background: `url(${bgPhoto.url}) center/cover` } : undefined}
+                      onClick={(e) => {
+                        // A photo is already loaded — first click selects it;
+                        // click again to replace it with a new file.
+                        if (bgPhoto && bgId !== "photo") {
+                          e.preventDefault();
+                          setBgId("photo");
+                        }
+                      }}
+                    >
+                      {!bgPhoto && <ImageIcon className="text-muted-foreground absolute inset-0 m-auto size-4" />}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        aria-label="Upload a photo backdrop"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) void loadBgPhoto(file);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  </div>
+                  <p className="text-muted-foreground text-xs">{background.label}</p>
+                  {bgId === "photo" && bgPhoto && (
+                    <>
+                      <SliderRow label="Blur" value={bgBlur} min={0} max={1} step={0.05} reset={0.4} display={pct(bgBlur)} onChange={setBgBlur} />
+                      <SliderRow label="Dim" value={bgDim} min={0} max={0.8} step={0.05} reset={0.3} display={pct(bgDim)} onChange={setBgDim} />
+                    </>
+                  )}
+                </Section>
+              </>
+            )}
+          </div>
+        </aside>
       </div>
-    </GeneratorLayout>
+
+      <p className="text-muted-foreground mt-8 max-w-2xl text-sm">{tool.description}</p>
+    </div>
   );
+}
+
+type PanelId = "device" | "camera" | "light" | "style";
+const PANELS: { id: PanelId; label: string; icon: typeof BoxIcon }[] = [
+  { id: "device", label: "Device", icon: BoxIcon },
+  { id: "camera", label: "Camera", icon: Move3dIcon },
+  { id: "light", label: "Light", icon: SunIcon },
+  { id: "style", label: "Style", icon: PaletteIcon },
+];
+
+const pct = (v: number) => (v === 0 ? "Off" : `${Math.round(v * 100)}%`);
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-4 p-4">
+      <h2 className="text-muted-foreground font-mono text-[11px] font-medium tracking-[0.14em] uppercase">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <Label>{label}</Label>
+      {children}
+    </div>
+  );
+}
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="border-border bg-muted rounded border px-1 py-px font-mono text-[10px]">{children}</kbd>
+  );
+}
+
+function Dot() {
+  return <span className="text-border mx-1.5" aria-hidden>|</span>;
 }
 
 function SliderRow({
@@ -1425,6 +1549,7 @@ function SliderRow({
   max,
   step,
   display,
+  reset,
   onChange,
 }: {
   label: string;
@@ -1433,15 +1558,29 @@ function SliderRow({
   max: number;
   step: number;
   display: string;
+  /** Default value — the readout becomes a one-click reset when the value differs. */
+  reset: number;
   onChange: (v: number) => void;
 }) {
+  const changed = Math.abs(value - reset) > step / 2;
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <Label>{label}</Label>
-        <span className="bg-muted rounded px-2 py-0.5 font-mono text-xs tabular-nums">
+        <button
+          type="button"
+          onClick={() => onChange(reset)}
+          disabled={!changed}
+          title={changed ? "Reset to default" : undefined}
+          aria-label={`${label}: ${display}${changed ? ". Reset to default" : ""}`}
+          className={cn(
+            "bg-muted group flex items-center gap-1 rounded px-2 py-0.5 font-mono text-xs tabular-nums transition-colors",
+            changed && "hover:bg-emerald-500/15 hover:text-emerald-600 dark:hover:text-emerald-400"
+          )}
+        >
+          {changed && <RotateCcwIcon className="size-2.5 opacity-0 transition-opacity group-hover:opacity-100" />}
           {display}
-        </span>
+        </button>
       </div>
       <Slider
         value={[value]}
