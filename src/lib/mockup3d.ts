@@ -502,7 +502,8 @@ export interface FrameFinish {
 }
 
 export const FINISHES: readonly FrameFinish[] = [
-  { id: "titanium", label: "Titanium", light: "#98989f", dark: "#4e4e54" },
+  { id: "titanium", label: "Natural Titanium", light: "#b3ada3", dark: "#5f5a53" },
+  { id: "burgundy", label: "Burgundy", light: "#62464b", dark: "#46202a" },
   { id: "black", label: "Space Black", light: "#3c3c3f", dark: "#151517" },
   { id: "silver", label: "Silver", light: "#e2e3e6", dark: "#a2a4a9" },
   { id: "gold", label: "Light Gold", light: "#eddcbd", dark: "#b39469" },
@@ -571,38 +572,142 @@ export function drawContent(
   ctx.drawImage(src, x + (w - dw) / 2, y + oy, dw, dh);
 }
 
+/**
+ * Empty-screen content: a lock screen over an abstract emerald wallpaper, so
+ * the device reads as a real, switched-on phone before anything is dropped in.
+ * Tall rects get the full phone layout; wide ones a centered clock.
+ */
 export function paintPlaceholder(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  const g = ctx.createLinearGradient(x, y, x + w, y + h);
-  g.addColorStop(0, "#022c22");
-  g.addColorStop(0.5, "#065f46");
-  g.addColorStop(1, "#0d9488");
-  ctx.fillStyle = g;
+  const tall = h > w * 1.5;
+  const u = tall ? w : Math.min(w, h) * 0.62; // layout unit
+  const cx = x + w / 2;
+  const font = (weight: number, px: number) =>
+    `${weight} ${px}px -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif`;
+  const pill = (px: number, py: number, pw: number, ph: number, r: number, fill: string | CanvasGradient) => {
+    ctx.fillStyle = fill;
+    roundRectPath(ctx, px, py, pw, ph, r);
+    ctx.fill();
+  };
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+
+  // Wallpaper — soft ribbons of light sweeping across a deep green field.
+  const base = ctx.createLinearGradient(x, y, x + w * 0.4, y + h);
+  base.addColorStop(0, "#010d0a");
+  base.addColorStop(0.5, "#04372b");
+  base.addColorStop(1, "#021410");
+  ctx.fillStyle = base;
   ctx.fillRect(x, y, w, h);
-  const glow = ctx.createRadialGradient(
-    x + w * 0.75,
-    y + h * 0.2,
-    0,
-    x + w * 0.75,
-    y + h * 0.2,
-    w * 0.9
-  );
-  glow.addColorStop(0, "rgba(52, 211, 153, 0.5)");
-  glow.addColorStop(1, "rgba(52, 211, 153, 0)");
-  ctx.fillStyle = glow;
-  ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = "rgba(255,255,255,0.92)";
-  const base = Math.min(w, h);
-  ctx.font = `700 ${base * 0.085}px ui-sans-serif, system-ui`;
-  ctx.textAlign = "left";
-  ctx.fillText("Your app", x + w * 0.09, y + h * 0.5);
-  ctx.font = `400 ${base * 0.045}px ui-sans-serif, system-ui`;
-  ctx.fillStyle = "rgba(255,255,255,0.65)";
-  ctx.fillText("here", x + w * 0.09, y + h * 0.5 + base * 0.075);
-  ctx.fillStyle = "rgba(255,255,255,0.14)";
-  for (let i = 0; i < 3; i++) {
-    roundRectPath(ctx, x + w * 0.09, y + h * (0.62 + i * 0.11), w * 0.82, h * 0.075, base * 0.02);
+  const long = Math.max(w, h);
+  const short = Math.min(w, h);
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.filter = `blur(${(short * 0.04).toFixed(1)}px)`;
+  const ribbons: [number, number, number, number, number, string][] = [
+    [0.12, 0.64, 0.9, 0.17, -0.9, "rgba(16,185,129,0.7)"],
+    [0.78, 0.47, 0.85, 0.12, -0.96, "rgba(45,212,191,0.5)"],
+    [0.55, 0.88, 0.9, 0.2, -0.8, "rgba(5,150,105,0.8)"],
+    [0.98, 0.2, 0.6, 0.09, -1.02, "rgba(167,243,208,0.4)"],
+  ];
+  for (const [rx, ry, len, thick, rot, color] of ribbons) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(x + rx * w, y + ry * h, len * long, thick * short, rot, 0, Math.PI * 2);
     ctx.fill();
   }
+  ctx.restore();
+  // Darken the top so the clock stays legible on any wallpaper.
+  const scrim = ctx.createLinearGradient(x, y, x, y + h * 0.45);
+  scrim.addColorStop(0, "rgba(0,0,0,0.38)");
+  scrim.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = scrim;
+  ctx.fillRect(x, y, w, h);
+
+  // Clock and date
+  const top = y + (tall ? h * 0.118 : h * 0.17);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = "rgba(255,255,255,0.86)";
+  ctx.font = font(600, u * 0.054);
+  ctx.fillText("Monday, June 9", cx, top);
+  ctx.fillStyle = "rgba(255,255,255,0.95)";
+  ctx.font = font(700, u * 0.27);
+  ctx.fillText("9:41", cx, top + u * 0.25);
+
+  if (tall) {
+    // Status icons to the right of the island: signal, Wi-Fi, battery.
+    const sy = y + u * 0.086;
+    let sx = x + w * 0.715;
+    for (let i = 0; i < 4; i++) {
+      const bh = u * (0.012 + i * 0.007);
+      pill(sx, sy - bh, u * 0.011, bh, u * 0.003, "rgba(255,255,255,0.95)");
+      sx += u * 0.017;
+    }
+    sx += u * 0.03;
+    ctx.strokeStyle = "rgba(255,255,255,0.95)";
+    ctx.lineCap = "round";
+    ctx.lineWidth = u * 0.0085;
+    for (let i = 1; i <= 3; i++) {
+      ctx.beginPath();
+      ctx.arc(sx, sy, u * 0.011 * i, -Math.PI * 0.75, -Math.PI * 0.25);
+      ctx.stroke();
+    }
+    sx += u * 0.05;
+    ctx.lineWidth = u * 0.004;
+    ctx.strokeStyle = "rgba(255,255,255,0.5)";
+    roundRectPath(ctx, sx, sy - u * 0.03, u * 0.066, u * 0.031, u * 0.009);
+    ctx.stroke();
+    pill(sx + u * 0.006, sy - u * 0.024, u * 0.054, u * 0.019, u * 0.005, "rgba(255,255,255,0.95)");
+  }
+
+  // Notifications — they double as the instructions.
+  const cardW = tall ? w * 0.91 : u * 1.25;
+  const cardH = u * 0.185;
+  const cards: [string, string][] = [
+    ["Your app", "Drop a screenshot or video to show it here"],
+    ["Studio", "Drag the device to orbit it"],
+  ];
+  const first = tall ? y + h * 0.62 : y + h - u * 0.16 - cardH * (cards.length + 0.2);
+  cards.forEach(([title, body], i) => {
+    const kx = cx - cardW / 2;
+    const ky = first + i * (cardH + u * 0.022);
+    pill(kx, ky, cardW, cardH, u * 0.058, "rgba(236,253,245,0.17)");
+    const icon = ctx.createLinearGradient(kx, ky, kx + cardH, ky + cardH);
+    icon.addColorStop(0, "#34d399");
+    icon.addColorStop(1, "#047857");
+    pill(kx + u * 0.036, ky + cardH * 0.22, cardH * 0.56, cardH * 0.56, cardH * 0.13, icon);
+    ctx.textAlign = "left";
+    const tx = kx + u * 0.036 + cardH * 0.56 + u * 0.034;
+    ctx.fillStyle = "rgba(255,255,255,0.96)";
+    ctx.font = font(600, u * 0.043);
+    ctx.fillText(title, tx, ky + cardH * 0.43);
+    ctx.fillStyle = "rgba(255,255,255,0.74)";
+    ctx.font = font(400, u * 0.037);
+    ctx.fillText(body, tx, ky + cardH * 0.72);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.font = font(400, u * 0.033);
+    ctx.fillText("now", kx + cardW - u * 0.04, ky + cardH * 0.43);
+  });
+
+  if (tall) {
+    // Flashlight and camera shortcuts, then the home indicator.
+    for (const side of [0.17, 0.83]) {
+      ctx.fillStyle = "rgba(10,20,17,0.42)";
+      ctx.beginPath();
+      ctx.arc(x + w * side, y + h - u * 0.2, u * 0.064, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.92)";
+      ctx.beginPath();
+      ctx.arc(x + w * side, y + h - u * 0.2, u * 0.019, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    pill(cx - w * 0.18, y + h - u * 0.036, w * 0.36, u * 0.014, u * 0.007, "rgba(255,255,255,0.92)");
+  }
+  ctx.restore();
 }
 
 /** View-dependent glass reflections: an ambient sheen plus a light band that sweeps as the device turns. */

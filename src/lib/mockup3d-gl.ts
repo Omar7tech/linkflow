@@ -17,6 +17,7 @@
 
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import {
   drawContent,
   paintPlaceholder,
@@ -41,7 +42,46 @@ export interface GLSceneConfig {
   lid: number;
   /** Average backdrop color (0..255) that bleeds into the reflections. */
   tint: [number, number, number] | null;
+  /** True once loadPhoneModel() has resolved — swaps the phone to the scanned model. */
+  model: boolean;
 }
+
+/* ------------------------------------------------------------ phone model */
+
+/**
+ * The phone is an artist-made model (public/models/iphone.glb, metres, origin
+ * at the bottom edge). Until it arrives, or if it fails to load, the
+ * procedural phone below stands in.
+ */
+const PHONE = { w: 79, h: 163.3, screenW: 73, screenH: 158.5 };
+let phoneTemplate: THREE.Group | null = null;
+let phoneLoading: Promise<boolean> | null = null;
+
+export function loadPhoneModel(): Promise<boolean> {
+  phoneLoading ??= new GLTFLoader()
+    .loadAsync("/models/iphone.glb")
+    .then((gltf) => {
+      const screen = gltf.scene.getObjectByName("Front_Screen");
+      if (!(screen instanceof THREE.Mesh)) return false;
+      // Remap the panel's UVs to its own bounding box, so any canvas fills it edge to edge.
+      const geo = screen.geometry as THREE.BufferGeometry;
+      geo.computeBoundingBox();
+      const { min, max } = geo.boundingBox!;
+      const pos = geo.attributes.position;
+      const uv = new Float32Array(pos.count * 2);
+      for (let i = 0; i < pos.count; i++) {
+        uv[i * 2] = (pos.getX(i) - min.x) / (max.x - min.x);
+        uv[i * 2 + 1] = (pos.getY(i) - min.y) / (max.y - min.y);
+      }
+      geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+      phoneTemplate = gltf.scene;
+      return true;
+    })
+    .catch(() => false);
+  return phoneLoading;
+}
+
+const luminance = (c: THREE.Color) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
 
 /* -------------------------------------------------------------- geometry */
 
@@ -136,8 +176,11 @@ function uAt(outline: OutlinePt[], x: number, y: number): number {
   return u;
 }
 
-/** Slab cross-section: rounded front edge, flat rail, rounded back edge. */
-function railProfile(t: number, eFront: number, eBack = eFront, arc = 8): ProfilePt[] {
+/**
+ * Slab cross-section: rounded front edge, rail, rounded back edge. `bulge`
+ * crowns the rail outward a hair, so it catches a gradient instead of one flat tone.
+ */
+function railProfile(t: number, eFront: number, eBack = eFront, arc = 8, bulge = 0): ProfilePt[] {
   const pts: ProfilePt[] = [];
   for (let i = 0; i <= arc; i++) {
     const f = (i / arc) * (Math.PI / 2);
@@ -147,6 +190,15 @@ function railProfile(t: number, eFront: number, eBack = eFront, arc = 8): Profil
       nd: Math.sin(f),
       nz: Math.cos(f),
     });
+  }
+  if (bulge > 0) {
+    const len = t - eFront - eBack;
+    for (let i = 1; i < 10; i++) {
+      const k = (i / 10) * 2 - 1;
+      const nz = (-4 * bulge * k) / len;
+      const m = Math.hypot(1, nz);
+      pts.push({ d: -bulge * (1 - k * k), z: t / 2 - eFront - (i / 10) * len, nd: 1 / m, nz: nz / m });
+    }
   }
   for (let i = 0; i <= arc; i++) {
     const f = Math.PI / 2 + (i / arc) * (Math.PI / 2);
@@ -160,8 +212,11 @@ function railProfile(t: number, eFront: number, eBack = eFront, arc = 8): Profil
   return pts;
 }
 
-/** Raised plateau cross-section: rounded top edge, straight wall down to z = 0. */
-function bumpProfile(height: number, e: number, arc = 6): ProfilePt[] {
+/**
+ * Raised plateau cross-section: rounded top edge, wall down to z = 0. `foot`
+ * flares the base out in a concave fillet, the way glass is ground into a panel.
+ */
+function bumpProfile(height: number, e: number, arc = 6, foot = 0): ProfilePt[] {
   const pts: ProfilePt[] = [];
   for (let i = 0; i <= arc; i++) {
     const f = (i / arc) * (Math.PI / 2);
@@ -172,7 +227,14 @@ function bumpProfile(height: number, e: number, arc = 6): ProfilePt[] {
       nz: Math.cos(f),
     });
   }
-  pts.push({ d: 0, z: 0, nd: 1, nz: 0 });
+  if (foot > 0) {
+    for (let i = 0; i <= arc; i++) {
+      const a = (i / arc) * (Math.PI / 2);
+      pts.push({ d: -foot * (1 - Math.cos(a)), z: foot * (1 - Math.sin(a)), nd: Math.cos(a), nz: Math.sin(a) });
+    }
+  } else {
+    pts.push({ d: 0, z: 0, nd: 1, nz: 0 });
+  }
   return pts;
 }
 
@@ -327,8 +389,8 @@ function lensTexture(): THREE.CanvasTexture {
   ring(98, "#0d0e11", 12);
   ring(84, "#2a2c33", 2);
   const lens = g.createRadialGradient(m - 22, m - 26, 4, m, m, 76);
-  lens.addColorStop(0, "#5d73ad");
-  lens.addColorStop(0.25, "#26315a");
+  lens.addColorStop(0, "#3a4a7a");
+  lens.addColorStop(0.25, "#161d3a");
   lens.addColorStop(0.6, "#0b0f20");
   lens.addColorStop(1, "#020308");
   disc(76, lens);
@@ -338,6 +400,59 @@ function lensTexture(): THREE.CanvasTexture {
   disc(76, coat);
   disc(24, "#000");
   ring(24, "#1c2030", 2);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/**
+ * Frosted back glass: a slow diagonal falloff (the near-field light a flat
+ * panel never gets from a distant environment) under a fine satin grain.
+ */
+function backTexture(color: string): THREE.CanvasTexture {
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 512;
+  const g = c.getContext("2d")!;
+  const sweepLight = g.createLinearGradient(0, 0, 256, 512);
+  sweepLight.addColorStop(0, shade(color, 1.16));
+  sweepLight.addColorStop(0.45, color);
+  sweepLight.addColorStop(1, shade(color, 0.84));
+  g.fillStyle = sweepLight;
+  g.fillRect(0, 0, 256, 512);
+  const rnd = seeded(11);
+  const img = g.getImageData(0, 0, 256, 512);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (rnd() - 0.5) * 9;
+    img.data[i] += n;
+    img.data[i + 1] += n;
+    img.data[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  return tex;
+}
+
+/** LED flash behind its fresnel diffuser: warm core, fine concentric ridges. */
+function flashTexture(): THREE.CanvasTexture {
+  const c = document.createElement("canvas");
+  c.width = c.height = 128;
+  const g = c.getContext("2d")!;
+  const core = g.createRadialGradient(64, 64, 2, 64, 64, 64);
+  core.addColorStop(0, "#fff6d8");
+  core.addColorStop(0.35, "#f0dfae");
+  core.addColorStop(1, "#b9a97e");
+  g.fillStyle = core;
+  g.fillRect(0, 0, 128, 128);
+  g.strokeStyle = "rgba(90,74,40,0.28)";
+  g.lineWidth = 1.5;
+  for (let r = 10; r < 64; r += 7) {
+    g.beginPath();
+    g.arc(64, 64, r, 0, Math.PI * 2);
+    g.stroke();
+  }
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
@@ -598,7 +713,8 @@ export class GLMockupRenderer {
     this.setLighting(cfg.lighting, cfg.tint);
     const laptop = cfg.device === "laptop";
     const layout = laptop ? "single" : cfg.layout;
-    const key = `${cfg.device}|${cfg.orientation}|${cfg.finish.id}|${layout}`;
+    const template = cfg.device === "iphone" && cfg.model ? phoneTemplate : null;
+    const key = `${cfg.device}|${cfg.orientation}|${cfg.finish.id}|${layout}|${template ? "model" : "built"}`;
     if (key !== this.deviceKey) {
       this.deviceKey = key;
       this.clear();
@@ -606,7 +722,9 @@ export class GLMockupRenderer {
       for (const slot of SLOTS[layout]) {
         const b = laptop
           ? this.buildLaptop(cfg.finish)
-          : this.buildSlab(cfg.device === "iphone", cfg.finish, cfg.orientation === "landscape");
+          : template
+            ? this.buildPhoneModel(template, cfg.finish, cfg.orientation === "landscape")
+            : this.buildSlab(cfg.device === "iphone", cfg.finish, cfg.orientation === "landscape");
         b.group.position.set(slot.x * b.w, slot.y * b.h, slot.z * b.w);
         content.add(b.group);
         this.built.push(b);
@@ -662,13 +780,19 @@ export class GLMockupRenderer {
       clay,
       metal: clay ? std(finish.light, 0.82, 0) : std(finish.light, 0.3, 1, { envMapIntensity: 1.1 }),
       darkMetal: clay ? std(finish.dark, 0.82, 0) : std(finish.dark, 0.22, 1),
-      back: clay ? std(finish.light, 0.82, 0) : std(backColor, 0.46, 0.3, { envMapIntensity: 0.9 }),
+      back: clay
+        ? std(finish.light, 0.82, 0)
+        : std("#ffffff", 0.5, 0.3, { map: this.track(backTexture(backColor)), envMapIntensity: 0.9 }),
       gloss: clay
         ? std(finish.dark, 0.7, 0)
         : std(backColor, 0.12, 0.3, { clearcoat: 1, clearcoatRoughness: 0.06 }),
       bezel: this.track(new THREE.MeshBasicMaterial({ color: clay ? finish.dark : "#030304" })),
       hole: this.track(new THREE.MeshBasicMaterial({ color: clay ? finish.dark : "#060607" })),
       sapphire: clay ? std(finish.dark, 0.7, 0) : std("#0a0a0c", 0.08, 0.2, { clearcoat: 1 }),
+      glassEdge: clay ? std(finish.dark, 0.7, 0) : std("#060607", 0.05, 0, { envMapIntensity: 1.6 }),
+      well: clay ? std(finish.dark, 0.8, 0) : std("#020203", 0.55, 0, { envMapIntensity: 0.15 }),
+      ring: clay ? std(finish.dark, 0.82, 0) : std(finish.light, 0.14, 1, { envMapIntensity: 1.3 }),
+      slit: this.track(new THREE.MeshBasicMaterial({ color: "#19191c" })),
     };
   }
 
@@ -737,6 +861,94 @@ export class GLMockupRenderer {
     s.texture.needsUpdate = true;
   }
 
+  /* -------------------------------------------------------- phone model */
+
+  private buildPhoneModel(template: THREE.Group, finish: FrameFinish, landscape: boolean): Built {
+    const g = new THREE.Group();
+    const m = this.materials(finish);
+    const body = template.clone(true);
+    body.scale.setScalar(1000); // metres → the millimetre-ish units everything else uses
+    body.position.y = -PHONE.h / 2;
+    g.add(body);
+
+    const surface = this.makeSurface(
+      PHONE.screenW,
+      PHONE.screenH,
+      landscape,
+      m.clay
+        ? null
+        : (c, tw) => {
+            // The island's hardware sits on the panel plane; black it out underneath.
+            const k = tw / PHONE.screenW;
+            c.fillStyle = "#000";
+            roundRectPath(c, 28.5 * k, 2.45 * k, 15.8 * k, 6 * k, 3 * k);
+            c.fill();
+          }
+    );
+    // Island parts are coplanar with the panel — push the panel back so they win.
+    surface.material.polygonOffset = true;
+    surface.material.polygonOffsetFactor = 2;
+    surface.material.polygonOffsetUnits = 2;
+
+    // Finishes recolor the model: frame-family parts follow the frame color,
+    // the rest follow the back glass, each keeping its original relative tone.
+    const frame = new THREE.Color(finish.light);
+    const backGlass = new THREE.Color(finish.light).lerp(new THREE.Color(finish.dark), 0.6);
+    const original = finish.id === "burgundy";
+    const tuned = new Map<THREE.Material, THREE.Material>();
+    const tune = (src: THREE.MeshStandardMaterial) => {
+      const mat = this.track(src.clone());
+      if (mat.opacity < 1) {
+        if (mat.name.includes("Backpanel")) mat.opacity = 1;
+        else {
+          mat.transparent = true;
+          mat.depthWrite = false;
+        }
+      }
+      if (!original && mat.name.startsWith("COLOUR_")) {
+        const isFrame = /Side_Panel|Aniso|Screws|Border/.test(mat.name);
+        const ratio = luminance(mat.color) / (isFrame ? 0.0724 : 0.021);
+        mat.color.copy(isFrame ? frame : backGlass).multiplyScalar(Math.min(1.5, Math.max(0.45, ratio)));
+      }
+      return mat;
+    };
+
+    const faces: THREE.Mesh[] = [];
+    body.traverse((o) => {
+      if (!(o instanceof THREE.Mesh)) return;
+      const src = o.material as THREE.MeshStandardMaterial;
+      if (o.name === "Front_Screen") {
+        o.material = surface.material;
+        faces.push(o);
+      } else if (src.name === "BASE_Glass") {
+        // Exported as opaque grey; it is clear glass, so keep only its reflections.
+        o.material = this.glassMaterial(m.clay ? 0.1 : 0.3);
+        o.renderOrder = 2;
+      } else if (m.clay) {
+        o.material = /^(Side_Panel|Side_Panel_Gloss|Back_Panel|Antenna|Side_Button|Screws)/.test(o.name)
+          ? m.metal
+          : m.darkMetal;
+        if (o.name === "Front_Panel") faces.push(o);
+      } else {
+        if (o.name === "Front_Panel") faces.push(o);
+        let mat = tuned.get(src);
+        if (!mat) tuned.set(src, (mat = tune(src)));
+        o.material = mat;
+      }
+    });
+    // Cover glass: the face again, a hair forward, carrying only reflections.
+    const cover = this.glassMaterial(m.clay ? 0.35 : 1);
+    for (const face of faces) {
+      const layer = new THREE.Mesh(face.geometry, cover);
+      layer.position.z = 0.00004;
+      layer.renderOrder = 2;
+      face.parent?.add(layer);
+    }
+
+    g.rotation.z = landscape ? Math.PI / 2 : 0;
+    return { group: g, surface, w: landscape ? PHONE.h : PHONE.w, h: landscape ? PHONE.w : PHONE.h };
+  }
+
   /* --------------------------------------------------- phone and tablet */
 
   private buildSlab(phone: boolean, finish: FrameFinish, landscape: boolean): Built {
@@ -767,16 +979,22 @@ export class GLMockupRenderer {
         new THREE.MeshPhysicalMaterial({
           map: this.track(railTexture(finish.light, bands)),
           metalness: 1,
-          roughness: phone ? 0.34 : 0.4,
+          roughness: phone ? 0.27 : 0.36,
           anisotropy: 0.4,
           envMapIntensity: 1.1,
         })
       );
     }
-    this.mesh(g, sweep(outline, railProfile(t, e)), rail);
+    const crown = phone ? 0.2 : 0.1; // how far the rail bows out at its middle
+    this.mesh(g, sweep(outline, railProfile(t, e, e, 8, crown)), rail);
 
     // Front: black border glass, the panel, then the reflective cover layer.
-    this.mesh(g, cap(outline, e, t / 2, true, w, h), m.bezel);
+    // The cover glass stands a hair proud of the frame; its rounded edge
+    // draws the thin bright line that runs around the face of a real phone.
+    const lift = 0.26;
+    const glassOutline = squircle(w - e * 2, h - e * 2, r - e);
+    this.mesh(g, sweep(glassOutline, bumpProfile(lift, 0.24)), m.glassEdge).position.z = t / 2;
+    this.mesh(g, cap(glassOutline, 0.24, t / 2 + lift, true, w, h), m.bezel);
     const sw = w - inset * 2;
     const sh = h - inset * 2;
     const surface = this.makeSurface(
@@ -809,8 +1027,12 @@ export class GLMockupRenderer {
         : null
     );
     const screenOutline = squircle(sw, sh, Math.max(r - inset, 3.4));
-    this.mesh(g, cap(screenOutline, 0, t / 2 + 0.02, true, sw, sh), surface.material);
-    const glass = this.mesh(g, cap(outline, e, t / 2 + 0.05, true, w, h), this.glassMaterial(m.clay ? 0.35 : 1));
+    this.mesh(g, cap(screenOutline, 0, t / 2 + lift + 0.02, true, sw, sh), surface.material);
+    const glass = this.mesh(
+      g,
+      cap(glassOutline, 0.24, t / 2 + lift + 0.05, true, w, h),
+      this.glassMaterial(m.clay ? 0.35 : 1)
+    );
     glass.renderOrder = 2;
 
     const lensTex = this.track(lensTexture());
@@ -819,17 +1041,19 @@ export class GLMockupRenderer {
       : this.track(
           new THREE.MeshPhysicalMaterial({
             map: lensTex,
-            roughness: 0.06,
+            roughness: 0.35,
             metalness: 0,
-            clearcoat: 1,
-            clearcoatRoughness: 0.03,
-            envMapIntensity: 0.75,
+            envMapIntensity: 0.08,
           })
         );
     if (!phone) {
       // Tablet front camera lives in the bezel.
       const cam = this.mesh(g, new THREE.CircleGeometry(1.15, 24), lensGlass);
-      cam.position.set(0, h / 2 - inset / 2 - 0.3, t / 2 + 0.03);
+      cam.position.set(0, h / 2 - inset / 2 - 0.3, t / 2 + lift + 0.03);
+    } else if (!m.clay) {
+      // Earpiece: a hairline slit where the glass meets the top rail.
+      const ear = this.mesh(g, new THREE.ShapeGeometry(capsuleShape(9.5, 0.42), 6), m.slit);
+      ear.position.set(0, h / 2 - e - 0.62, t / 2 + lift + 0.03);
     }
 
     // Back — local axes match what you see from behind: +x right, +z toward you.
@@ -838,15 +1062,41 @@ export class GLMockupRenderer {
     back.rotation.y = Math.PI;
     back.position.z = -t / 2;
     g.add(back);
+    // A lens is a well, not a sticker: polished ring, a dark cone falling away
+    // to the coated front element, and a cover glass that carries the glints.
     const lensAt = (parent: THREE.Object3D, x: number, y: number, z: number, rad: number, height: number) => {
       const ring = circleOutline(rad);
+      const lip = rad * 0.2; // width of the polished ring
+      const fall = rad * 0.27;
+      const depth = height * 0.8;
       const barrel = new THREE.Group();
       barrel.position.set(x, y, z);
       parent.add(barrel);
-      this.mesh(barrel, sweep(ring, bumpProfile(height, 0.45)), m.darkMetal);
-      this.mesh(barrel, cap(ring, 0.45, height, true, rad * 2, rad * 2), m.darkMetal);
-      const front = this.mesh(barrel, new THREE.CircleGeometry(rad - 0.95, 48), lensGlass);
-      front.position.z = height + 0.02;
+      this.mesh(barrel, sweep(ring, bumpProfile(height, 0.45)), m.ring);
+      this.mesh(
+        barrel,
+        sweep(ring, [
+          { d: lip, z: height, nd: 0, nz: 1 },
+          { d: 0.45, z: height, nd: 0, nz: 1 },
+        ]),
+        m.ring
+      );
+      const slope = Math.hypot(fall, depth);
+      this.mesh(
+        barrel,
+        sweep(ring, [
+          { d: lip + fall, z: height - depth, nd: -depth / slope, nz: fall / slope },
+          { d: lip, z: height, nd: -depth / slope, nz: fall / slope },
+        ]),
+        m.well
+      );
+      const element = this.mesh(barrel, new THREE.CircleGeometry(rad - lip - fall, 48), lensGlass);
+      element.position.z = height - depth;
+      if (!m.clay) {
+        const cover = this.mesh(barrel, new THREE.CircleGeometry(rad - lip, 48), this.glassMaterial(0.12));
+        cover.position.z = height - 0.02;
+        cover.renderOrder = 2;
+      }
     };
     const dotAt = (parent: THREE.Object3D, x: number, y: number, z: number, rad: number, mat: THREE.Material) => {
       const d = this.mesh(parent, new THREE.CircleGeometry(rad, 28), mat);
@@ -854,19 +1104,19 @@ export class GLMockupRenderer {
     };
     if (phone) {
       const bw = 38;
-      const bh = 1.5;
+      const bh = 1.7;
       const plateau = new THREE.Group();
       plateau.position.set(-w / 2 + bw / 2 + 2.6, h / 2 - bw / 2 - 2.6, 0);
       back.add(plateau);
       const po = squircle(bw, bw, 10.5);
-      this.mesh(plateau, sweep(po, bumpProfile(bh, 0.9)), m.gloss);
-      this.mesh(plateau, cap(po, 0.9, bh, true, bw, bw), m.gloss);
+      this.mesh(plateau, sweep(po, bumpProfile(bh, 0.6, 6, 0.9)), m.gloss);
+      this.mesh(plateau, cap(po, 0.6, bh, true, bw, bw), m.gloss);
       lensAt(plateau, -8.7, 8.9, bh, 7.6, 1.5);
       lensAt(plateau, -8.7, -8.9, bh, 7.6, 1.5);
       lensAt(plateau, 9.1, 0, bh, 7.6, 1.5);
       const flash = m.clay
         ? m.gloss
-        : this.track(new THREE.MeshStandardMaterial({ color: "#f1e7cd", roughness: 0.35, emissive: "#40382a" }));
+        : this.track(new THREE.MeshStandardMaterial({ map: this.track(flashTexture()), roughness: 0.3 }));
       dotAt(plateau, 10.6, 12.6, bh + 0.02, 2.5, flash);
       dotAt(plateau, 10.6, -12.6, bh + 0.02, 2.3, m.sapphire);
       dotAt(plateau, 0.4, 13.6, bh + 0.02, 0.5, m.hole);
@@ -884,34 +1134,44 @@ export class GLMockupRenderer {
     }
 
     // Buttons — pills barely proud of the rail.
+    // Each key sits in a slightly larger dark cut-out, so a shadow gap runs around it.
     const btn = (x: number, y: number, len: number, alongTop = false) => {
+      const deep = t * 0.4;
       const bar = this.mesh(
         g,
-        new RoundedBoxGeometry(alongTop ? len : 1.5, alongTop ? 1.5 : len, t * 0.4, 5, 0.7),
+        new RoundedBoxGeometry(alongTop ? len : 1.5, alongTop ? 1.5 : len, deep, 5, 0.7),
         m.metal
       );
       bar.position.set(x, y, 0);
+      const gap = this.mesh(g, new THREE.ShapeGeometry(capsuleShape(deep + 0.55, len + 0.55), 10), m.hole);
+      if (alongTop) {
+        gap.rotation.set(-Math.PI / 2, 0, Math.PI / 2, "ZYX");
+        gap.position.set(x, h / 2 + crown + 0.012, 0);
+      } else {
+        gap.rotation.y = (Math.sign(x) * Math.PI) / 2;
+        gap.position.set(Math.sign(x) * (w / 2 + crown + 0.012), y, 0);
+      }
     };
     if (phone) {
-      btn(-w / 2 + 0.32, 39, 7); // Action button
-      btn(-w / 2 + 0.32, 25, 12); // volume up
-      btn(-w / 2 + 0.32, 10, 12); // volume down
-      btn(w / 2 - 0.32, 22, 19); // side button
+      btn(-w / 2 + 0.12, 39, 7); // Action button
+      btn(-w / 2 + 0.12, 25, 12); // volume up
+      btn(-w / 2 + 0.12, 10, 12); // volume down
+      btn(w / 2 - 0.12, 22, 19); // side button
       // Camera Control sits flush: a sapphire inlay rather than a raised key.
       const cc = this.mesh(g, new THREE.ShapeGeometry(capsuleShape(2.7, 14), 10), m.sapphire);
       cc.rotation.y = Math.PI / 2;
-      cc.position.set(w / 2 + 0.02, -27, 0);
+      cc.position.set(w / 2 + crown + 0.012, -27, 0);
     } else {
-      btn(w / 2 - 24, h / 2 - 0.32, 13, true);
-      btn(w / 2 - 0.32, h / 2 - 34, 10);
-      btn(w / 2 - 0.32, h / 2 - 47, 10);
+      btn(w / 2 - 24, h / 2 - 0.2, 13, true);
+      btn(w / 2 - 0.2, h / 2 - 34, 10);
+      btn(w / 2 - 0.2, h / 2 - 47, 10);
     }
 
     // Bottom rail: USB-C and the speaker / microphone perforations.
     const under = (geo: THREE.BufferGeometry, x: number) => {
       const o = this.mesh(g, geo, m.hole);
       o.rotation.x = Math.PI / 2;
-      o.position.set(x, -h / 2 - 0.02, 0);
+      o.position.set(x, -h / 2 - crown - 0.012, 0);
     };
     under(new THREE.ShapeGeometry(capsuleShape(8.6, 2.6), 10), 0);
     const holes = phone ? [5, 5] : [8, 8];
@@ -1046,7 +1306,7 @@ export class GLMockupRenderer {
   setView(rotX: number, rotY: number, camDist: number, zoom: number, glare: number) {
     this.rig.rotation.x = rotX;
     this.rig.rotation.y = rotY;
-    for (const { mat, gain } of this.glassMats) mat.envMapIntensity = glare * 0.4 * gain;
+    for (const { mat, gain } of this.glassMats) mat.envMapIntensity = glare * 0.9 * gain;
     // Panels lose apparent brightness as they turn away from the viewer.
     const facing = Math.max(0, Math.cos(rotX - this.lean) * Math.cos(rotY));
     for (const b of this.built) b.surface.material.color.setScalar(1 - (1 - facing) * 0.16);

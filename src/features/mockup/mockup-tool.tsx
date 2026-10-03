@@ -199,6 +199,7 @@ export function MockupTool() {
   const [lighting, setLighting] = React.useState<LightingId>("studio");
   const [glReady, setGlReady] = React.useState(false);
   const [glFailed, setGlFailed] = React.useState(false);
+  const [modelReady, setModelReady] = React.useState(false);
   const [finishId, setFinishId] = React.useState("titanium");
   const [bgId, setBgId] = React.useState("emerald");
   const [aspectId, setAspectId] = React.useState("1:1");
@@ -247,6 +248,10 @@ export function MockupTool() {
       if (cancelled) return;
       try {
         glRef.current = new m.GLMockupRenderer();
+        // The scanned phone streams in behind the procedural one, then takes over.
+        void m.loadPhoneModel().then((ok) => {
+          if (ok && !cancelled) setModelReady(true);
+        });
       } catch {
         // WebGL unavailable — the plate engine takes over.
         setGlFailed(true);
@@ -356,7 +361,7 @@ export function MockupTool() {
       const gl = glReady && !glFailed ? glRef.current : null;
       if (gl) {
         gl.setSize(w, h);
-        gl.prepare({ device, orientation, finish, layout, lighting, lid, tint });
+        gl.prepare({ device, orientation, finish, layout, lighting, lid, tint, model: modelReady });
         gl.setScreens(screens, scroll);
         gl.setView(sceneOpts.rotX, sceneOpts.rotY, sceneOpts.camera, sceneOpts.zoom, glare);
         gl.render();
@@ -367,7 +372,7 @@ export function MockupTool() {
         renderScene(ctx, spec.plates, sceneOpts, computeFit(spec.plates, w, h, sceneOpts.camera));
       }
     },
-    [spec, sceneOpts, sources, slotCount, scroll, glare, glReady, glFailed, device, orientation, finish, layout, lighting, lid, tint]
+    [spec, sceneOpts, sources, slotCount, scroll, glare, glReady, glFailed, modelReady, device, orientation, finish, layout, lighting, lid, tint]
   );
 
   // Static render on any change; continuous loop while a video is playing.
