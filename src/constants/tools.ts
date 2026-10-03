@@ -272,11 +272,13 @@ export const TOOLS = [
     name: "3D Device Mockups",
     shortName: "3D Mockup",
     description:
-      "Put your screenshot or video on a real 3D phone or tablet — grab the device and spin it in true perspective, with lit metal edges, floor shadows, five finishes and studio backdrops. Export a crisp 2× PNG, or a WebM clip of your video playing on the device.",
+      "Put your screenshot or video on a photoreal 3D phone, tablet or laptop. Orbit it all the way around to the back, light it with studio softboxes, pair up to three screens, and scroll a full page inside the display. Export a crisp PNG up to 4×, or a WebM clip of a cinematic reveal.",
     keywords: [
       "3d device mockup",
       "iphone mockup generator",
       "ipad mockup",
+      "macbook mockup",
+      "clay device mockup",
       "app screenshot mockup",
       "video mockup generator",
     ],

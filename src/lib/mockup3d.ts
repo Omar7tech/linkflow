@@ -264,6 +264,8 @@ export interface SceneOptions {
   glowRgb: [number, number, number];
   /** 0..1 photographic grain over the final image. */
   grain: number;
+  /** 0..1 soft drop shadow cast by the device onto the backdrop. */
+  shadow?: number;
   /** World-space y of the floor (device-dependent). */
   floorY: number;
   background: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
@@ -358,6 +360,30 @@ export function composeScene(
     glow.addColorStop(1, `rgba(${gr},${gg},${gb},0)`);
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, w, h);
+  }
+
+  // Soft shadow — the device silhouette at quarter size (cheap to blur),
+  // laid down twice: a wide ambient falloff and a tight contact core.
+  const shadow = opts.shadow ?? 0;
+  if (shadow > 0) {
+    const sw = Math.ceil(w / 4);
+    const sh = Math.ceil(h / 4);
+    const sil = getScratch(2, sw, sh);
+    const sx = sil.getContext("2d")!;
+    sx.globalCompositeOperation = "source-over";
+    sx.clearRect(0, 0, sw, sh);
+    sx.drawImage(device, 0, 0, sw, sh);
+    sx.globalCompositeOperation = "source-in";
+    sx.fillStyle = "#000";
+    sx.fillRect(0, 0, sw, sh);
+    ctx.save();
+    ctx.globalAlpha = 0.5 * shadow;
+    ctx.filter = `blur(${(w * 0.03).toFixed(1)}px)`;
+    ctx.drawImage(sil, w * 0.012, h * 0.036, w, h);
+    ctx.globalAlpha = 0.38 * shadow;
+    ctx.filter = `blur(${(w * 0.007).toFixed(1)}px)`;
+    ctx.drawImage(sil, w * 0.003, h * 0.009, w, h);
+    ctx.restore();
   }
 
   // Mirror-floor reflection — flip the device render about the floor line,
@@ -463,7 +489,7 @@ export function renderScene(
 
 /* --------------------------------------------------------------- devices */
 
-export type DeviceId = "iphone" | "ipad";
+export type DeviceId = "iphone" | "ipad" | "laptop";
 export type Orientation = "portrait" | "landscape";
 
 export interface FrameFinish {
@@ -471,6 +497,8 @@ export interface FrameFinish {
   label: string;
   light: string;
   dark: string;
+  /** Matte single-color "clay" body instead of metal and glass. */
+  clay?: boolean;
 }
 
 export const FINISHES: readonly FrameFinish[] = [
@@ -484,6 +512,9 @@ export const FINISHES: readonly FrameFinish[] = [
   { id: "sage", label: "Sage", light: "#a7b89d", dark: "#5a6a52" },
   { id: "lavender", label: "Lavender", light: "#cfc4e6", dark: "#8b7fae" },
   { id: "skyblue", label: "Sky Blue", light: "#b9d4e7", dark: "#6d92ac" },
+  { id: "clay-white", label: "Clay White", light: "#eeeeec", dark: "#d6d6d3", clay: true },
+  { id: "clay-ink", label: "Clay Ink", light: "#2c2d31", dark: "#1b1c1f", clay: true },
+  { id: "clay-emerald", label: "Clay Emerald", light: "#4fb892", dark: "#3c9a78", clay: true },
 ];
 
 export function roundRectPath(
@@ -516,6 +547,28 @@ export function drawCover(
   const dw = sw * scale;
   const dh = sh * scale;
   ctx.drawImage(src, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+}
+
+/**
+ * Fit a source to the screen width-first. Content taller than the screen is
+ * anchored to the top and travels with `scroll` (0..1), like a real page.
+ */
+export function drawContent(
+  ctx: CanvasRenderingContext2D,
+  src: ScreenSource,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  scroll: number
+) {
+  const sw = src instanceof HTMLVideoElement ? src.videoWidth || 1 : src.width;
+  const sh = src instanceof HTMLVideoElement ? src.videoHeight || 1 : src.height;
+  const scale = Math.max(w / sw, h / sh);
+  const dw = sw * scale;
+  const dh = sh * scale;
+  const oy = dh > h + 1 ? -scroll * (dh - h) : (h - dh) / 2;
+  ctx.drawImage(src, x + (w - dw) / 2, y + oy, dw, dh);
 }
 
 export function paintPlaceholder(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
@@ -930,7 +983,10 @@ export function buildDevice(
   orientation: Orientation,
   finish: FrameFinish
 ): DeviceSpec {
-  return buildSlabDevice(device, orientation, finish);
+  // The plate engine has no laptop — a landscape tablet stands in for it.
+  return device === "laptop"
+    ? buildSlabDevice("ipad", "landscape", finish)
+    : buildSlabDevice(device, orientation, finish);
 }
 
 /* ----------------------------------------------------------- backgrounds */
@@ -1076,6 +1132,18 @@ export function customBackground(hex: string): BackgroundPreset {
     css: `linear-gradient(135deg, ${shade(hex, 0.3)}, ${shade(hex, 0.68)} 55%, ${shade(hex, 1.08)})`,
     paint: withGlow(linear([[0, shade(hex, 0.3)], [0.55, shade(hex, 0.68)], [1, shade(hex, 1.08)]]), [
       [0.8, 0.15, "rgba(255,255,255,0.16)"],
+    ]),
+  };
+}
+
+/** Backdrop built from two colors sampled off the screen content. */
+export function duotoneBackground(deep: string, vivid: string): BackgroundPreset {
+  return {
+    id: "match",
+    label: "Match",
+    css: `linear-gradient(135deg, ${shade(deep, 0.3)}, ${shade(vivid, 0.62)} 55%, ${vivid})`,
+    paint: withGlow(linear([[0, shade(deep, 0.3)], [0.55, shade(vivid, 0.62)], [1, vivid]]), [
+      [0.8, 0.15, "rgba(255,255,255,0.14)"],
     ]),
   };
 }
