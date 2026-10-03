@@ -221,7 +221,6 @@ export function Logo3DTool() {
       glow,
       glowRgb,
       grain,
-      floorY: 0, // unused — the GL engine supplies the floor line directly
       background: background.paint,
     }),
     [rotX, rotY, zoom, camera, reflection, glow, glowRgb, grain, background]

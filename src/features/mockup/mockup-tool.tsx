@@ -23,27 +23,24 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GeneratorLayout } from "@/components/shared/generator-layout";
 import { TOOL_BY_ID } from "@/constants/tools";
+import { DEVICE_MODELS, type DeviceModel } from "@/lib/mockup-models";
 import {
   BACKGROUNDS,
-  buildDevice,
   composeScene,
-  computeFit,
   customBackground,
   duotoneBackground,
   FINISHES,
-  renderScene,
-  type DeviceId,
   type Orientation,
 } from "@/lib/mockup3d";
-import type { GLMockupRenderer, LayoutId, LightingId } from "@/lib/mockup3d-gl";
+import type { DeviceInfo, GLMockupRenderer, LayoutId, LightingId } from "@/lib/mockup3d-gl";
 import { cn } from "@/lib/utils";
 import { buildZip, type ZipEntry } from "@/lib/zip";
 
-const DEVICES: { id: DeviceId; label: string; icon: typeof SmartphoneIcon }[] = [
-  { id: "iphone", label: "Phone", icon: SmartphoneIcon },
-  { id: "ipad", label: "Tablet", icon: TabletIcon },
-  { id: "laptop", label: "Laptop", icon: LaptopIcon },
-];
+const KIND_ICON: Record<DeviceModel["kind"], typeof SmartphoneIcon> = {
+  phone: SmartphoneIcon,
+  tablet: TabletIcon,
+  laptop: LaptopIcon,
+};
 
 const LAYOUTS: { id: LayoutId; label: string; screens: number }[] = [
   { id: "single", label: "Single", screens: 1 },
@@ -85,9 +82,6 @@ const ANIMS: { id: Anim; label: string; ms: number }[] = [
   { id: "reveal", label: "Reveal", ms: 5_500 },
   { id: "scroll", label: "Scroll", ms: 8_000 },
 ];
-
-/** Screen height ÷ width per device, portrait — decides when content can scroll. */
-const SCREEN_RATIO: Record<DeviceId, number> = { iphone: 2.18, ipad: 1.45, laptop: 0.646 };
 
 /** Curated one-click scene looks: camera, light, effects, backdrop and finish together. */
 const PRESETS: {
@@ -147,7 +141,7 @@ const PRESETS: {
   },
 ];
 
-const SETTINGS_KEY = "mockup-scene-v2";
+const SETTINGS_KEY = "mockup-scene-v3";
 
 type Source = { url: string; name: string; ratio: number } & (
   | { kind: "image"; media: ImageBitmap }
@@ -192,15 +186,15 @@ const easeOut = (p: number) => 1 - Math.pow(1 - p, 4);
 const easeInOut = (p: number) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 
 export function MockupTool() {
-  const [device, setDevice] = React.useState<DeviceId>("iphone");
+  const [device, setDevice] = React.useState(DEVICE_MODELS[0].id);
   const [orientation, setOrientation] = React.useState<Orientation>("portrait");
   const [layout, setLayout] = React.useState<LayoutId>("single");
-  const [lid, setLid] = React.useState(104);
   const [lighting, setLighting] = React.useState<LightingId>("studio");
   const [glReady, setGlReady] = React.useState(false);
   const [glFailed, setGlFailed] = React.useState(false);
-  const [modelReady, setModelReady] = React.useState(false);
-  const [finishId, setFinishId] = React.useState("titanium");
+  // Measurements of the device whose model is loaded; "failed" if it couldn't be.
+  const [modelState, setModelState] = React.useState<{ id: string; info: DeviceInfo | null } | null>(null);
+  const [finishId, setFinishId] = React.useState("burgundy");
   const [bgId, setBgId] = React.useState("emerald");
   const [aspectId, setAspectId] = React.useState("1:1");
   const [rotX, setRotX] = React.useState(8);
@@ -248,12 +242,7 @@ export function MockupTool() {
       if (cancelled) return;
       try {
         glRef.current = new m.GLMockupRenderer();
-        // The scanned phone streams in behind the procedural one, then takes over.
-        void m.loadPhoneModel().then((ok) => {
-          if (ok && !cancelled) setModelReady(true);
-        });
       } catch {
-        // WebGL unavailable — the plate engine takes over.
         setGlFailed(true);
       }
       setGlReady(true);
@@ -263,6 +252,22 @@ export function MockupTool() {
     };
   }, []);
   React.useEffect(() => () => glRef.current?.dispose(), []);
+
+  const model = DEVICE_MODELS.find((d) => d.id === device) ?? DEVICE_MODELS[0];
+  // Fetch the device's model; the renderer picks it up once it is measured.
+  React.useEffect(() => {
+    let cancelled = false;
+    void import("@/lib/mockup3d-gl")
+      .then((m) => m.loadDeviceModel(model))
+      .then((info) => {
+        if (!cancelled) setModelState({ id: model.id, info });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [model]);
+  const info = modelState?.id === model.id ? modelState.info : null;
+  const modelFailed = modelState?.id === model.id && !modelState.info;
 
   const finish = FINISHES.find((f) => f.id === finishId) ?? FINISHES[0];
   const background = React.useMemo(() => {
@@ -317,20 +322,13 @@ export function MockupTool() {
     return [sum[0] / 64, sum[1] / 64, sum[2] / 64];
   }, [background, bgId]);
 
-  const laptop = device === "laptop";
-  const slotCount = laptop ? 1 : (LAYOUTS.find((l) => l.id === layout)?.screens ?? 1);
+  const slotCount = LAYOUTS.find((l) => l.id === layout)?.screens ?? 1;
   const shown = sources.slice(0, slotCount);
   const hasSource = shown.some(Boolean);
   const hasVideo = shown.some((s) => s?.kind === "video");
-  const screenRatio =
-    laptop || orientation === "portrait" ? SCREEN_RATIO[device] : 1 / SCREEN_RATIO[device];
+  // Content taller than the screen can be scrolled inside it.
+  const screenRatio = info ? (orientation === "portrait" ? info.screenRatio : 1 / info.screenRatio) : Infinity;
   const scrollable = shown.some((s) => s && s.ratio > screenRatio * 1.05);
-
-  // The plate engine is only built when WebGL is unavailable.
-  const spec = React.useMemo(
-    () => (glFailed ? buildDevice(device, orientation, finish) : null),
-    [glFailed, device, orientation, finish]
-  );
   // Camera distance from the lens slider — log scale, ~24mm wide to ~150mm tele.
   const camera = Math.round(320 * Math.pow(6.25, lens));
 
@@ -345,34 +343,28 @@ export function MockupTool() {
       glow,
       glowRgb,
       grain,
-      floorY: spec?.floorY ?? 0,
       background: background.paint,
     }),
-    [rotX, rotY, zoom, camera, reflection, shadow, glow, glowRgb, grain, spec, background]
+    [rotX, rotY, zoom, camera, reflection, shadow, glow, glowRgb, grain, background]
   );
 
   // One render path for preview and every export: draw the current scene
-  // into any 2D context at any size, through whichever engine is active.
+  // into any 2D context at any size.
   const renderTo = React.useCallback(
     (ctx: CanvasRenderingContext2D, w: number, h: number) => {
-      const screens = sources
-        .slice(0, slotCount)
-        .map((s) => (!s ? null : s.kind === "image" ? s.media : s.el));
-      const gl = glReady && !glFailed ? glRef.current : null;
-      if (gl) {
-        gl.setSize(w, h);
-        gl.prepare({ device, orientation, finish, layout, lighting, lid, tint, model: modelReady });
-        gl.setScreens(screens, scroll);
-        gl.setView(sceneOpts.rotX, sceneOpts.rotY, sceneOpts.camera, sceneOpts.zoom, glare);
-        gl.render();
-        composeScene(ctx, gl.domElement, sceneOpts, gl.floorScreenY());
-      } else if (spec) {
-        spec.updateScreen(screens.find(Boolean) ?? null);
-        spec.setView(sceneOpts.rotX, sceneOpts.rotY, glare);
-        renderScene(ctx, spec.plates, sceneOpts, computeFit(spec.plates, w, h, sceneOpts.camera));
-      }
+      const gl = glReady && info ? glRef.current : null;
+      if (!gl) return;
+      gl.setSize(w, h);
+      if (!gl.prepare({ model, orientation, finish, layout, lighting, tint })) return;
+      gl.setScreens(
+        sources.slice(0, slotCount).map((s) => (!s ? null : s.kind === "image" ? s.media : s.el)),
+        scroll
+      );
+      gl.setView(sceneOpts.rotX, sceneOpts.rotY, sceneOpts.camera, sceneOpts.zoom, glare);
+      gl.render();
+      composeScene(ctx, gl.domElement, sceneOpts, gl.floorScreenY());
     },
-    [spec, sceneOpts, sources, slotCount, scroll, glare, glReady, glFailed, modelReady, device, orientation, finish, layout, lighting, lid, tint]
+    [sceneOpts, sources, slotCount, scroll, glare, glReady, info, model, orientation, finish, layout, lighting, tint]
   );
 
   // Static render on any change; continuous loop while a video is playing.
@@ -584,7 +576,7 @@ export function MockupTool() {
   };
 
   const downloadPng = async () => {
-    if (!glReady || busyPng) return;
+    if (!info || busyPng) return;
     setBusyPng(true);
     try {
       const blob = await renderPngBlob(aspect.w * exportScale, aspect.h * exportScale);
@@ -595,7 +587,7 @@ export function MockupTool() {
   };
 
   const copyPng = async () => {
-    if (!glReady || busyCopy) return;
+    if (!info || busyCopy) return;
     setBusyCopy(true);
     try {
       const blob = await renderPngBlob(aspect.w * exportScale, aspect.h * exportScale);
@@ -611,7 +603,7 @@ export function MockupTool() {
 
   // Every aspect ratio at the chosen scale, packed into one ZIP.
   const exportAllSizes = async () => {
-    if (!glReady || zipProgress !== null) return;
+    if (!info || zipProgress !== null) return;
     setZipProgress(0);
     try {
       const entries: ZipEntry[] = [];
@@ -698,7 +690,7 @@ export function MockupTool() {
       const raw = localStorage.getItem(SETTINGS_KEY);
       if (raw) {
         const s = JSON.parse(raw) as Record<string, unknown>;
-        if (DEVICES.some((d) => d.id === s.device)) setDevice(s.device as DeviceId);
+        if (DEVICE_MODELS.some((d) => d.id === s.device)) setDevice(s.device as string);
         if (s.orientation === "portrait" || s.orientation === "landscape")
           setOrientation(s.orientation);
         if (LAYOUTS.some((l) => l.id === s.layout)) setLayout(s.layout as LayoutId);
@@ -714,7 +706,6 @@ export function MockupTool() {
           [s.rotY, setRotY, -180, 180],
           [s.zoom, setZoom, 0.55, 1.6],
           [s.lens, setLens, 0, 1],
-          [s.lid, setLid, 20, 135],
           [s.reflection, setReflection, 0, 1],
           [s.shadow, setShadow, 0, 1],
           [s.glare, setGlare, 0, 1],
@@ -745,7 +736,6 @@ export function MockupTool() {
             orientation,
             layout,
             lighting,
-            lid,
             finishId,
             // The photo and the sampled colors aren't persisted.
             bgId: bgId === "photo" || bgId === "match" ? "emerald" : bgId,
@@ -770,7 +760,7 @@ export function MockupTool() {
       }
     }, 400);
     return () => clearTimeout(t);
-  }, [anim, device, orientation, layout, lighting, lid, finishId, bgId, aspectId, customBg, rotX, rotY, zoom, lens, reflection, shadow, glare, glow, grain, bgBlur, bgDim, exportScale]);
+  }, [anim, device, orientation, layout, lighting, finishId, bgId, aspectId, customBg, rotX, rotY, zoom, lens, reflection, shadow, glare, glow, grain, bgBlur, bgDim, exportScale]);
 
   return (
     <GeneratorLayout
@@ -821,12 +811,22 @@ export function MockupTool() {
                   </span>
                 </div>
               )}
-              {!glReady && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
-                  <span className="flex items-center gap-2 rounded-full bg-black/60 px-4 py-2 text-xs font-medium text-white">
-                    <Loader2Icon className="size-3.5 animate-spin" /> Setting up the studio…
-                  </span>
+              {glFailed || modelFailed ? (
+                <div className="bg-muted/80 absolute inset-0 flex items-center justify-center p-6 text-center">
+                  <p className="text-muted-foreground max-w-xs text-sm">
+                    {glFailed
+                      ? "This tool needs WebGL, which your browser has turned off or doesn't support."
+                      : "The device model couldn't be loaded. Check your connection and reload the page."}
+                  </p>
                 </div>
+              ) : (
+                !(glReady && info) && (
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+                    <span className="flex items-center gap-2 rounded-full bg-black/60 px-4 py-2 text-xs font-medium text-white">
+                      <Loader2Icon className="size-3.5 animate-spin" /> Loading the {model.label} model…
+                    </span>
+                  </div>
+                )
               )}
               {mediaLoading && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -922,53 +922,42 @@ export function MockupTool() {
 
         <Card>
           <CardContent className="space-y-5">
-            <Tabs value={device} onValueChange={(v) => setDevice(v as DeviceId)}>
-              <TabsList className="w-full">
-                {DEVICES.map((d) => (
-                  <TabsTrigger key={d.id} value={d.id} className="flex-1">
-                    <d.icon className="size-4" /> {d.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-
-            {laptop ? (
-              <SliderRow
-                label="Lid"
-                value={lid}
-                min={20}
-                max={135}
-                step={1}
-                display={`${Math.round(lid)}°`}
-                onChange={setLid}
-              />
-            ) : (
-              <>
-                <div className="flex items-center justify-between">
-                  <Label>Orientation</Label>
-                  <Tabs value={orientation} onValueChange={(v) => setOrientation(v as Orientation)}>
-                    <TabsList>
-                      <TabsTrigger value="portrait">Portrait</TabsTrigger>
-                      <TabsTrigger value="landscape">Landscape</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </div>
-                {!glFailed && (
-                  <div className="flex items-center justify-between">
-                    <Label>Layout</Label>
-                    <Tabs value={layout} onValueChange={(v) => setLayout(v as LayoutId)}>
-                      <TabsList>
-                        {LAYOUTS.map((l) => (
-                          <TabsTrigger key={l.id} value={l.id}>
-                            {l.label}
-                          </TabsTrigger>
-                        ))}
-                      </TabsList>
-                    </Tabs>
-                  </div>
-                )}
-              </>
+            {DEVICE_MODELS.length > 1 && (
+              <Tabs value={device} onValueChange={setDevice}>
+                <TabsList className="w-full">
+                  {DEVICE_MODELS.map((d) => {
+                    const Icon = KIND_ICON[d.kind];
+                    return (
+                      <TabsTrigger key={d.id} value={d.id} className="flex-1">
+                        <Icon className="size-4" /> {d.label}
+                      </TabsTrigger>
+                    );
+                  })}
+                </TabsList>
+              </Tabs>
             )}
+
+            <div className="flex items-center justify-between">
+              <Label>Orientation</Label>
+              <Tabs value={orientation} onValueChange={(v) => setOrientation(v as Orientation)}>
+                <TabsList>
+                  <TabsTrigger value="portrait">Portrait</TabsTrigger>
+                  <TabsTrigger value="landscape">Landscape</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Layout</Label>
+              <Tabs value={layout} onValueChange={(v) => setLayout(v as LayoutId)}>
+                <TabsList>
+                  {LAYOUTS.map((l) => (
+                    <TabsTrigger key={l.id} value={l.id}>
+                      {l.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
 
             <div className="space-y-2">
               {shown.map((source, i) => (
@@ -1162,20 +1151,18 @@ export function MockupTool() {
 
         <Card>
           <CardContent className="space-y-5">
-            {!glFailed && (
-              <div className="space-y-1.5">
-                <Label>Lighting</Label>
-                <Tabs value={lighting} onValueChange={(v) => setLighting(v as LightingId)}>
-                  <TabsList className="w-full">
-                    {LIGHTINGS.map((l) => (
-                      <TabsTrigger key={l.id} value={l.id} className="flex-1">
-                        {l.label}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
-              </div>
-            )}
+            <div className="space-y-1.5">
+              <Label>Lighting</Label>
+              <Tabs value={lighting} onValueChange={(v) => setLighting(v as LightingId)}>
+                <TabsList className="w-full">
+                  {LIGHTINGS.map((l) => (
+                    <TabsTrigger key={l.id} value={l.id} className="flex-1">
+                      {l.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
             <SliderRow
               label="Shadow"
               value={shadow}
