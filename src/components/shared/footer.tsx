@@ -82,12 +82,12 @@ export function Footer() {
           <p className="text-muted-foreground mt-2 text-xs">
             Developed by{" "}
             <a
-              href="https://github.com/Omar7tech"
+              href="https://twomindsengine.com"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-foreground font-medium transition-colors"
             >
-              Omar Abi Farraj
+              twominds
             </a>
           </p>
         </div>
