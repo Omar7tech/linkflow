@@ -24,6 +24,8 @@ export interface DeviceModel {
   label: string;
   kind: "phone" | "tablet" | "laptop";
   url: string;
+  /** Size of the file in bytes — servers that compress it don't say, and the download bar needs it. */
+  bytes: number;
   /** Model units → millimetres (1000 for a file authored in metres). */
   scale: number;
   /** Degrees to turn the model about +Y so that it faces +Z. */
@@ -67,6 +69,7 @@ export const DEVICE_MODELS: readonly DeviceModel[] = [
     label: "iPhone",
     kind: "phone",
     url: "/models/iphone.glb",
+    bytes: 3_860_024,
     scale: 1000,
     screens: [{ mesh: "Front_Screen", label: "Screen", island: ["Front_Sensor", "Front_Cam_Glass"] }],
     face: ["Front_Panel"],
@@ -88,6 +91,7 @@ export const DEVICE_MODELS: readonly DeviceModel[] = [
     label: "iPhone Fold",
     kind: "phone",
     url: "/models/iphone-fold.glb",
+    bytes: 5_997_544,
     scale: 1000,
     screens: [
       { mesh: "Front_Screen", label: "Inner screen", island: [] },
@@ -115,6 +119,7 @@ export const DEVICE_MODELS: readonly DeviceModel[] = [
     label: "iPad Pro",
     kind: "tablet",
     url: "/models/ipad-pro-13.glb",
+    bytes: 14_704_452,
     scale: 1000,
     turn: -90,
     screens: [{ mesh: "EjCaatfcGdAQBho", label: "Screen", island: [] }],
@@ -140,6 +145,7 @@ export const DEVICE_MODELS: readonly DeviceModel[] = [
     label: "MacBook Pro",
     kind: "laptop",
     url: "/models/macbook-pro-14.glb",
+    bytes: 10_847_304,
     scale: 1000,
     screens: [{ mesh: "tfTbkkzhxqpKRgC", label: "Screen", island: [] }],
     face: ["nAIWMiVEtSYdjdZ"], // display glass around the panel

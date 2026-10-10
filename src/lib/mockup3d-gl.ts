@@ -92,13 +92,34 @@ const luminance = (c: THREE.Color) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b
 const loaded = new Map<string, LoadedModel>();
 const loading = new Map<string, Promise<DeviceInfo | null>>();
 
+// Download progress per model, 0..1 (1 once the file is in and being unpacked).
+const progress = new Map<string, number>();
+const watchers = new Map<string, Set<(fraction: number) => void>>();
+function report(id: string, fraction: number) {
+  progress.set(id, fraction);
+  watchers.get(id)?.forEach((notify) => notify(fraction));
+}
+
+/** Follow a model's download. Calls back with where it is now, then on every step; returns the unsubscribe. */
+export function watchModelProgress(id: string, notify: (fraction: number) => void): () => void {
+  let set = watchers.get(id);
+  if (!set) watchers.set(id, (set = new Set()));
+  set.add(notify);
+  notify(progress.get(id) ?? 0);
+  return () => void set.delete(notify);
+}
+
 /** Fetch and measure a device model. Resolves null if it can't be used. */
 export function loadDeviceModel(def: DeviceModel): Promise<DeviceInfo | null> {
   let task = loading.get(def.id);
   if (!task) {
     task = new GLTFLoader()
-      .loadAsync(def.url)
+      .loadAsync(def.url, (e) => {
+        // Counted against the known size: a compressed response reports no total of its own.
+        report(def.id, Math.min(0.99, e.loaded / def.bytes));
+      })
       .then((gltf) => {
+        report(def.id, 1);
         const scene = gltf.scene;
         scene.rotation.y = ((def.turn ?? 0) * Math.PI) / 180;
         scene.updateMatrixWorld(true);

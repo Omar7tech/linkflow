@@ -8,6 +8,7 @@ import {
   DownloadIcon,
   ImageIcon,
   LaptopIcon,
+  LightbulbIcon,
   Loader2Icon,
   MaximizeIcon,
   MinimizeIcon,
@@ -75,6 +76,89 @@ const LIGHTINGS: { id: LightingId; label: string }[] = [
 ];
 
 const FINISH_GROUPS: FinishGroup[] = ["Metal", "Special", "Material", "Clay", "Art", "Wild"];
+
+/** Things worth knowing about the tool, shown while a model downloads. */
+const TIPS = [
+  "Drag to orbit, scroll to zoom, right-drag to pan. The stage works like a 3D viewer.",
+  "Press F to give the stage the whole display, and 0 to bring the view back.",
+  "You can paste a screenshot straight in with Ctrl V, no need to save it first.",
+  "Material finishes wrap the back and leave the frame metal, like a custom build.",
+  "Screen glow lights the keyboard with the color of whatever is on the screen.",
+  "The sparkle backdrop is matched to your screenshot: it lifts two colors from it.",
+  "A 16:9 frame exported at 4x comes out 7680 pixels wide, enough for print.",
+  "A screenshot taller than the screen can scroll inside it. Try the Scroll motion.",
+  "A look sets camera, light, backdrop and finish in one click, and Undo brings your scene back.",
+  "Not sure where to start? Surprise me, in the Style tab, rolls a whole scene.",
+  "About 25 degrees of turn shows the screen and the side of the device at once.",
+  "A mirror finish under Golden hour lets the reflections do the work.",
+  "All ratios exports 1:1, 4:5, 9:16 and 16:9 together in one zip.",
+  "Any motion can be recorded as a WebM clip, one full pass at a time.",
+  "Zoom in up to 600% and pan to frame a single corner of the device.",
+  "The None backdrop exports a transparent PNG, shadow and reflection included.",
+  "The glass reflects a different room under every studio light. Orbit to see it drift.",
+  "Duo and Trio take a different screenshot on every device.",
+];
+
+/** One tip at a time, changing every few seconds. Starts on a random one. */
+function LoadingTip() {
+  const [index, setIndex] = React.useState<number | null>(null);
+  React.useEffect(() => {
+    const next = () =>
+      setIndex((i) => (i === null ? Math.floor(Math.random() * TIPS.length) : (i + 1 + Math.floor(Math.random() * (TIPS.length - 1))) % TIPS.length));
+    const first = setTimeout(next, 0);
+    const timer = setInterval(next, 4500);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
+  }, []);
+  return (
+    <div className="border-border flex min-h-16 gap-2.5 border-t pt-3">
+      <LightbulbIcon className="mt-0.5 size-4 shrink-0 text-emerald-500" aria-hidden />
+      <div className="space-y-0.5">
+        <p className="text-muted-foreground/70 text-[10px] font-medium tracking-wider uppercase">Did you know</p>
+        {index !== null && (
+          <p key={index} className="text-foreground/90 animate-in fade-in text-xs leading-relaxed duration-500">
+            {TIPS[index]}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Covers the stage while a device model is on its way. `fraction` is null until the download reports. */
+function StageLoader({ label, fraction, over }: { label: string; fraction: number | null; over: boolean }) {
+  const unpacking = fraction !== null && fraction >= 1;
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        "absolute inset-0 flex items-center justify-center p-4",
+        // Over the last frame of the previous device: dim it rather than blank it.
+        over && "bg-background/60 backdrop-blur-sm"
+      )}
+    >
+      <div className="bg-background/95 border-border w-full max-w-sm space-y-3 rounded-2xl border p-4 shadow-xl shadow-black/20">
+        <div className="flex items-center gap-2.5">
+          <Loader2Icon className="size-4 shrink-0 animate-spin text-emerald-500" aria-hidden />
+          <p className="text-sm font-medium">{unpacking ? `Setting up the ${label}` : `Loading the ${label}`}</p>
+          {fraction !== null && !unpacking && (
+            <span className="text-muted-foreground ml-auto font-mono text-[11px] tabular-nums">{Math.round(fraction * 100)}%</span>
+          )}
+        </div>
+        <div className="bg-muted h-1 overflow-hidden rounded-full">
+          <div
+            className={cn("h-full rounded-full bg-emerald-500 transition-[width] duration-300 ease-out", (fraction === null || unpacking) && "animate-pulse")}
+            style={{ width: `${fraction === null ? 12 : Math.max(4, fraction * 100)}%` }}
+          />
+        </div>
+        <LoadingTip />
+      </div>
+    </div>
+  );
+}
 
 /** A finish shown as a small lit ball of the material itself. */
 function FinishOrb({ finish }: { finish: FrameFinish }) {
@@ -408,17 +492,25 @@ export function MockupTool() {
 
   const model = DEVICE_MODELS.find((d) => d.id === device) ?? DEVICE_MODELS[0];
   // Fetch the device's model; the renderer picks it up once it is measured.
+  const [download, setDownload] = React.useState<{ id: string; fraction: number } | null>(null);
   React.useEffect(() => {
     let cancelled = false;
+    let unwatch = () => {};
     void import("@/lib/mockup3d-gl")
-      .then((m) => m.loadDeviceModel(model))
+      .then((m) => {
+        if (!cancelled) unwatch = m.watchModelProgress(model.id, (fraction) => setDownload({ id: model.id, fraction }));
+        return m.loadDeviceModel(model);
+      })
       .then((info) => {
         if (!cancelled) setModelState({ id: model.id, info });
       });
     return () => {
       cancelled = true;
+      unwatch();
     };
   }, [model]);
+  // Pointing at a device starts its download, so it is often there by the click.
+  const preload = (d: DeviceModel) => void import("@/lib/mockup3d-gl").then((m) => m.loadDeviceModel(d));
   const info = modelState?.id === model.id ? modelState.info : null;
   const turned = !model.fixedOrientation && orientation === "landscape";
   const modelFailed = modelState?.id === model.id && !modelState.info;
@@ -538,25 +630,65 @@ export function MockupTool() {
     [sceneOpts, sources, slotCount, scroll, glare, glReady, info, model, turned, finish, layout, lighting, tint, pose]
   );
 
+  // The room the stage has for the frame, and the frame fitted into it.
+  const stageRef = React.useRef<HTMLDivElement>(null);
+  const [room, setRoom] = React.useState<{ w: number; h: number; dpr: number } | null>(null);
+  React.useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const measure = () => {
+      const style = getComputedStyle(stage);
+      const w = stage.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      const h = stage.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      setRoom((r) => (r && r.w === w && r.h === h && r.dpr === dpr ? r : { w, h, dpr }));
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
+  const fit = room ? Math.min(room.w / aspect.w, room.h / aspect.h) : 0;
+  const shownW = Math.max(0, Math.floor(aspect.w * fit));
+  const shownH = Math.max(0, Math.floor(aspect.h * fit));
+
+  // The preview is drawn at the size it is shown, not the size it exports at —
+  // and coarser still while the view is being dragged, when sharpness can't be
+  // seen anyway. A scene that can be recorded stays at full frame size, so a
+  // take never changes resolution part-way.
+  const [moving, setMoving] = React.useState(false);
+  const settle = React.useRef(0);
+  const touch = React.useCallback(() => {
+    setMoving(true);
+    window.clearTimeout(settle.current);
+    settle.current = window.setTimeout(() => setMoving(false), 220);
+  }, []);
+  React.useEffect(() => () => window.clearTimeout(settle.current), []);
+  const steady = hasVideo || anim !== "off";
+  const detail = steady || !room ? 1 : Math.min(1, ((shownW * room.dpr) / aspect.w) * (moving ? 0.6 : 1));
+  const drawW = Math.max(2, Math.round(aspect.w * detail));
+  const drawH = Math.max(2, Math.round(aspect.h * detail));
+
   // Static render on any change; continuous loop while a video is playing.
+  // Until the device is ready the canvas is left alone, still showing its last frame.
+  const ready = glReady && !!info;
   React.useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !glReady) return;
-    canvas.width = aspect.w;
-    canvas.height = aspect.h;
+    if (!canvas || !ready) return;
+    if (canvas.width !== drawW) canvas.width = drawW;
+    if (canvas.height !== drawH) canvas.height = drawH;
     const ctx = canvas.getContext("2d")!;
 
     if (hasVideo) {
       let raf = 0;
       const loop = () => {
-        renderTo(ctx, aspect.w, aspect.h);
+        renderTo(ctx, drawW, drawH);
         raf = requestAnimationFrame(loop);
       };
       raf = requestAnimationFrame(loop);
       return () => cancelAnimationFrame(raf);
     }
-    renderTo(ctx, aspect.w, aspect.h);
-  }, [renderTo, glReady, aspect, hasVideo]);
+    renderTo(ctx, drawW, drawH);
+  }, [renderTo, ready, drawW, drawH, hasVideo]);
 
   // Release whatever media is still loaded when the tool unmounts.
   const sourcesRef = React.useRef(sources);
@@ -680,6 +812,7 @@ export function MockupTool() {
   };
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!pointers.current.has(e.pointerId)) return;
+    touch();
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (moveRaf.current) return;
     moveRaf.current = requestAnimationFrame(() => {
@@ -1164,19 +1297,19 @@ export function MockupTool() {
   };
 
   // The wheel zooms toward the cursor (a trackpad pinch arrives as Ctrl + wheel).
-  const stageRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
     const onWheel = (e: WheelEvent) => {
       if (!canvasRef.current) return;
       e.preventDefault();
+      touch();
       const delta = e.deltaY * (e.deltaMode === 1 ? 16 : 1);
       zoomAtRef.current(e.clientX, e.clientY, viewRef.current.zoom * Math.exp(-delta * (e.ctrlKey ? 0.01 : 0.0018)));
     };
     stage.addEventListener("wheel", onWheel, { passive: false });
     return () => stage.removeEventListener("wheel", onWheel);
-  }, []);
+  }, [touch]);
 
   const [panel, setPanel] = React.useState<PanelId>("device");
   const tool = TOOL_BY_ID.mockup;
@@ -1220,7 +1353,7 @@ export function MockupTool() {
                 {DEVICE_MODELS.map((d) => {
                   const Icon = KIND_ICON[d.kind];
                   return (
-                    <TabsTrigger key={d.id} value={d.id}>
+                    <TabsTrigger key={d.id} value={d.id} onPointerEnter={() => preload(d)} onFocus={() => preload(d)}>
                       <Icon className="size-4" /> {d.label}
                     </TabsTrigger>
                   );
@@ -1300,17 +1433,19 @@ export function MockupTool() {
             <canvas
               ref={canvasRef}
               className={cn(
-                "block h-auto max-h-full w-auto max-w-full touch-none rounded-lg shadow-xl shadow-black/20",
+                "block shrink-0 touch-none rounded-lg shadow-xl shadow-black/20 transition-opacity duration-300",
+                // Nothing to show until the first device has been drawn.
+                glReady && modelState?.info ? "opacity-100" : "opacity-0",
                 grab === "pan" ? "cursor-move" : grab ? "cursor-grabbing" : "cursor-grab"
               )}
-              style={
-                bgId === "transparent"
-                  ? {
-                      backgroundImage: "repeating-conic-gradient(#d4d4d833 0% 25%, transparent 0% 50%)",
-                      backgroundSize: "16px 16px",
-                    }
-                  : undefined
-              }
+              style={{
+                width: shownW,
+                height: shownH,
+                ...(bgId === "transparent" && {
+                  backgroundImage: "repeating-conic-gradient(#d4d4d833 0% 25%, transparent 0% 50%)",
+                  backgroundSize: "16px 16px",
+                }),
+              }}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
@@ -1355,12 +1490,12 @@ export function MockupTool() {
                 </p>
               </div>
             ) : (
-              !(glReady && info) && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <span className="bg-background/90 border-border flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium">
-                    <Loader2Icon className="size-3.5 animate-spin" /> Loading the {model.label} model…
-                  </span>
-                </div>
+              !ready && (
+                <StageLoader
+                  label={model.label}
+                  fraction={download?.id === model.id ? download.fraction : null}
+                  over={glReady && !!modelState?.info}
+                />
               )
             )}
             {mediaLoading && (
