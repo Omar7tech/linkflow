@@ -9,6 +9,7 @@
  *    glass layer that contributes nothing but reflections
  *  - the studio: softboxes baked into a PMREM environment, tinted by the
  *    backdrop so the device picks up the color of the scene it sits in
+ *  - the room: a second, soft-edged environment that only the glass reflects
  *  - finishes: recoloring the model's own materials, or a matte clay pass
  */
 
@@ -228,6 +229,166 @@ const STUDIOS: Record<LightingId, { top: number; bottom: number; boxes: Softbox[
   },
 };
 
+/**
+ * What the cover glass reflects: a lived-in room rather than the studio —
+ * paned windows, a ceiling wash, bounce off the floor, all soft-edged. A
+ * screen only mirrors a sliver of its surroundings (about as much as the
+ * device fills the lens), so the lights are placed by angle and kept small
+ * enough to read as shapes. The room also turns part-way with the device (see
+ * setView), which keeps a window in the glass through the usual hero angles.
+ */
+interface RoomLight {
+  /** Direction from the device, in degrees: azimuth (+ right) and elevation. */
+  az: number;
+  el: number;
+  /** Angular size, in degrees. */
+  w: number;
+  h: number;
+  color: string;
+  power: number;
+  /** Edge falloff, as a fraction of the light's half-size. */
+  feather: number;
+  /** Window panes across and down (1×1 = a plain glow). */
+  panes?: [number, number];
+}
+
+const ROOMS: Record<LightingId, { top: number; bottom: number; lights: RoomLight[] }> = {
+  studio: {
+    top: 0.2,
+    bottom: 0.05,
+    lights: [
+      { az: -7.6, el: 3.2, w: 5.2, h: 8.6, color: "#f1f6ff", power: 3, feather: 0.14, panes: [2, 3] },
+      { az: 7.6, el: 3.2, w: 5.2, h: 8.6, color: "#ffffff", power: 2.8, feather: 0.14, panes: [2, 3] },
+      { az: 0, el: -9, w: 16, h: 7, color: "#ffe9d2", power: 0.7, feather: 1 },
+      { az: 0, el: 16, w: 40, h: 10, color: "#ffffff", power: 1.1, feather: 1 },
+      { az: 0, el: -19, w: 40, h: 10, color: "#fff1df", power: 0.9, feather: 1 },
+      { az: -35, el: 3, w: 10, h: 14, color: "#ffffff", power: 2, feather: 0.5, panes: [2, 2] },
+      { az: 35, el: 3, w: 10, h: 14, color: "#ffffff", power: 2, feather: 0.5, panes: [2, 2] },
+    ],
+  },
+  soft: {
+    top: 0.4,
+    bottom: 0.2,
+    lights: [
+      { az: -7.5, el: 3, w: 9, h: 12, color: "#ffffff", power: 1.9, feather: 0.8 },
+      { az: 7.5, el: 3, w: 9, h: 12, color: "#ffffff", power: 1.7, feather: 0.8 },
+      { az: 0, el: 16, w: 44, h: 12, color: "#ffffff", power: 1.1, feather: 1 },
+      { az: 0, el: -18, w: 44, h: 12, color: "#fffaf2", power: 1, feather: 1 },
+      { az: -35, el: 3, w: 16, h: 18, color: "#ffffff", power: 1.4, feather: 0.9 },
+      { az: 35, el: 3, w: 16, h: 18, color: "#ffffff", power: 1.4, feather: 0.9 },
+    ],
+  },
+  dramatic: {
+    top: 0.04,
+    bottom: 0.02,
+    lights: [
+      { az: -7, el: 2, w: 2.4, h: 15, color: "#ffffff", power: 4, feather: 0.4, panes: [1, 4] },
+      { az: 8.5, el: 1, w: 1.5, h: 12, color: "#ffe2c4", power: 3, feather: 0.6 },
+      { az: 0, el: -18, w: 30, h: 8, color: "#ffffff", power: 1, feather: 1 },
+      { az: -35, el: 3, w: 3, h: 16, color: "#ffffff", power: 5, feather: 0.5 },
+      { az: 35, el: 3, w: 3, h: 16, color: "#ffffff", power: 5, feather: 0.5 },
+    ],
+  },
+  neon: {
+    top: 0.06,
+    bottom: 0.03,
+    lights: [
+      { az: -7, el: 1, w: 1.8, h: 15, color: "#ff2d95", power: 4, feather: 0.7 },
+      { az: 7, el: 1, w: 1.8, h: 15, color: "#19e3ff", power: 4, feather: 0.7 },
+      { az: 0, el: -17, w: 34, h: 8, color: "#7c3aed", power: 2.4, feather: 1 },
+      { az: 0, el: 16, w: 34, h: 8, color: "#ffffff", power: 0.7, feather: 1 },
+      { az: -35, el: 2, w: 2.4, h: 16, color: "#ff2d95", power: 5, feather: 0.7 },
+      { az: 35, el: 2, w: 2.4, h: 16, color: "#19e3ff", power: 5, feather: 0.7 },
+    ],
+  },
+};
+
+/** How much of the device's turn the reflected room follows (2 = pinned to the glass). */
+const ROOM_FOLLOW = 1.8;
+
+// Light masks — a soft-edged glow, optionally split into window panes. Shared by every bake.
+const BAR_DEG = 0.75; // a glazing bar, as seen from the device
+const lightMasks = new Map<string, THREE.DataTexture>();
+function lightMask(l: RoomLight): THREE.DataTexture {
+  const [cols, rows] = l.panes ?? [1, 1];
+  const key = [l.feather, cols, rows, l.w, l.h].join("|");
+  let tex = lightMasks.get(key);
+  if (tex) return tex;
+  const n = 256;
+  const data = new Uint8Array(n * n * 4);
+  const ease = (t: number) => t * t * (3 - 2 * t);
+  const fall = l.feather * 0.5;
+  const inner = 1 - fall; // half-size of the fully lit area
+  // Darkness of the nearest bar along one axis, for a light `deg` degrees across.
+  const bars = (p: number, count: number, deg: number) => {
+    const half = BAR_DEG / deg; // half a bar, in mask units (the mask spans 2)
+    let lit = 1;
+    for (let k = 1; k < count; k++) {
+      const d = Math.abs(p - (-inner + (2 * inner * k) / count));
+      lit = Math.min(lit, ease(Math.min(1, Math.max(0, (d - half * 0.6) / (half * 0.8)))));
+    }
+    return lit;
+  };
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      const x = ((i + 0.5) / n) * 2 - 1;
+      const y = ((j + 0.5) / n) * 2 - 1;
+      const out = Math.hypot(Math.max(0, Math.abs(x) - inner), Math.max(0, Math.abs(y) - inner));
+      const v = ease(Math.max(0, 1 - out / fall)) * bars(x, cols, l.w) * bars(y, rows, l.h);
+      const o = (j * n + i) * 4;
+      data[o] = data[o + 1] = data[o + 2] = Math.round(v * 255);
+      data[o + 3] = 255;
+    }
+  }
+  tex = new THREE.DataTexture(data, n, n);
+  tex.magFilter = tex.minFilter = THREE.LinearFilter;
+  tex.needsUpdate = true;
+  lightMasks.set(key, tex);
+  return tex;
+}
+
+function buildRoom(id: LightingId): THREE.Scene {
+  const def = ROOMS[id];
+  const scene = new THREE.Scene();
+  const dome = new THREE.SphereGeometry(40, 32, 16);
+  const pos = dome.attributes.position;
+  const col = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) {
+    col.fill(def.bottom + (def.top - def.bottom) * (pos.getY(i) / 80 + 0.5), i * 3, i * 3 + 3);
+  }
+  dome.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  scene.add(new THREE.Mesh(dome, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+  const dist = 20;
+  const rad = Math.PI / 180;
+  for (const l of def.lights) {
+    const m = new THREE.Mesh(
+      new THREE.PlaneGeometry(2 * dist * Math.tan((l.w / 2) * rad), 2 * dist * Math.tan((l.h / 2) * rad)),
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color(l.color).multiplyScalar(l.power),
+        map: lightMask(l),
+        side: THREE.DoubleSide,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+    );
+    const ce = Math.cos(l.el * rad);
+    m.position.set(Math.sin(l.az * rad) * ce, Math.sin(l.el * rad), Math.cos(l.az * rad) * ce).multiplyScalar(dist);
+    m.lookAt(0, 0, 0);
+    scene.add(m);
+  }
+  return scene;
+}
+
+function disposeScene(scene: THREE.Scene) {
+  scene.traverse((o) => {
+    if (o instanceof THREE.Mesh) {
+      o.geometry.dispose();
+      (o.material as THREE.Material).dispose();
+    }
+  });
+}
+
 function buildStudio(id: LightingId, tint: [number, number, number] | null): THREE.Scene {
   const def = STUDIOS[id];
   const scene = new THREE.Scene();
@@ -316,6 +477,8 @@ export class GLMockupRenderer {
   private pmrem: THREE.PMREMGenerator;
   private envTarget: THREE.WebGLRenderTarget | null = null;
   private envKey = "";
+  private roomTarget: THREE.WebGLRenderTarget | null = null;
+  private roomKey = "";
   private sceneKey = "";
   private pose = -1;
   private trash: { dispose(): void }[] = [];
@@ -355,19 +518,25 @@ export class GLMockupRenderer {
   private setLighting(id: LightingId, tint: [number, number, number] | null) {
     // Quantized so dragging a backdrop slider doesn't rebake the studio every frame.
     const key = `${id}|${tint ? tint.map((v) => Math.round(v / 12)).join(",") : "-"}`;
-    if (key === this.envKey) return;
-    this.envKey = key;
-    const studio = buildStudio(id, tint);
-    const target = this.pmrem.fromScene(studio, 0.025);
-    studio.traverse((o) => {
-      if (o instanceof THREE.Mesh) {
-        o.geometry.dispose();
-        (o.material as THREE.Material).dispose();
-      }
-    });
-    this.envTarget?.dispose();
-    this.envTarget = target;
-    this.scene.environment = target.texture;
+    if (key !== this.envKey) {
+      this.envKey = key;
+      const studio = buildStudio(id, tint);
+      const target = this.pmrem.fromScene(studio, 0.025);
+      disposeScene(studio);
+      this.envTarget?.dispose();
+      this.envTarget = target;
+      this.scene.environment = target.texture;
+    }
+    // The cover glass reflects its own room, which doesn't change with the backdrop.
+    if (id !== this.roomKey) {
+      this.roomKey = id;
+      const room = buildRoom(id);
+      const target = this.pmrem.fromScene(room);
+      disposeScene(room);
+      this.roomTarget?.dispose();
+      this.roomTarget = target;
+      for (const { mat } of this.glassMats) mat.envMap = target.texture;
+    }
   }
 
   /**
@@ -449,7 +618,8 @@ export class GLMockupRenderer {
       new THREE.MeshPhysicalMaterial({
         color: "#000000",
         metalness: 0,
-        roughness: 0.03,
+        roughness: 0.05,
+        envMap: this.roomTarget?.texture ?? null,
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
@@ -646,7 +816,12 @@ export class GLMockupRenderer {
   setView(rotX: number, rotY: number, camDist: number, zoom: number, glare: number) {
     this.rig.rotation.x = rotX;
     this.rig.rotation.y = rotY;
-    for (const { mat, gain } of this.glassMats) mat.envMapIntensity = glare * 0.9 * gain;
+    for (const { mat, gain } of this.glassMats) {
+      mat.envMapIntensity = glare * 1.6 * gain;
+      // The room follows the device most of the way round, so its reflections
+      // drift across the glass instead of racing off it at twice the turn.
+      mat.envMapRotation.set(rotX * ROOM_FOLLOW, rotY * ROOM_FOLLOW, 0, "YXZ");
+    }
     // Panels lose apparent brightness as they turn away from the viewer.
     const facing = Math.max(0, Math.cos(rotX) * Math.cos(rotY));
     const dim = 1 - (1 - facing) * 0.16;
@@ -680,6 +855,7 @@ export class GLMockupRenderer {
     this.sceneKey = "";
     this.clear();
     this.envTarget?.dispose();
+    this.roomTarget?.dispose();
     this.pmrem.dispose();
     this.renderer.dispose();
   }
