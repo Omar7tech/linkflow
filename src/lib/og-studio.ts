@@ -8,6 +8,8 @@
  * `opengraph-image` route) further down.
  */
 
+import { drawBlurred } from "@/lib/canvas-blur";
+
 /* ------------------------------- size presets ----------------------------- */
 
 export type SizeId =
@@ -551,8 +553,7 @@ function drawCover(
     dy = y - (dh - h) / 2;
   }
   ctx.save();
-  if (blur > 0) ctx.filter = `blur(${blur}px)`;
-  ctx.drawImage(img, dx, dy, dw, dh);
+  drawBlurred(ctx, img, dx, dy, dw, dh, blur);
   ctx.restore();
 }
 

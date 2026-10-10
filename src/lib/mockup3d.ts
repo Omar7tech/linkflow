@@ -4,6 +4,8 @@
  * themselves, finishes, and the painters for screen content.
  */
 
+import { drawBlurred, HAS_CANVAS_FILTER } from "@/lib/canvas-blur";
+
 function hexRgb(hex: string): [number, number, number] {
   return [
     parseInt(hex.slice(1, 3), 16),
@@ -119,11 +121,9 @@ export function composeScene(
     sx.fillRect(0, 0, sw, sh);
     ctx.save();
     ctx.globalAlpha = 0.5 * shadow;
-    ctx.filter = `blur(${(w * 0.03).toFixed(1)}px)`;
-    ctx.drawImage(sil, w * 0.012, h * 0.036, w, h);
+    drawBlurred(ctx, sil, w * 0.012, h * 0.036, w, h, w * 0.03);
     ctx.globalAlpha = 0.38 * shadow;
-    ctx.filter = `blur(${(w * 0.007).toFixed(1)}px)`;
-    ctx.drawImage(sil, w * 0.003, h * 0.009, w, h);
+    drawBlurred(ctx, sil, w * 0.003, h * 0.009, w, h, w * 0.007);
     ctx.restore();
   }
 
@@ -266,18 +266,36 @@ export function paintPlaceholder(ctx: CanvasRenderingContext2D, x: number, y: nu
   const short = Math.min(w, h);
   ctx.save();
   ctx.globalCompositeOperation = "screen";
-  ctx.filter = `blur(${(short * 0.04).toFixed(1)}px)`;
+  const ribbonBlur = short * 0.04;
   const ribbons: [number, number, number, number, number, string][] = [
     [0.12, 0.64, 0.9, 0.17, -0.9, "rgba(16,185,129,0.7)"],
     [0.78, 0.47, 0.85, 0.12, -0.96, "rgba(45,212,191,0.5)"],
     [0.55, 0.88, 0.9, 0.2, -0.8, "rgba(5,150,105,0.8)"],
     [0.98, 0.2, 0.6, 0.09, -1.02, "rgba(167,243,208,0.4)"],
   ];
-  for (const [rx, ry, len, thick, rot, color] of ribbons) {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.ellipse(x + rx * w, y + ry * h, len * long, thick * short, rot, 0, Math.PI * 2);
-    ctx.fill();
+  if (HAS_CANVAS_FILTER) {
+    ctx.filter = `blur(${ribbonBlur.toFixed(1)}px)`;
+    for (const [rx, ry, len, thick, rot, color] of ribbons) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.ellipse(x + rx * w, y + ry * h, len * long, thick * short, rot, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else {
+    // No canvas filter (Safari): draw each ribbon small on a layer that
+    // overhangs the screen by the blur's reach, then blur that layer in.
+    const q = 1 / 8;
+    const m = ribbonBlur * 3;
+    const layer = getScratch(3, Math.ceil((w + m * 2) * q), Math.ceil((h + m * 2) * q));
+    const lctx = layer.getContext("2d")!;
+    for (const [rx, ry, len, thick, rot, color] of ribbons) {
+      lctx.clearRect(0, 0, layer.width, layer.height);
+      lctx.fillStyle = color;
+      lctx.beginPath();
+      lctx.ellipse((m + rx * w) * q, (m + ry * h) * q, len * long * q, thick * short * q, rot, 0, Math.PI * 2);
+      lctx.fill();
+      drawBlurred(ctx, layer, x - m, y - m, layer.width / q, layer.height / q, ribbonBlur);
+    }
   }
   ctx.restore();
   // Darken the top so the clock stays legible on any wallpaper.

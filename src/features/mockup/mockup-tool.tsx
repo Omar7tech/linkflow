@@ -30,6 +30,7 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FavoriteButton } from "@/components/shared/favorite-button";
 import { TOOL_BY_ID } from "@/constants/tools";
+import { drawBlurred } from "@/lib/canvas-blur";
 import { DEVICE_MODELS, type DeviceModel } from "@/lib/mockup-models";
 import {
   BACKGROUNDS,
@@ -294,8 +295,7 @@ export function MockupTool() {
           const dw = media.width * s;
           const dh = media.height * s;
           ctx.save();
-          if (blurPx >= 0.5) ctx.filter = `blur(${blurPx}px)`;
-          ctx.drawImage(media, (w - dw) / 2, (h - dh) / 2, dw, dh);
+          drawBlurred(ctx, media, (w - dw) / 2, (h - dh) / 2, dw, dh, blurPx);
           ctx.restore();
           if (bgDim > 0) {
             ctx.fillStyle = `rgba(2,6,8,${bgDim})`;
