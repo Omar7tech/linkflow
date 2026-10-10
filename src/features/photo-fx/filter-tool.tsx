@@ -27,6 +27,7 @@ import { GeneratorLayout } from "@/components/shared/generator-layout";
 import { HistoryPanel } from "@/components/shared/history-panel";
 import { TOOL_BY_ID } from "@/constants/tools";
 import { useHistory } from "@/hooks/useHistory";
+import { PhotoFxImage } from "./photo-fx-image";
 import {
   FILTER_PRESETS,
   FILTER_SCENES,
@@ -42,13 +43,28 @@ import { cn } from "@/lib/utils";
 const clamp = (n: number) => Math.min(Math.max(n, 0), 100);
 
 export function FilterLabTool() {
-  const history = useHistory("filterlab");
+  const history = useHistory("photofx");
   const [config, setConfig] = React.useState<FilterConfig>(
     FILTER_PRESETS[1].config,
   );
   const [presetId, setPresetId] = React.useState(FILTER_PRESETS[1].id);
   const [sceneId, setSceneId] = React.useState(FILTER_SCENES[0].id);
+  const shared = React.useContext(PhotoFxImage);
   const [image, setImage] = React.useState<string | null>(null);
+  const readPhoto = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => setImage(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+  const clearPhoto = () => {
+    setImage(null);
+    shared.set(null);
+  };
+  // Arriving from another effect: carry on with the photo that was open there.
+  React.useEffect(() => {
+    if (shared.file) readPhoto(shared.file);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
+  }, []);
   const [split, setSplit] = React.useState(55);
 
   const scene = FILTER_SCENES.find((s) => s.id === sceneId) ?? FILTER_SCENES[0];
@@ -74,9 +90,8 @@ export function FilterLabTool() {
       toast.error("Image too large (max 8MB)");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (ev) => setImage(ev.target?.result as string);
-    reader.readAsDataURL(file);
+    readPhoto(file);
+    shared.set(file);
   };
 
   const startSplit = (e: React.PointerEvent) => {
@@ -111,7 +126,7 @@ export function FilterLabTool() {
 
   return (
     <GeneratorLayout
-      tool={TOOL_BY_ID.filterlab}
+      tool={TOOL_BY_ID.photofx}
       output={null}
       footer={<HistoryPanel history={history} />}
     >
@@ -174,7 +189,7 @@ export function FilterLabTool() {
                       type="button"
                       onClick={() => {
                         setSceneId(s.id);
-                        setImage(null);
+                        clearPhoto();
                       }}
                       className={cn(
                         "h-9 w-12 overflow-hidden rounded-lg border-2 transition-all",
@@ -195,7 +210,7 @@ export function FilterLabTool() {
                       />
                       <button
                         type="button"
-                        onClick={() => setImage(null)}
+                        onClick={clearPhoto}
                         className="bg-foreground text-background absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full"
                         aria-label="Remove image"
                       >

@@ -2,7 +2,7 @@
 
 import { LayoutGridIcon, SearchIcon, XIcon, type LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
-import { TOOLS, TOOL_CATEGORIES } from "@/constants/tools";
+import { CATALOG, TOOL_CATEGORIES } from "@/constants/tools";
 import { accentFor } from "@/lib/tool-accent";
 import { cn } from "@/lib/utils";
 import type { ToolCategory } from "@/types";
@@ -25,7 +25,7 @@ export function ToolsBrowser() {
   // Flat matches for the search view — name, description and keywords, scoped to the active pill.
   const matches = useMemo(() => {
     if (!searching) return [];
-    return TOOLS.filter((t) => {
+    return CATALOG.filter((t) => {
       if (active !== "all" && t.category !== active) return false;
       return (
         t.name.toLowerCase().includes(q) ||
@@ -43,7 +43,7 @@ export function ToolsBrowser() {
     return visible
       .map((category) => ({
         ...category,
-        tools: TOOLS.filter((t) => t.category === category.id),
+        tools: CATALOG.filter((t) => t.category === category.id),
       }))
       .filter((s) => s.tools.length > 0);
   }, [active]);

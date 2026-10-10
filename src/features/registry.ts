@@ -13,15 +13,12 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   cyberlab: dynamic(() => import("./cyber-lab/cyber-lab-tool").then((m) => m.CyberLabTool)),
   whatsapp: dynamic(() => import("./whatsapp/whatsapp-tool").then((m) => m.WhatsAppTool)),
   qr: dynamic(() => import("./qr/qr-tool").then((m) => m.QrTool)),
-  share: dynamic(() => import("./share/share-tool").then((m) => m.ShareTool)),
-  sms: dynamic(() => import("./sms/sms-tool").then((m) => m.SmsTool)),
-  email: dynamic(() => import("./email/email-tool").then((m) => m.EmailTool)),
+  share: dynamic(() => import("./share/share-hub").then((m) => m.ShareHub)),
   vcard: dynamic(() => import("./vcard/vcard-tool").then((m) => m.VCardTool)),
   utm: dynamic(() => import("./utm/utm-tool").then((m) => m.UtmTool)),
   password: dynamic(() => import("./password/password-tool").then((m) => m.PasswordTool)),
   hash: dynamic(() => import("./hash/hash-tool").then((m) => m.HashTool)),
   lorem: dynamic(() => import("./lorem/lorem-tool").then((m) => m.LoremTool)),
-  readtime: dynamic(() => import("./readtime/readtime-tool").then((m) => m.ReadtimeTool)),
   mockup: dynamic(() => import("./mockup/mockup-tool").then((m) => m.MockupTool)),
   favicon: dynamic(() => import("./favicon/favicon-tool").then((m) => m.FaviconTool)),
   jsoncsv: dynamic(() => import("./json-csv/json-csv-tool").then((m) => m.JsonCsvTool)),
@@ -35,13 +32,9 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   ),
   gradient: dynamic(() => import("./gradient/gradient-tool").then((m) => m.GradientTool)),
   palette: dynamic(() => import("./palette/palette-tool").then((m) => m.PaletteTool)),
-  neumorphism: dynamic(() =>
-    import("./neumorphism/neumorphism-tool").then((m) => m.NeumorphismTool)
-  ),
   bgremover: dynamic(() => import("./bg-remover/bg-remover-tool").then((m) => m.BgRemoverTool)),
   colors: dynamic(() => import("./colors/colors-tool").then((m) => m.ColorsTool)),
   contrast: dynamic(() => import("./contrast/contrast-tool").then((m) => m.ContrastTool)),
-  brand: dynamic(() => import("./brand/brand-tool").then((m) => m.BrandTool)),
   fluid: dynamic(() => import("./fluid/fluid-tool").then((m) => m.FluidTool)),
   attention: dynamic(() => import("./attention/attention-tool").then((m) => m.AttentionTool)),
   enhancer: dynamic(() => import("./enhancer/enhancer-tool").then((m) => m.EnhancerTool)),
@@ -61,18 +54,11 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   clippath: dynamic(() =>
     import("./clippath/clippath-tool").then((m) => m.ClipPathTool)
   ),
-  filterlab: dynamic(() =>
-    import("./filterlab/filterlab-tool").then((m) => m.FilterLabTool)
-  ),
+  photofx: dynamic(() => import("./photo-fx/photo-fx-tool").then((m) => m.PhotoFxTool)),
   pantone: dynamic(() => import("./pantone/pantone-tool").then((m) => m.PantoneTool)),
-  socialpreview: dynamic(() =>
-    import("./social-preview/social-preview-tool").then((m) => m.SocialPreviewTool)
-  ),
   steganography: dynamic(() =>
     import("./steganography/steganography-tool").then((m) => m.SteganographyTool)
   ),
-  duotone: dynamic(() => import("./duotone/duotone-tool").then((m) => m.DuotoneTool)),
-  halftone: dynamic(() => import("./halftone/halftone-tool").then((m) => m.HalftoneTool)),
   stereogram: dynamic(() =>
     import("./stereogram/stereogram-tool").then((m) => m.StereogramTool)
   ),
@@ -81,7 +67,7 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   foundry: dynamic(() => import("./foundry/foundry-tool").then((m) => m.FoundryTool)),
   logo3d: dynamic(() => import("./logo3d/logo3d-tool").then((m) => m.Logo3DTool)),
   invoice: dynamic(() => import("./invoice/invoice-tool").then((m) => m.InvoiceTool)),
-  ogstudio: dynamic(() => import("./og-studio/og-studio-tool").then((m) => m.OgStudioTool)),
+  ogstudio: dynamic(() => import("./og-studio/og-hub").then((m) => m.OgHub)),
   carousel: dynamic(() => import("./carousel-studio/carousel-studio-tool").then((m) => m.CarouselStudioTool)),
   avatar: dynamic(() => import("./avatar/avatar-tool").then((m) => m.AvatarTool)),
   vectorforge: dynamic(() =>
@@ -96,6 +82,5 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
     import("./pathfinding/pathfinding-tool").then((m) => m.PathfindingTool)
   ),
   sorting: dynamic(() => import("./sorting/sorting-tool").then((m) => m.SortingTool)),
-  slugify: dynamic(() => import("./slugify/slugify-tool").then((m) => m.SlugifyTool)),
   markdown: dynamic(() => import("./markdown/markdown-tool").then((m) => m.MarkdownTool)),
 };

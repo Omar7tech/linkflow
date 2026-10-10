@@ -16,7 +16,9 @@ export type ToolCategory =
   | "type"
   | "brandlab"
   | "utilities"
-  | "playground";
+  | "playground"
+  /** Not a tools-page section: these live under /experiments. */
+  | "experiments";
 
 export interface ToolMeta {
   readonly id: string;

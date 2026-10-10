@@ -123,6 +123,16 @@ export const CATEGORY_ACCENT: Record<ToolCategory, Accent> = {
     linkHover: "hover:text-purple-600 dark:hover:text-purple-400",
     value: { light: "var(--color-purple-500)", dark: "var(--color-purple-400)" },
   },
+  experiments: {
+    text: "text-purple-500 dark:text-purple-400",
+    border: "hover:border-purple-500/40",
+    shadow: "hover:shadow-purple-500/10",
+    rule: "bg-purple-500",
+    pill: "border-purple-500/60 bg-purple-500/10 text-purple-600 dark:text-purple-400",
+    tint: "bg-purple-500/[0.07]",
+    linkHover: "hover:text-purple-600 dark:hover:text-purple-400",
+    value: { light: "var(--color-purple-500)", dark: "var(--color-purple-400)" },
+  },
 };
 
 export const accentFor = (category: ToolCategory): Accent =>

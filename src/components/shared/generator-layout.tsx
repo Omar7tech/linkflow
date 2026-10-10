@@ -1,5 +1,11 @@
+"use client";
+
+import * as React from "react";
 import type { ToolMeta } from "@/types";
 import { FavoriteButton } from "./favorite-button";
+
+/** Mode tabs for a tool that is several tools in one — see ModedTool. Shown under the title. */
+export const ToolModesSlot = React.createContext<React.ReactNode>(null);
 
 interface GeneratorLayoutProps {
   tool: ToolMeta;
@@ -27,6 +33,7 @@ export function GeneratorLayout({
   fullBleed,
   footer,
 }: GeneratorLayoutProps) {
+  const modes = React.useContext(ToolModesSlot);
   return (
     <div
       className={
@@ -45,6 +52,7 @@ export function GeneratorLayout({
         </div>
         <p className="text-muted-foreground">{tool.description}</p>
       </header>
+      {modes && <div className="mb-6">{modes}</div>}
 
       <div
         className={

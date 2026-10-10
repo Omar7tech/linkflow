@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ToolJsonLd } from "@/components/shared/tool-jsonld";
-import { TOOLS } from "@/constants/tools";
+import { CATALOG } from "@/constants/tools";
 import { TOOL_COMPONENTS } from "@/features/registry";
 import { toolMetadata } from "@/lib/seo";
 
@@ -9,11 +9,11 @@ import { toolMetadata } from "@/lib/seo";
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return TOOLS.map((tool) => ({ slug: tool.slug.split("/").pop()! }));
+  return CATALOG.map((tool) => ({ slug: tool.slug.split("/").pop()! }));
 }
 
 function toolFromSlug(slug: string) {
-  return TOOLS.find((tool) => tool.slug === `/tools/${slug}`);
+  return CATALOG.find((tool) => tool.slug === `/tools/${slug}`);
 }
 
 export async function generateMetadata({

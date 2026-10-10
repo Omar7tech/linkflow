@@ -4,7 +4,7 @@ import { SITE } from "@/constants/site";
 
 export const metadata: Metadata = {
   title: "All Tools",
-  description: `Browse every ${SITE.name} generator — WhatsApp links, QR codes, share links, SMS, click-to-call, email, vCards, UTM campaign URLs, secure passwords, hash checksums, lorem ipsum text and reading time.`,
+  description: `Browse every ${SITE.name} tool — 3D mockups, social cards, photo effects, color and CSS generators, QR codes, share links, vCards, UTM campaign URLs, passwords, hashes and more.`,
   alternates: { canonical: `${SITE.url}/tools` },
 };
 

@@ -22,7 +22,7 @@ const SEGMENT_LENGTH = 160;
 
 export function SmsTool() {
   const { form, values, output, commit, history } = useGenerator<SmsValues>({
-    toolId: "sms",
+    toolId: "share",
     schema: smsSchema,
     defaultValues: { phone: "", body: "" },
     build: (v) => buildSmsLink(v.phone, v.body),
@@ -34,7 +34,7 @@ export function SmsTool() {
 
   return (
     <GeneratorLayout
-      tool={TOOL_BY_ID.sms}
+      tool={TOOL_BY_ID.share}
       output={
         <OutputCard
           output={output}

@@ -22,7 +22,7 @@ interface MailtoValues {
 
 export function EmailTool() {
   const { form, output, commit, history } = useGenerator<MailtoValues>({
-    toolId: "email",
+    toolId: "share",
     schema: mailtoSchema,
     defaultValues: { to: "", subject: "", body: "", cc: "", bcc: "" },
     build: buildMailtoLink,
@@ -32,7 +32,7 @@ export function EmailTool() {
 
   return (
     <GeneratorLayout
-      tool={TOOL_BY_ID.email}
+      tool={TOOL_BY_ID.share}
       output={
         <OutputCard
           output={output}

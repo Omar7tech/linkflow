@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { TOOLS } from "@/constants/tools";
+import { CATALOG } from "@/constants/tools";
 import { SITE } from "@/constants/site";
 import { LinkLoadingIndicator } from "./link-indicator";
 import { Logo } from "./logo";
@@ -28,7 +28,7 @@ export function Footer() {
         <div>
           <h3 className="mb-3 text-sm font-semibold">Popular tools</h3>
           <ul className="space-y-2 text-sm">
-            {TOOLS.slice(0, 5).map((tool) => (
+            {CATALOG.slice(0, 5).map((tool) => (
               <li key={tool.id}>
                 <Link
                   href={tool.slug}

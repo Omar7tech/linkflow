@@ -23,7 +23,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { TOOLS } from "@/constants/tools";
+import { CATALOG, EXPERIMENTS } from "@/constants/tools";
 
 export function CommandPalette() {
   const [open, setOpen] = React.useState(false);
@@ -65,7 +65,20 @@ export function CommandPalette() {
           <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Tools">
-            {TOOLS.map((tool) => (
+            {CATALOG.map((tool) => (
+              <CommandItem
+                key={tool.id}
+                value={`${tool.name} ${tool.keywords.join(" ")}`}
+                onSelect={() => run(() => router.push(tool.slug))}
+              >
+                <tool.icon className="text-muted-foreground size-4" aria-hidden />
+                <span>{tool.shortName}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Experiments">
+            {EXPERIMENTS.map((tool) => (
               <CommandItem
                 key={tool.id}
                 value={`${tool.name} ${tool.keywords.join(" ")}`}

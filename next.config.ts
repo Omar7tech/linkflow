@@ -6,21 +6,44 @@ const MOVED_TOOL_SLUGS = [
   "whatsapp",
   "qr",
   "share",
-  "sms",
   "tel",
-  "email",
   "vcard",
   "utm",
   "password",
   "hash",
   "lorem",
-  "reading-time",
   "mockup",
   "favicon",
   "json-csv",
   "image-splitter",
   "colors",
 ];
+
+/**
+ * Tools that were folded into another tool, moved out of /tools, or retired.
+ * Each old address goes to wherever its job is done now.
+ */
+const RETIRED_TOOLS: Record<string, string> = {
+  // Folded into the share-link generator, opening on the right tab.
+  sms: "/tools/share?mode=sms",
+  email: "/tools/share?mode=email",
+  // Three photo tools became one.
+  duotone: "/tools/photo-effects?mode=duotone",
+  halftone: "/tools/photo-effects?mode=halftone",
+  "filter-lab": "/tools/photo-effects",
+  // The link preview is a tab of the OG image studio.
+  "social-preview": "/tools/og-image?mode=preview",
+  // Moved to /experiments.
+  "magic-eye": "/experiments/magic-eye",
+  "audio-secrets": "/experiments/audio-secrets",
+  "sorting-visualizer": "/experiments/sorting-visualizer",
+  "pathfinding-visualizer": "/experiments/pathfinding-visualizer",
+  // Retired: the nearest tool that is still here.
+  neumorphism: "/tools/material-forge",
+  "brand-personality": "/tools/theme-foundry",
+  "reading-time": "/tools",
+  slugify: "/tools",
+};
 
 /**
  * Vercel sizes its build containers honestly; shared hosts (Hostinger) report
@@ -54,11 +77,22 @@ const nextConfig: NextConfig = {
       : {}),
   },
   async redirects() {
-    return MOVED_TOOL_SLUGS.map((slug) => ({
-      source: `/${slug}`,
-      destination: `/tools/${slug}`,
-      permanent: true,
-    }));
+    return [
+      ...MOVED_TOOL_SLUGS.map((slug) => ({
+        source: `/${slug}`,
+        destination: `/tools/${slug}`,
+        permanent: true,
+      })),
+      ...Object.entries(RETIRED_TOOLS).map(([slug, destination]) => ({
+        source: `/tools/${slug}`,
+        destination,
+        permanent: true,
+      })),
+      // These three also had pre-/tools addresses.
+      { source: "/sms", destination: RETIRED_TOOLS.sms, permanent: true },
+      { source: "/email", destination: RETIRED_TOOLS.email, permanent: true },
+      { source: "/reading-time", destination: RETIRED_TOOLS["reading-time"], permanent: true },
+    ];
   },
   async headers() {
     return [

@@ -29,6 +29,7 @@ import {
 } from "@/lib/halftone";
 import { parseHex } from "@/lib/pantone";
 import { cn } from "@/lib/utils";
+import { PhotoFxImage } from "./photo-fx-image";
 
 const MAX_EDGE = 1400;
 const SHAPES: DotShape[] = ["circle", "square", "diamond"];
@@ -71,6 +72,7 @@ function fileToSource(file: File): Promise<Source> {
 }
 
 export function HalftoneTool() {
+  const shared = React.useContext(PhotoFxImage);
   const [source, setSource] = React.useState<Source | null>(null);
   const [cell, setCell] = React.useState(8);
   const [scale, setScale] = React.useState(1.1);
@@ -112,10 +114,20 @@ export function HalftoneTool() {
   const load = async (file: File) => {
     try {
       setSource(await fileToSource(file));
+      shared.set(file);
     } catch (e) {
       toast.error((e as Error).message);
     }
   };
+  const clear = () => {
+    setSource(null);
+    shared.set(null);
+  };
+  // Arriving from another effect: carry on with the photo that was open there.
+  React.useEffect(() => {
+    if (shared.file) void fileToSource(shared.file).then(setSource, () => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
+  }, []);
 
   React.useEffect(() => {
     const onPaste = (e: ClipboardEvent) => {
@@ -157,7 +169,7 @@ export function HalftoneTool() {
 
   return (
     <GeneratorLayout
-      tool={TOOL_BY_ID.halftone}
+      tool={TOOL_BY_ID.photofx}
       output={
         <Card>
           <CardHeader>
@@ -217,7 +229,7 @@ export function HalftoneTool() {
                     />
                   </label>
                 </Button>
-                <Button variant="ghost" size="icon-sm" onClick={() => setSource(null)} aria-label="Remove">
+                <Button variant="ghost" size="icon-sm" onClick={clear} aria-label="Remove">
                   <XIcon />
                 </Button>
               </div>

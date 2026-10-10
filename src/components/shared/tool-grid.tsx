@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Reveal } from "@/components/home/reveal";
-import { TOOLS, TOOL_CATEGORIES } from "@/constants/tools";
+import { CATALOG, TOOL_CATEGORIES } from "@/constants/tools";
 import { accentFor } from "@/lib/tool-accent";
 import { cn } from "@/lib/utils";
 import type { ToolCategory, ToolMeta } from "@/types";
@@ -42,7 +42,7 @@ export function ToolCard({ tool }: { tool: ToolMeta }) {
             accent.text
           )}
         >
-          {CATEGORY_LABEL[category]}
+          {CATEGORY_LABEL[category] ?? "Experiment"}
         </span>
 
         <h3 className="font-heading mt-2 flex items-center gap-1.5 text-xl font-bold tracking-tight">
@@ -68,7 +68,7 @@ interface ToolGridProps {
 }
 
 export function ToolGrid({ className, animated = false, limit }: ToolGridProps) {
-  const tools = limit ? TOOLS.slice(0, limit) : TOOLS;
+  const tools = limit ? CATALOG.slice(0, limit) : CATALOG;
   const grid = (
     <>
       {tools.map((tool) => (

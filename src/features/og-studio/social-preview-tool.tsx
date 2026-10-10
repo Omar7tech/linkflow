@@ -169,7 +169,7 @@ export function SocialPreviewTool() {
 
   return (
     <GeneratorLayout
-      tool={TOOL_BY_ID.socialpreview}
+      tool={TOOL_BY_ID.ogstudio}
       output={
         <Card>
           <CardHeader>

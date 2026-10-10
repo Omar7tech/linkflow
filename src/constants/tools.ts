@@ -15,8 +15,6 @@ import {
   ImageUpscaleIcon,
   KeyRoundIcon,
   LayoutGridIcon,
-  MailIcon,
-  MessageSquareIcon,
   PaletteIcon,
   QrCodeIcon,
   RainbowIcon,
@@ -25,7 +23,6 @@ import {
   SmileIcon,
   SwatchBookIcon,
   SparkleIcon,
-  SquircleIcon,
   TypeIcon,
   EyeIcon,
   SplineIcon,
@@ -48,8 +45,6 @@ import {
   BookMarkedIcon,
   LayoutTemplateIcon,
   VenetianMaskIcon,
-  Layers2Icon,
-  GripIcon,
   GlassesIcon,
   AudioLinesIcon,
   DnaIcon,
@@ -58,7 +53,6 @@ import {
   TabletSmartphoneIcon,
   Repeat2Icon,
   RouteIcon,
-  SignpostIcon,
   FrameIcon,
   GalleryHorizontalEndIcon,
   RocketIcon,
@@ -145,34 +139,19 @@ export const TOOLS = [
   {
     id: "share",
     slug: "/tools/share",
-    name: "Share Link Generator",
+    name: "Share, SMS & Email Link Generator",
     shortName: "Share Links",
     description:
-      "Build share links for WhatsApp, Telegram, X, Facebook, LinkedIn, Reddit and email — plus a native share button for mobile.",
-    keywords: ["share link generator", "social share links", "share button"],
+      "Build share links for WhatsApp, Telegram, X, Facebook, LinkedIn, Reddit and email, with a native share button for mobile. Switch tabs for sms: links that open a text with the number and message filled in, and mailto: links with subject, body, CC and BCC.",
+    keywords: [
+      "share link generator",
+      "social share links",
+      "share button",
+      "sms link generator",
+      "mailto link generator",
+      "email link generator",
+    ],
     icon: Share2Icon,
-    category: "links",
-  },
-  {
-    id: "sms",
-    slug: "/tools/sms",
-    name: "SMS Link Generator",
-    shortName: "SMS",
-    description:
-      "Create sms: links that open the messaging app with the number and message already filled in. Perfect for ads, posters and email signatures.",
-    keywords: ["sms link generator", "sms link", "text message link"],
-    icon: MessageSquareIcon,
-    category: "links",
-  },
-  {
-    id: "email",
-    slug: "/tools/email",
-    name: "Email Link Generator",
-    shortName: "Email",
-    description:
-      "Compose mailto: links with subject, body, CC and BCC prefilled. Great for support buttons, signatures and landing pages.",
-    keywords: ["mailto link generator", "email link", "mailto builder"],
-    icon: MailIcon,
     category: "links",
   },
   {
@@ -247,23 +226,6 @@ export const TOOLS = [
       "lorem ipsum html",
     ],
     icon: TypeIcon,
-    category: "type",
-  },
-  {
-    id: "readtime",
-    slug: "/tools/reading-time",
-    name: "Reading Time Calculator",
-    shortName: "Reading Time",
-    description:
-      "Paste any text to get reading and speaking time at adjustable speeds, full word and sentence stats, and a Flesch readability score — with Medium-style image time included.",
-    keywords: [
-      "reading time calculator",
-      "read time estimator",
-      "words per minute",
-      "speaking time calculator",
-      "readability score",
-    ],
-    icon: BookOpenIcon,
     category: "type",
   },
   {
@@ -498,21 +460,24 @@ export const TOOLS = [
     category: "backgrounds",
   },
   {
-    id: "filterlab",
-    slug: "/tools/filter-lab",
-    name: "CSS Filter Lab",
-    shortName: "Filter Lab",
+    id: "photofx",
+    slug: "/tools/photo-effects",
+    name: "Photo Effects Studio",
+    shortName: "Photo Effects",
     description:
-      "Tune photo filters live and compare with a draggable before/after split — brightness, contrast, saturation, hue, sepia, grayscale, invert, blur and a real drop-shadow. Start from 12 looks, drop in your own photo, then export the filter as CSS or Tailwind.",
+      "Three photo effects in one place. Tune live filters with a before/after split and export them as CSS, recolor a photo into a two-tone duotone, or screen it into retro halftone dots. Drop a photo in once and it follows you between effects.",
     keywords: [
-      "css filter generator",
-      "image filter css",
+      "photo effects online",
       "photo filter editor",
+      "css filter generator",
+      "duotone generator",
+      "two tone photo effect",
+      "halftone generator",
+      "halftone effect online",
       "before after compare slider",
-      "css drop-shadow filter",
     ],
     icon: ApertureIcon,
-    category: "css",
+    category: "image",
   },
   {
     id: "gradient",
@@ -567,24 +532,6 @@ export const TOOLS = [
     category: "color",
   },
   {
-    id: "socialpreview",
-    slug: "/tools/social-preview",
-    name: "Social Link Preview",
-    shortName: "Link Preview",
-    description:
-      "See exactly how your link unfurls on Google, X, Facebook, Slack and Discord before you ship it — fill in the title, description and image once, watch every card update live, then copy production-ready Open Graph and Twitter meta tags.",
-    keywords: [
-      "open graph preview",
-      "og meta tag generator",
-      "twitter card preview",
-      "social media preview",
-      "link unfurl preview",
-      "meta tags generator",
-    ],
-    icon: LayoutTemplateIcon,
-    category: "studio",
-  },
-  {
     id: "steganography",
     slug: "/tools/steganography",
     name: "Image Secrets",
@@ -603,44 +550,8 @@ export const TOOLS = [
     category: "playground",
   },
   {
-    id: "duotone",
-    slug: "/tools/duotone",
-    name: "Duotone Studio",
-    shortName: "Duotone",
-    description:
-      "Turn any photo into a striking two-tone image — map the shadows to one color and the highlights to another, with curated presets, contrast, midpoint and film-grain controls. Recolor live and export a crisp PNG.",
-    keywords: [
-      "duotone generator",
-      "duotone image maker",
-      "two tone photo effect",
-      "gradient map image",
-      "spotify duotone effect",
-      "duotone png export",
-    ],
-    icon: Layers2Icon,
-    category: "image",
-  },
-  {
-    id: "halftone",
-    slug: "/tools/halftone",
-    name: "Halftone Studio",
-    shortName: "Halftone",
-    description:
-      "Turn any photo into a retro halftone — a rotated screen of dots sized by brightness, the classic newsprint and comic-book look. Choose dot shape, spacing, angle and ink/paper colors, then export a PNG or a crisp, infinitely-scalable SVG for print.",
-    keywords: [
-      "halftone generator",
-      "halftone image maker",
-      "comic dot effect",
-      "newsprint effect",
-      "halftone svg export",
-      "dot screen filter",
-    ],
-    icon: GripIcon,
-    category: "image",
-  },
-  {
     id: "stereogram",
-    slug: "/tools/magic-eye",
+    slug: "/experiments/magic-eye",
     name: "Magic Eye Maker",
     shortName: "Magic Eye",
     description:
@@ -654,11 +565,11 @@ export const TOOLS = [
       "hidden message image",
     ],
     icon: GlassesIcon,
-    category: "playground",
+    category: "experiments",
   },
   {
     id: "spectro",
-    slug: "/tools/audio-secrets",
+    slug: "/experiments/audio-secrets",
     name: "Audio Secrets",
     shortName: "Audio Secrets",
     description:
@@ -672,24 +583,7 @@ export const TOOLS = [
       "spectrogram viewer online",
     ],
     icon: AudioLinesIcon,
-    category: "playground",
-  },
-  {
-    id: "neumorphism",
-    slug: "/tools/neumorphism",
-    name: "Neumorphism Generator",
-    shortName: "Neumorphism",
-    description:
-      "Generate soft-UI elements with auto-derived light and dark shadows from any base color — flat, concave, convex or pressed, with a movable light source. Export CSS or Tailwind.",
-    keywords: [
-      "neumorphism generator",
-      "soft ui css",
-      "neumorphic shadow",
-      "box-shadow generator",
-      "soft ui generator",
-    ],
-    icon: SquircleIcon,
-    category: "css",
+    category: "experiments",
   },
   {
     id: "bgremover",
@@ -779,24 +673,6 @@ export const TOOLS = [
     ],
     icon: ALargeSmallIcon,
     category: "type",
-  },
-  {
-    id: "brand",
-    slug: "/tools/brand-personality",
-    name: "Brand Personality Mapper",
-    shortName: "Brand Mapper",
-    description:
-      "Map your brand on Aaker's five personality dimensions — Sincerity, Excitement, Competence, Sophistication and Ruggedness — and get a live radar chart plus a tailored palette, type, and tone-of-voice kit.",
-    keywords: [
-      "brand personality",
-      "aaker brand dimensions",
-      "brand archetype",
-      "brand identity tool",
-      "brand voice generator",
-      "brand strategy",
-    ],
-    icon: FingerprintIcon,
-    category: "brandlab",
   },
   {
     id: "attention",
@@ -984,7 +860,7 @@ export const TOOLS = [
     name: "OG Image Studio",
     shortName: "OG Studio",
     description:
-      "Design social share cards that actually get clicked — mesh, gradient and photo backgrounds, gradient headlines, logos and bylines, film grain and glass. Lay out once, then export a pixel-perfect PNG for Open Graph, X, LinkedIn, stories and YouTube — or copy a drop-in Next.js opengraph-image route that generates it per page.",
+      "Design social share cards that actually get clicked — mesh, gradient and photo backgrounds, gradient headlines, logos and bylines, film grain and glass. Lay out once, then export a pixel-perfect PNG for Open Graph, X, LinkedIn, stories and YouTube — or copy a drop-in Next.js opengraph-image route that generates it per page. The Preview tab shows how the link unfurls on Google, X, Facebook, WhatsApp, Slack and Discord, and writes the Open Graph and Twitter meta tags.",
     keywords: [
       "og image generator",
       "open graph image maker",
@@ -992,6 +868,9 @@ export const TOOLS = [
       "twitter card generator",
       "opengraph-image next.js",
       "og image template",
+      "social link preview",
+      "open graph preview",
+      "meta tag generator",
     ],
     icon: FrameIcon,
     category: "studio",
@@ -1106,7 +985,7 @@ export const TOOLS = [
   },
   {
     id: "sorting",
-    slug: "/tools/sorting-visualizer",
+    slug: "/experiments/sorting-visualizer",
     name: "Sorting Algorithm Visualizer",
     shortName: "Sorting Lab",
     description:
@@ -1120,11 +999,11 @@ export const TOOLS = [
       "algorithm animation",
     ],
     icon: BarChart3Icon,
-    category: "playground",
+    category: "experiments",
   },
   {
     id: "pathfinding",
-    slug: "/tools/pathfinding-visualizer",
+    slug: "/experiments/pathfinding-visualizer",
     name: "Pathfinding & Maze Visualizer",
     shortName: "Pathfinding Lab",
     description:
@@ -1138,25 +1017,7 @@ export const TOOLS = [
       "shortest path animation",
     ],
     icon: RouteIcon,
-    category: "playground",
-  },
-  {
-    id: "slugify",
-    slug: "/tools/slugify",
-    name: "Slug Generator",
-    shortName: "Slugify",
-    description:
-      "Turn any title into a clean URL slug — accents folded, symbols spelled out, filler words dropped and length capped. Paste a list to slugify hundreds at once.",
-    keywords: [
-      "slug generator",
-      "slugify",
-      "url slug maker",
-      "seo friendly url",
-      "permalink generator",
-      "text to slug",
-    ],
-    icon: SignpostIcon,
-    category: "utilities",
+    category: "experiments",
   },
 ] as const satisfies readonly ToolMeta[];
 
@@ -1167,6 +1028,14 @@ export type ToolId = (typeof TOOLS)[number]["id"];
 export const TOOL_BY_ID = Object.fromEntries(
   TOOLS.map((t) => [t.id, t])
 ) as unknown as Record<ToolId, ToolMeta>;
+
+/**
+ * Experiments — visualizers and curiosities — sit in the same registry (same
+ * pages, metadata and components) but live under /experiments and are left
+ * out of everything that lists "tools".
+ */
+export const EXPERIMENTS: readonly (typeof TOOLS)[number][] = TOOLS.filter((t) => t.category === "experiments");
+export const CATALOG: readonly (typeof TOOLS)[number][] = TOOLS.filter((t) => t.category !== "experiments");
 
 /** Human labels, icons + display order for the tools-page sections and filter. */
 export const TOOL_CATEGORIES: readonly {
@@ -1186,13 +1055,13 @@ export const TOOL_CATEGORIES: readonly {
     id: "links",
     label: "Links & QR",
     icon: LinkIcon,
-    description: "Click-to-chat links, QR codes, share buttons, contact cards and campaign URLs.",
+    description: "Click-to-chat, share, SMS and email links, QR codes, contact cards and campaign URLs.",
   },
   {
     id: "image",
     label: "Image Lab",
     icon: ImageIcon,
-    description: "Remove backgrounds, upscale, split and stylize. Retouch any picture in place.",
+    description: "Remove backgrounds, convert, upscale, split and apply photo effects.",
   },
   {
     id: "color",
@@ -1216,7 +1085,7 @@ export const TOOL_CATEGORIES: readonly {
     id: "type",
     label: "Type & Text",
     icon: TypeIcon,
-    description: "Type scales, fluid sizing, placeholder text and reading-time stats.",
+    description: "Type scales, fluid sizing, text effects, a Markdown studio and placeholder text.",
   },
   {
     id: "brandlab",
@@ -1235,6 +1104,6 @@ export const TOOL_CATEGORIES: readonly {
     label: "Playground",
     icon: VenetianMaskIcon,
     description:
-      "A live code editor, messages hidden inside pixels, 3D dot fields and sound.",
+      "A live code editor, a hands-on security lab and messages hidden inside pixels.",
   },
 ];
