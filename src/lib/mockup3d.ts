@@ -5,6 +5,7 @@
  */
 
 import { drawBlurred, HAS_CANVAS_FILTER } from "@/lib/canvas-blur";
+import type { MaterialTextureId } from "@/lib/mockup-textures";
 
 function hexRgb(hex: string): [number, number, number] {
   return [
@@ -185,9 +186,11 @@ export type FinishSurface =
   /** Deep color under a glossy lacquer. */
   | { type: "paint" }
   /** Thin-film color that shifts with the viewing angle. */
-  | { type: "holo" };
+  | { type: "holo" }
+  /** A real material — weave, hide, stone — wrapped over the body; the frame stays metal. */
+  | { type: "textured"; texture: MaterialTextureId; tint: string };
 
-export type FinishGroup = "Metal" | "Special" | "Clay" | "Art";
+export type FinishGroup = "Metal" | "Special" | "Material" | "Clay" | "Art" | "Wild";
 
 export interface FrameFinish {
   id: string;
@@ -218,6 +221,11 @@ function art(id: string, label: string, angle: number, stops: [number, string][]
   };
 }
 
+/** A material finish: `tint` colors the material, `frame` the metal around it. */
+function material(id: string, label: string, texture: MaterialTextureId, tint: string, frame: string, group: FinishGroup = "Material"): FrameFinish {
+  return { id, label, group, light: frame, dark: shade(frame, 0.7), surface: { type: "textured", texture, tint } };
+}
+
 export const FINISHES: readonly FrameFinish[] = [
   { id: "titanium", label: "Natural Titanium", group: "Metal", light: "#b3ada3", dark: "#5f5a53" },
   { id: "starwhite", label: "Star White", group: "Metal", light: "#b3b0a8", dark: "#e9e6e0" },
@@ -243,6 +251,27 @@ export const FINISHES: readonly FrameFinish[] = [
   { id: "racing", label: "Racing Green", group: "Special", light: "#0b5a40", dark: "#063b2a", surface: { type: "paint" }, swatch: "radial-gradient(circle at 32% 28%,#7fd8b4,#0b5a40 45%,#02231a)" },
   { id: "papaya", label: "Papaya", group: "Special", light: "#ff6a1a", dark: "#cf4a05", surface: { type: "paint" }, swatch: "radial-gradient(circle at 32% 28%,#ffc7a1,#ff6a1a 45%,#7a2a02)" },
   { id: "crystal", label: "Crystal", group: "Special", light: "#ffffff", dark: "#dfe9f5", surface: { type: "crystal" }, swatch: "linear-gradient(135deg,rgba(255,255,255,0.9),rgba(160,190,220,0.25) 45%,rgba(255,255,255,0.7) 62%,rgba(120,150,190,0.3))" },
+
+  material("carbon", "Carbon Fiber", "carbon", "#ffffff", "#2a2b30"),
+  material("forged", "Forged Carbon", "forged", "#ffffff", "#1d1e21"),
+  material("alcantara", "Alcantara", "alcantara", "#5d5f69", "#2c2d31"),
+  material("suede-emerald", "Emerald Suede", "alcantara", "#1f7a5c", "#2c2d31"),
+  material("suede-camel", "Camel Suede", "alcantara", "#c59a68", "#bfa27a"),
+  material("silk-champagne", "Champagne Silk", "silk", "#f0dfc4", "#e6cfa3"),
+  material("silk-emerald", "Emerald Silk", "silk", "#0f8a66", "#d9c08a"),
+  material("silk-midnight", "Midnight Silk", "silk", "#232b6b", "#b9c0d6"),
+  material("leather-cognac", "Cognac Leather", "leather", "#a8592a", "#c9a66b"),
+  material("leather-black", "Black Leather", "leather", "#26262a", "#3a3a3e"),
+  material("walnut", "Walnut", "walnut", "#ffffff", "#b08d57"),
+  material("marble", "Carrara Marble", "marble", "#ffffff", "#d9dadd"),
+  material("nero", "Nero Marble", "nero", "#ffffff", "#d9ad55"),
+  material("brushed", "Brushed Steel", "brushed", "#c9ced6", "#c9ced6"),
+  material("terrazzo", "Terrazzo", "terrazzo", "#ffffff", "#e8e2d6"),
+
+  material("stardust", "Stardust", "stardust", "#ffffff", "#2a2f4a", "Wild"),
+  material("galaxy", "Galaxy", "galaxy", "#ffffff", "#3b2a7a", "Wild"),
+  material("magma", "Magma", "magma", "#ffffff", "#1a1210", "Wild"),
+  material("circuit", "Live Circuit", "circuit", "#ffffff", "#c79a3a", "Wild"),
 
   { id: "clay-white", label: "Clay White", group: "Clay", light: "#f4f4f2", dark: "#e3e3e0", surface: { type: "clay" }, swatch: "#f4f4f2" },
   { id: "clay-ink", label: "Clay Ink", group: "Clay", light: "#34363c", dark: "#232429", surface: { type: "clay" }, swatch: "#34363c" },

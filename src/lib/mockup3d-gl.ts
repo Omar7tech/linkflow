@@ -27,6 +27,7 @@ import {
   type ScreenSource,
 } from "./mockup3d";
 import type { DeviceModel } from "./mockup-models";
+import { materialTexture, type MaterialTextureId } from "./mockup-textures";
 
 export type LayoutId = "single" | "duo" | "trio";
 export type LightingId = "studio" | "soft" | "daylight" | "golden" | "dramatic" | "spot" | "neon" | "cyber" | "aurora";
@@ -559,6 +560,78 @@ function addFilmWaves(mat: THREE.MeshPhysicalMaterial, scale: number) {
   mat.customProgramCacheKey = () => "film-waves";
 }
 
+/**
+ * How each material texture is laid on and lit: the size of one repeat in
+ * millimetres, how deep its relief runs (mm), how hard it glows, and the
+ * surface it sits in.
+ */
+const MATERIALS: Record<
+  MaterialTextureId,
+  { tile: number; bump?: number; glow?: number; props: THREE.MeshPhysicalMaterialParameters }
+> = {
+  carbon: { tile: 7, bump: 0.05, props: { metalness: 0.2, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.04 } },
+  forged: { tile: 34, bump: 0.02, props: { metalness: 0.35, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.05 } },
+  alcantara: { tile: 26, bump: 0.06, props: { roughness: 1, sheen: 1, sheenRoughness: 0.45 } },
+  silk: { tile: 70, bump: 1.4, props: { roughness: 0.36, sheen: 1, sheenRoughness: 0.22, clearcoat: 0.25, clearcoatRoughness: 0.3 } },
+  leather: { tile: 16, bump: 0.09, props: { roughness: 0.58, clearcoat: 0.12, clearcoatRoughness: 0.5 } },
+  walnut: { tile: 60, bump: 0.03, props: { roughness: 0.45, clearcoat: 0.45, clearcoatRoughness: 0.12 } },
+  marble: { tile: 90, props: { roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.03 } },
+  nero: { tile: 90, props: { roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.03 } },
+  brushed: { tile: 30, bump: 0.02, props: { metalness: 1, roughness: 0.34 } },
+  terrazzo: { tile: 48, props: { roughness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.08 } },
+  stardust: { tile: 20, bump: 0.12, glow: 1.2, props: { metalness: 0.85, roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.03 } },
+  galaxy: { tile: 120, glow: 0.9, props: { roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.03 } },
+  magma: { tile: 56, bump: 0.5, glow: 3, props: { roughness: 0.85 } },
+  circuit: { tile: 44, bump: 0.04, glow: 2.2, props: { roughness: 0.45, clearcoat: 0.6, clearcoatRoughness: 0.1 } },
+};
+
+// Material canvases as textures, shared by every device that wears them.
+const materialMaps = new Map<string, THREE.CanvasTexture>();
+function materialMap(id: MaterialTextureId, kind: "map" | "bump" | "emissive", anisotropy: number): THREE.CanvasTexture | null {
+  const key = `${id}|${kind}`;
+  let tex = materialMaps.get(key);
+  if (tex) return tex;
+  const canvas = materialTexture(id, 512)[kind];
+  if (!canvas) return null;
+  tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = anisotropy;
+  if (kind !== "bump") tex.colorSpace = THREE.SRGBColorSpace;
+  materialMaps.set(key, tex);
+  return tex;
+}
+
+/**
+ * Lay a material's textures by position instead of the model's own UVs, which
+ * are scaled differently on every part: each face is mapped flat-on along
+ * whichever axis it faces, at `scale` repeats per model unit.
+ */
+function addObjectUv(mat: THREE.MeshPhysicalMaterial, scale: number) {
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.objectUvScale = { value: scale };
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nuniform float objectUvScale;")
+      .replace(
+        "#include <uv_vertex>",
+        `#include <uv_vertex>
+        {
+          vec3 facing = abs(normal);
+          vec2 objectUv = (facing.z >= facing.x && facing.z >= facing.y ? position.xy : facing.x >= facing.y ? position.zy : position.xz) * objectUvScale;
+          #ifdef USE_MAP
+            vMapUv = objectUv;
+          #endif
+          #ifdef USE_BUMPMAP
+            vBumpMapUv = objectUv;
+          #endif
+          #ifdef USE_EMISSIVEMAP
+            vEmissiveMapUv = objectUv;
+          #endif
+        }`
+      );
+  };
+  mat.customProgramCacheKey = () => "object-uv";
+}
+
 // "Art" finishes: one neutral shaded sphere gives every part its form, and a
 // color sweep is laid across the whole device on top of it.
 let formMatcap: THREE.CanvasTexture | null = null;
@@ -970,10 +1043,18 @@ export class GLMockupRenderer {
     const tuned = new Map<THREE.Material, THREE.Material>();
     const tune = (src: THREE.MeshStandardMaterial) => {
       const recolor = !original && rules.colored.test(src.name) && !rules.keep.includes(src.name);
+      const isFrame = rules.frame.test(src.name);
+      // A material wraps the body and leaves the frame as metal — unless the device is all frame.
+      const textured = surface?.type === "textured" && !(isFrame && rules.frameRef !== rules.bodyRef) ? surface : null;
       // A re-surfaced part keeps the model's relief but none of its old gloss or metal maps.
       const resurfaced =
-        recolor && surface
-          ? new THREE.MeshPhysicalMaterial({ name: src.name, normalMap: src.normalMap, side: src.side, opacity: src.opacity })
+        recolor && surface && (textured || surface.type !== "textured")
+          ? new THREE.MeshPhysicalMaterial({
+              name: src.name,
+              normalMap: textured ? null : src.normalMap,
+              side: src.side,
+              opacity: src.opacity,
+            })
           : null;
       resurfaced?.normalScale.copy(src.normalScale);
       const mat = this.track(resurfaced ?? src.clone());
@@ -985,9 +1066,25 @@ export class GLMockupRenderer {
         }
       }
       if (recolor) {
-        const isFrame = rules.frame.test(mat.name);
         const ratio = luminance(src.color) / (isFrame ? model.frameLum : model.bodyLum);
         mat.color.copy(isFrame ? frame : backGlass).multiplyScalar(Math.min(1.5, Math.max(0.45, ratio)));
+        if (resurfaced && textured) {
+          const spec = MATERIALS[textured.texture];
+          const anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+          resurfaced.setValues(spec.props);
+          resurfaced.color.set(textured.tint);
+          resurfaced.map = materialMap(textured.texture, "map", anisotropy);
+          resurfaced.bumpMap = spec.bump ? materialMap(textured.texture, "bump", anisotropy) : null;
+          resurfaced.bumpScale = spec.bump ?? 1;
+          resurfaced.emissiveMap = spec.glow ? materialMap(textured.texture, "emissive", anisotropy) : null;
+          if (spec.glow) {
+            resurfaced.emissive.set("#ffffff");
+            resurfaced.emissiveIntensity = spec.glow;
+          }
+          // Cloth catches light on its nap: a paler version of its own color.
+          if (spec.props.sheen) resurfaced.sheenColor.set(textured.tint).lerp(new THREE.Color("#ffffff"), 0.55);
+          addObjectUv(resurfaced, def.scale / spec.tile);
+        }
         if (resurfaced && surface?.type === "mirror") {
           resurfaced.metalness = 1;
           resurfaced.roughness = isFrame ? 0.03 : 0.08;

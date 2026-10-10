@@ -4,6 +4,7 @@ import * as React from "react";
 import {
   BoxIcon,
   CopyIcon,
+  DicesIcon,
   DownloadIcon,
   ImageIcon,
   LaptopIcon,
@@ -41,9 +42,11 @@ import {
   duotoneBackground,
   FINISHES,
   type FinishGroup,
+  type FrameFinish,
   type Orientation,
 } from "@/lib/mockup3d";
 import type { DeviceInfo, GLMockupRenderer, LayoutId, LightingId } from "@/lib/mockup3d-gl";
+import { paintMaterialChip } from "@/lib/mockup-textures";
 import { cn } from "@/lib/utils";
 import { buildZip, type ZipEntry } from "@/lib/zip";
 
@@ -71,7 +74,41 @@ const LIGHTINGS: { id: LightingId; label: string }[] = [
   { id: "aurora", label: "Aurora" },
 ];
 
-const FINISH_GROUPS: FinishGroup[] = ["Metal", "Special", "Clay", "Art"];
+const FINISH_GROUPS: FinishGroup[] = ["Metal", "Special", "Material", "Clay", "Art", "Wild"];
+
+/** A finish shown as a small lit ball of the material itself. */
+function FinishOrb({ finish }: { finish: FrameFinish }) {
+  const ref = React.useRef<HTMLCanvasElement>(null);
+  const surface = finish.surface;
+  const texture = surface?.type === "textured" ? surface : null;
+  React.useEffect(() => {
+    if (texture && ref.current) paintMaterialChip(ref.current, texture.texture, texture.tint);
+  }, [texture]);
+  // Cloth, hide and clay scatter the light; everything else throws a hard highlight.
+  const matte =
+    surface?.type === "clay" || (texture && ["alcantara", "leather", "silk", "walnut", "magma"].includes(texture.texture));
+  return (
+    <span
+      className="block rounded-full p-[3px] shadow-[0_8px_12px_-6px_rgba(0,0,0,0.7)] transition-transform group-hover:scale-105"
+      // A material sits in its metal frame, shown as the ring around it.
+      style={{ background: texture ? `linear-gradient(135deg, ${finish.light}, ${finish.dark})` : "transparent" }}
+    >
+      <span
+        className="relative block size-11 overflow-hidden rounded-full ring-1 ring-black/25"
+        style={{ background: texture ? undefined : (finish.swatch ?? `linear-gradient(135deg, ${finish.light}, ${finish.dark})`) }}
+      >
+        {texture && <canvas ref={ref} width={88} height={88} className="size-full" />}
+        <span
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: `radial-gradient(circle at 30% 24%, rgba(255,255,255,${matte ? 0.3 : 0.72}) 0, rgba(255,255,255,0) ${matte ? 48 : 30}%), radial-gradient(circle at 68% 84%, rgba(0,0,0,0.5), rgba(0,0,0,0) 62%)`,
+            boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.14), inset 0 -6px 10px rgba(0,0,0,0.28)",
+          }}
+        />
+      </span>
+    </span>
+  );
+}
 
 const ANGLES: { label: string; rotX: number; rotY: number }[] = [
   { label: "Front", rotX: 0, rotY: 0 },
@@ -214,6 +251,30 @@ const PRESETS: {
     css: "linear-gradient(180deg,#f3f4f6,#ffffff 55%,#d9dce1 66%,#eceef1)",
     s: { rotX: 10, rotY: -24, zoom: 0.96, lens: 0.65, reflection: 0.2, shadow: 0.7, glare: 0.35, glow: 0, grain: 0, bgId: "studio-white", finishId: "porcelain", lighting: "daylight" },
   },
+  {
+    id: "carbon",
+    label: "Carbon Stealth",
+    css: "repeating-linear-gradient(45deg,#17181b 0 4px,#2b2d32 4px 8px)",
+    s: { rotX: 8, rotY: 152, zoom: 1.02, lens: 0.5, reflection: 0.5, shadow: 0.45, glare: 0.6, glow: 0, grain: 0.1, bgId: "studio-black", finishId: "carbon", lighting: "dramatic" },
+  },
+  {
+    id: "silk",
+    label: "Silk & Gold",
+    css: "linear-gradient(120deg,#0b5e47,#19a57c 35%,#0a4a38 55%,#22b98c 75%,#0b5e47)",
+    s: { rotX: 10, rotY: 156, zoom: 1, lens: 0.55, reflection: 0.3, shadow: 0.6, glare: 0.5, glow: 0, grain: 0.05, bgId: "studio-emerald", finishId: "silk-emerald", lighting: "golden" },
+  },
+  {
+    id: "magma",
+    label: "Magma Core",
+    css: "radial-gradient(circle at 30% 30%,#ffd166,#ff3b00 30%,#1a0703 62%)",
+    s: { rotX: 12, rotY: 150, zoom: 1, lens: 0.4, reflection: 0.5, shadow: 0.3, glare: 0.5, glow: 0, grain: 0.15, bgId: "eclipse", finishId: "magma", lighting: "spot" },
+  },
+  {
+    id: "space",
+    label: "Deep Space",
+    css: "radial-gradient(circle at 25% 30%,#f72585,transparent 45%), radial-gradient(circle at 75% 70%,#4cc9f0,transparent 45%), #1b1464",
+    s: { rotX: 14, rotY: 160, zoom: 0.98, lens: 0.35, reflection: 0.4, shadow: 0.35, glare: 0.6, glow: 0.2, grain: 0.1, bgId: "dots", finishId: "galaxy", lighting: "aurora" },
+  },
 ];
 
 const SETTINGS_KEY = "mockup-scene-v3";
@@ -270,6 +331,8 @@ export function MockupTool() {
   // Measurements of the device whose model is loaded; "failed" if it couldn't be.
   const [modelState, setModelState] = React.useState<{ id: string; info: DeviceInfo | null } | null>(null);
   const [finishId, setFinishId] = React.useState("burgundy");
+  // The group being browsed in the finish picker; null follows the finish in use.
+  const [finishTab, setFinishTab] = React.useState<FinishGroup | null>(null);
   const [bgId, setBgId] = React.useState("emerald");
   const [aspectId, setAspectId] = React.useState("1:1");
   const [rotX, setRotX] = React.useState(8);
@@ -307,6 +370,11 @@ export function MockupTool() {
   const [bgBlur, setBgBlur] = React.useState(0.4);
   const [bgDim, setBgDim] = React.useState(0.3);
 
+  // TEMP-DEBUG
+  React.useEffect(() => {
+    (window as unknown as Record<string, unknown>).__mock = { setRotX, setRotY, setGlare, setZoom, setLighting, setBgId, setFinishId, setLens, setDevice, setReflection, setShadow, setGlow, setPanX, setPanY, setLayout, setGrain, setAnim, setPanel };
+  }, []);
+  // TEMP-DEBUG-END
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   // Every pointer currently down on the canvas: one drags, two pinch.
   const pointers = React.useRef(new Map<number, { x: number; y: number }>());
@@ -850,8 +918,25 @@ export function MockupTool() {
     setTimeout(() => recorder.stop(), duration);
   };
 
+  // Roll the dice: any finish, on any backdrop, under any light, from a hero angle.
+  const surprise = () => {
+    const pick = <T,>(from: readonly T[]) => from[Math.floor(Math.random() * from.length)];
+    const angle = pick(ANGLES.filter((a) => a.label !== "Flat lay"));
+    setAnim("off");
+    setFinishTab(null);
+    setFinishId(pick(FINISHES).id);
+    setBgId(pick(BACKGROUNDS.filter((b) => b.id !== "transparent")).id);
+    setLighting(pick(LIGHTINGS).id);
+    setRotX(angle.rotX);
+    setRotY(angle.rotY);
+    setZoom(1);
+    setPanX(0);
+    setPanY(0);
+  };
+
   const applyPreset = (p: (typeof PRESETS)[number]) => {
     setAnim("off");
+    setFinishTab(null);
     setRotX(p.s.rotX);
     setRotY(p.s.rotY);
     setZoom(p.s.zoom);
@@ -982,6 +1067,7 @@ export function MockupTool() {
     if (!s) return;
     h.index += step;
     setAnim("off");
+    setFinishTab(null);
     setDevice(s.device);
     setOrientation(s.orientation);
     setLayout(s.layout);
@@ -1129,6 +1215,7 @@ export function MockupTool() {
                 if (!next) return;
                 if (anim === "pose") setAnim("off");
                 setDevice(id);
+                setFinishTab(null);
                 setFinishId(next.originalFinish);
                 setPose(0);
               }}
@@ -1483,31 +1570,52 @@ export function MockupTool() {
                 </Section>
 
                 <Section title="Finish">
-                  {FINISH_GROUPS.map((group) => (
-                    <div key={group} className="space-y-1.5">
-                      <p className="text-muted-foreground/70 text-[10px] font-medium tracking-wider uppercase">{group}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {FINISHES.filter((f) => f.group === group).map((f) => (
-                          <button
-                            key={f.id}
-                            type="button"
-                            onClick={() => setFinishId(f.id)}
-                            title={f.label}
-                            className={cn(
-                              "size-8 rounded-full border-2 transition-transform hover:scale-110",
-                              finishId === f.id ? "border-emerald-500" : "border-border"
-                            )}
-                            style={{
-                              background: f.swatch ?? `linear-gradient(135deg, ${f.light}, ${f.dark})`,
-                            }}
-                            aria-label={`${f.label} finish`}
-                            aria-pressed={finishId === f.id}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                  <p className="text-muted-foreground text-xs">{finish.label}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {FINISH_GROUPS.map((group) => (
+                      <button
+                        key={group}
+                        type="button"
+                        onClick={() => setFinishTab(group)}
+                        aria-pressed={(finishTab ?? finish.group) === group}
+                        className={cn(
+                          "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                          (finishTab ?? finish.group) === group
+                            ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "border-border text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {group}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {FINISHES.filter((f) => f.group === (finishTab ?? finish.group)).map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setFinishId(f.id)}
+                        title={f.label}
+                        aria-label={`${f.label} finish`}
+                        aria-pressed={finishId === f.id}
+                        className={cn(
+                          "group flex flex-col items-center gap-1.5 rounded-xl border px-1 pt-2.5 pb-2 transition-colors",
+                          finishId === f.id
+                            ? "border-emerald-500/60 bg-emerald-500/10"
+                            : "border-border/60 bg-muted/30 hover:border-border hover:bg-muted/60"
+                        )}
+                      >
+                        <FinishOrb finish={f} />
+                        <span
+                          className={cn(
+                            "w-full truncate text-center text-[10px] leading-tight",
+                            finishId === f.id ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                          )}
+                        >
+                          {f.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </Section>
               </>
             )}
@@ -1614,6 +1722,9 @@ export function MockupTool() {
                       </button>
                     ))}
                   </div>
+                  <Button variant="outline" size="sm" className="w-full" onClick={surprise}>
+                    <DicesIcon /> Surprise me
+                  </Button>
                   <p className="text-muted-foreground text-xs">
                     A look sets camera, light, backdrop and finish together. Undo brings your scene back.
                   </p>
