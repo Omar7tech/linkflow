@@ -370,11 +370,6 @@ export function MockupTool() {
   const [bgBlur, setBgBlur] = React.useState(0.4);
   const [bgDim, setBgDim] = React.useState(0.3);
 
-  // TEMP-DEBUG
-  React.useEffect(() => {
-    (window as unknown as Record<string, unknown>).__mock = { setRotX, setRotY, setGlare, setZoom, setLighting, setBgId, setFinishId, setLens, setDevice, setReflection, setShadow, setGlow, setPanX, setPanY, setLayout, setGrain, setAnim, setPanel };
-  }, []);
-  // TEMP-DEBUG-END
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   // Every pointer currently down on the canvas: one drags, two pinch.
   const pointers = React.useRef(new Map<number, { x: number; y: number }>());
@@ -536,6 +531,7 @@ export function MockupTool() {
         scroll
       );
       gl.setView(sceneOpts.rotX, sceneOpts.rotY, sceneOpts.camera, sceneOpts.zoom, glare, sceneOpts.panX, sceneOpts.panY);
+      gl.setScreenLight(sceneOpts.glowRgb, sceneOpts.glow);
       gl.render();
       composeScene(ctx, gl.domElement, sceneOpts, gl.floorScreenY());
     },

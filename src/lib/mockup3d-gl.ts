@@ -15,6 +15,7 @@
  */
 
 import * as THREE from "three";
+import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as cloneRigged } from "three/examples/jsm/utils/SkeletonUtils.js";
 import {
@@ -99,6 +100,7 @@ export function loadDeviceModel(def: DeviceModel): Promise<DeviceInfo | null> {
       .loadAsync(def.url)
       .then((gltf) => {
         const scene = gltf.scene;
+        scene.rotation.y = ((def.turn ?? 0) * Math.PI) / 180;
         scene.updateMatrixWorld(true);
         const k = def.scale;
         const box = new THREE.Box3().setFromObject(scene);
@@ -415,6 +417,9 @@ const ROOMS: Record<LightingId, { top: number; bottom: number; lights: RoomLight
   },
 };
 
+/** Power of a screen's light at full glow. */
+const SCREEN_LIGHT = 5;
+
 /** How much of the device's turn the reflected room follows (2 = pinned to the glass). */
 const ROOM_FOLLOW = 1.8;
 
@@ -604,19 +609,23 @@ function materialMap(id: MaterialTextureId, kind: "map" | "bump" | "emissive", a
 /**
  * Lay a material's textures by position instead of the model's own UVs, which
  * are scaled differently on every part: each face is mapped flat-on along
- * whichever axis it faces, at `scale` repeats per model unit.
+ * whichever axis it faces, at `scale` repeats per model unit. `place` takes
+ * a part's vertices into the device's own space, so the pattern runs unbroken
+ * from one part to the next.
  */
-function addObjectUv(mat: THREE.MeshPhysicalMaterial, scale: number) {
+function addObjectUv(mat: THREE.MeshPhysicalMaterial, place: THREE.Matrix4, scale: number) {
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.objectUvScale = { value: scale };
+    shader.uniforms.objectUvPlace = { value: place };
     shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nuniform float objectUvScale;")
+      .replace("#include <common>", "#include <common>\nuniform float objectUvScale;\nuniform mat4 objectUvPlace;")
       .replace(
         "#include <uv_vertex>",
         `#include <uv_vertex>
         {
-          vec3 facing = abs(normal);
-          vec2 objectUv = (facing.z >= facing.x && facing.z >= facing.y ? position.xy : facing.x >= facing.y ? position.zy : position.xz) * objectUvScale;
+          vec3 placed = (objectUvPlace * vec4(position, 1.0)).xyz;
+          vec3 facing = abs(normalize(mat3(objectUvPlace) * normal));
+          vec2 objectUv = (facing.z >= facing.x && facing.z >= facing.y ? placed.xy : facing.x >= facing.y ? placed.zy : placed.xz) * objectUvScale;
           #ifdef USE_MAP
             vMapUv = objectUv;
           #endif
@@ -716,6 +725,8 @@ interface Built {
   group: THREE.Group;
   body: THREE.Object3D;
   surfaces: Surface[];
+  /** One light per fixed screen, throwing its glow onto whatever sits in front of it. */
+  spills: THREE.RectAreaLight[];
   rigged: THREE.SkinnedMesh[];
   mixer: THREE.AnimationMixer | null;
   poseLength: number;
@@ -773,6 +784,7 @@ export class GLMockupRenderer {
     this.renderer.toneMapping = THREE.NeutralToneMapping;
     this.domElement = this.renderer.domElement;
     this.pmrem = new THREE.PMREMGenerator(this.renderer);
+    RectAreaLightUniformsLib.init();
     this.rig.rotation.order = "YXZ"; // turn (Y) wraps tilt (X)
     this.scene.add(this.rig);
   }
@@ -960,7 +972,7 @@ export class GLMockupRenderer {
     return mat;
   }
 
-  private makeSurface(screen: LoadedScreen, rotated: boolean, showIsland: boolean): Surface {
+  private makeSurface(screen: LoadedScreen, rotated: boolean, showIsland: boolean, inFront: boolean): Surface {
     const px = 2600 / Math.max(screen.w, screen.h);
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(screen.w * px);
@@ -969,10 +981,11 @@ export class GLMockupRenderer {
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
     const material = this.track(new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }));
-    // Island hardware and the cover glass share the panel's plane — push the panel back so they win.
+    // Island hardware and the cover glass share the panel's plane — push the panel back so they
+    // win. A panel modelled on top of its black glass is pulled forward instead.
     material.polygonOffset = true;
-    material.polygonOffsetFactor = 2;
-    material.polygonOffsetUnits = 2;
+    material.polygonOffsetFactor = inFront ? -2 : 2;
+    material.polygonOffsetUnits = inFront ? -2 : 2;
     const i = screen.island;
     return {
       canvas,
@@ -1030,9 +1043,12 @@ export class GLMockupRenderer {
     body.scale.setScalar(def.scale);
     body.position.copy(model.center).multiplyScalar(-def.scale);
     g.add(body);
+    body.updateMatrixWorld(true);
+    const toBody = body.matrix.clone().invert();
 
     // A shell flattens the camera hardware itself, so nothing is painted over its screens.
-    const surfaces = model.screens.map((sc) => this.makeSurface(sc, landscape, !shell));
+    const surfaces = model.screens.map((sc) => this.makeSurface(sc, landscape, !shell, !!def.panelOnTop));
+    const panels: (THREE.Mesh | undefined)[] = [];
     const hardware = new Set(def.screens.flatMap((sc) => sc.island));
 
     // Finishes recolor the model: frame parts follow the frame color, the rest
@@ -1041,7 +1057,7 @@ export class GLMockupRenderer {
     const backGlass = new THREE.Color(finish.light).lerp(new THREE.Color(finish.dark), 0.6);
     const original = finish.id === def.originalFinish;
     const tuned = new Map<THREE.Material, THREE.Material>();
-    const tune = (src: THREE.MeshStandardMaterial) => {
+    const tune = (src: THREE.MeshStandardMaterial, mesh: THREE.Mesh) => {
       const recolor = !original && rules.colored.test(src.name) && !rules.keep.includes(src.name);
       const isFrame = rules.frame.test(src.name);
       // A material wraps the body and leaves the frame as metal — unless the device is all frame.
@@ -1083,7 +1099,9 @@ export class GLMockupRenderer {
           }
           // Cloth catches light on its nap: a paler version of its own color.
           if (spec.props.sheen) resurfaced.sheenColor.set(textured.tint).lerp(new THREE.Color("#ffffff"), 0.55);
-          addObjectUv(resurfaced, def.scale / spec.tile);
+          // Placed per part, so this material can't be shared between meshes.
+          addObjectUv(resurfaced, toBody.clone().multiply(mesh.matrixWorld), def.scale / spec.tile);
+          resurfaced.userData.perMesh = true;
         }
         if (resurfaced && surface?.type === "mirror") {
           resurfaced.metalness = 1;
@@ -1121,6 +1139,7 @@ export class GLMockupRenderer {
       const screen = model.screens.findIndex((sc) => sc.mesh === o.name);
       if (screen >= 0) {
         o.material = surfaces[screen].material;
+        panels[screen] = o;
         faces.push(o);
         return;
       }
@@ -1145,7 +1164,10 @@ export class GLMockupRenderer {
         shelled.push(o);
       } else {
         let mat = tuned.get(src);
-        if (!mat) tuned.set(src, (mat = tune(src)));
+        if (!mat) {
+          mat = tune(src, o);
+          if (!mat.userData.perMesh) tuned.set(src, mat);
+        }
         o.material = mat;
       }
     });
@@ -1179,6 +1201,21 @@ export class GLMockupRenderer {
       }
     }
 
+    // Screen light. A hinged panel moves with its pose, so only fixed ones get a lamp.
+    const spills: THREE.RectAreaLight[] = [];
+    panels.forEach((panel, i) => {
+      if (!panel || panel instanceof THREE.SkinnedMesh) return;
+      const center = new THREE.Box3().setFromObject(panel).getCenter(new THREE.Vector3());
+      const out = new THREE.Vector3()
+        .fromBufferAttribute(panel.geometry.attributes.normal as THREE.BufferAttribute, 0)
+        .transformDirection(panel.matrixWorld);
+      const light = new THREE.RectAreaLight("#ffffff", 0, model.screens[i].w, model.screens[i].h);
+      g.add(light);
+      light.position.copy(center).addScaledVector(out, 0.5);
+      light.lookAt(center.clone().addScaledVector(out, 100));
+      spills.push(light);
+    });
+
     let mixer: THREE.AnimationMixer | null = null;
     if (model.clip) {
       mixer = new THREE.AnimationMixer(body);
@@ -1190,6 +1227,7 @@ export class GLMockupRenderer {
       group: g,
       body,
       surfaces,
+      spills,
       rigged,
       mixer,
       poseLength: model.clip?.duration ?? 0,
@@ -1215,6 +1253,23 @@ export class GLMockupRenderer {
         s.src = src;
         s.scroll = scroll;
         if (changed || src instanceof HTMLVideoElement) this.paint(s);
+      }
+    }
+  }
+
+  /**
+   * The light the screens give off: `rgb` is the content's average color
+   * (0..255) and `strength` 0..1. It falls on keyboards, stands and desks.
+   */
+  setScreenLight(rgb: [number, number, number], strength: number) {
+    const color = new THREE.Color().setRGB(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
+    // Hue from the content at full strength; how bright the content is sets the power.
+    const power = strength * SCREEN_LIGHT * (0.3 + 0.7 * Math.min(1, luminance(color) * 3));
+    color.multiplyScalar(1 / Math.max(color.r, color.g, color.b, 0.001));
+    for (const b of this.built) {
+      for (const light of b.spills) {
+        light.color.copy(color);
+        light.intensity = power;
       }
     }
   }

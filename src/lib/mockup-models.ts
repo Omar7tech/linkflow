@@ -4,7 +4,8 @@
  * public/models and describe it here — size, screen and island positions are
  * all measured from the file when it loads.
  *
- * A model must face +Z with +Y up, and keep each screen as a separate mesh.
+ * A model must have +Y up and keep each screen as a separate mesh. It should
+ * face +Z; one that was exported facing another way is turned with `turn`.
  */
 
 export interface DeviceScreen {
@@ -25,8 +26,12 @@ export interface DeviceModel {
   url: string;
   /** Model units → millimetres (1000 for a file authored in metres). */
   scale: number;
+  /** Degrees to turn the model about +Y so that it faces +Z. */
+  turn?: number;
   /** First screen is the main one. */
   screens: DeviceScreen[];
+  /** The panel is modelled on top of its black glass rather than under it. */
+  panelOnTop?: boolean;
   /** Other meshes that sit under the same cover glass as a screen. */
   face: string[];
   /** An animation in the file exposed as a slider (a hinge, a lid). */
@@ -102,6 +107,32 @@ export const DEVICE_MODELS: readonly DeviceModel[] = [
     originalFinish: "starwhite",
     clayBody: /^(Side_Panel|Back_Panel|Antenna|Side_Buttons|Screws|Axle|Back_Cam_Border$|Back_Cam_Detail)/,
     shellDark: /^Inner_Cam/,
+  },
+  {
+    // An iPad Pro docked in its Magic Keyboard, with a Pencil on top. Exported
+    // facing +X with scrambled part names; each was identified by material and position.
+    id: "ipad-pro-13",
+    label: "iPad Pro",
+    kind: "tablet",
+    url: "/models/ipad-pro-13.glb",
+    scale: 1000,
+    turn: -90,
+    screens: [{ mesh: "EjCaatfcGdAQBho", label: "Screen", island: [] }],
+    panelOnTop: true,
+    face: ["wxOnnlZoqhCsHwI"], // front glass around the panel
+    fixedOrientation: true,
+    materials: {
+      clearGlass: [],
+      forceOpaque: [],
+      // The tablet is the metal frame; the keyboard case around it takes the body color or material.
+      colored: /^(wADiXiaDqUQHYtm|rlLxXLyqFuSJzQX|JiwoEoDQOLnLqCc|fetMGkTMYCEbhfc)$/,
+      frame: /^(wADiXiaDqUQHYtm|rlLxXLyqFuSJzQX|JiwoEoDQOLnLqCc)$/,
+      frameRef: "wADiXiaDqUQHYtm",
+      bodyRef: "fetMGkTMYCEbhfc",
+      keep: [],
+    },
+    originalFinish: "silver",
+    clayBody: /^(VnCyGREoTEZBfuS|CcxadAujtCPXuLV|bwtdVbkPLiQMXKM|qMySgvAZPQLyJha|gkBpCLiJsVZOeeI)$/,
   },
   {
     // Exported with scrambled part names; each was identified by material and position.
