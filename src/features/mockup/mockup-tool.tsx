@@ -40,6 +40,7 @@ import {
   customBackground,
   duotoneBackground,
   FINISHES,
+  type FinishGroup,
   type Orientation,
 } from "@/lib/mockup3d";
 import type { DeviceInfo, GLMockupRenderer, LayoutId, LightingId } from "@/lib/mockup3d-gl";
@@ -61,9 +62,16 @@ const LAYOUTS: { id: LayoutId; label: string; devices: number }[] = [
 const LIGHTINGS: { id: LightingId; label: string }[] = [
   { id: "studio", label: "Studio" },
   { id: "soft", label: "Soft" },
+  { id: "daylight", label: "Daylight" },
+  { id: "golden", label: "Golden hour" },
   { id: "dramatic", label: "Drama" },
+  { id: "spot", label: "Spotlight" },
   { id: "neon", label: "Neon" },
+  { id: "cyber", label: "Cyber" },
+  { id: "aurora", label: "Aurora" },
 ];
+
+const FINISH_GROUPS: FinishGroup[] = ["Metal", "Special", "Clay", "Art"];
 
 const ANGLES: { label: string; rotX: number; rotY: number }[] = [
   { label: "Front", rotX: 0, rotY: 0 },
@@ -156,7 +164,55 @@ const PRESETS: {
     id: "aurora",
     label: "Aurora Float",
     css: "linear-gradient(135deg,#042f2e,#a21caf)",
-    s: { rotX: 26, rotY: -14, zoom: 0.92, lens: 0.25, reflection: 0.2, shadow: 0.55, glare: 0.55, glow: 0.6, grain: 0.05, bgId: "aurora", finishId: "lavender", lighting: "studio" },
+    s: { rotX: 26, rotY: -14, zoom: 0.92, lens: 0.25, reflection: 0.2, shadow: 0.55, glare: 0.55, glow: 0.6, grain: 0.05, bgId: "aurora", finishId: "lavender", lighting: "aurora" },
+  },
+  {
+    id: "chrome",
+    label: "Liquid Chrome",
+    css: "linear-gradient(135deg,#f8fafc,#64748b 45%,#e2e8f0 60%,#0f172a)",
+    s: { rotX: 10, rotY: 150, zoom: 1, lens: 0.45, reflection: 0.6, shadow: 0.5, glare: 0.7, glow: 0, grain: 0.05, bgId: "studio-black", finishId: "chrome", lighting: "studio" },
+  },
+  {
+    id: "golden",
+    label: "Golden Hour",
+    css: "radial-gradient(circle at 50% 62%,#fff7d6 0 14%,transparent 50%), linear-gradient(180deg,#27194d,#b4407a 48%,#ff9d5c 72%,#ffd9a0)",
+    s: { rotX: 6, rotY: -30, zoom: 0.96, lens: 0.5, reflection: 0.35, shadow: 0.5, glare: 0.75, glow: 0.35, grain: 0.12, bgId: "sunrise", finishId: "gold-mirror", lighting: "golden" },
+  },
+  {
+    id: "holo",
+    label: "Holo Dream",
+    css: "conic-gradient(from 210deg at 50% 50%,#a5f3fc,#c4b5fd,#f9a8d4,#fde68a,#86efac,#a5f3fc)",
+    s: { rotX: 12, rotY: 158, zoom: 1, lens: 0.4, reflection: 0.3, shadow: 0.55, glare: 0.6, glow: 0.2, grain: 0, bgId: "iris", finishId: "holo", lighting: "aurora" },
+  },
+  {
+    id: "noir",
+    label: "Noir Spotlight",
+    css: "radial-gradient(ellipse 70% 30% at 50% 88%,rgba(255,255,255,0.3),transparent), linear-gradient(180deg,rgba(255,255,255,0.25),transparent 85%), #060607",
+    s: { rotX: 4, rotY: -18, zoom: 0.94, lens: 0.6, reflection: 0.45, shadow: 0.35, glare: 0.5, glow: 0.4, grain: 0.2, bgId: "spotlight", finishId: "black-mirror", lighting: "spot" },
+  },
+  {
+    id: "halo",
+    label: "Emerald Halo",
+    css: "radial-gradient(circle at 50% 47%,transparent 30%,#34d399 36%,transparent 43%), radial-gradient(circle at 50% 47%,rgba(16,185,129,0.35),transparent 70%), #03120e",
+    s: { rotX: 0, rotY: 0, zoom: 0.9, lens: 0.75, reflection: 0.25, shadow: 0.3, glare: 0.4, glow: 0.5, grain: 0.05, bgId: "halo", finishId: "racing", lighting: "aurora" },
+  },
+  {
+    id: "candy",
+    label: "Candy Pop",
+    css: "radial-gradient(circle at 10% 12%,#ff5fa2,transparent 62%), radial-gradient(circle at 92% 20%,#ffb347,transparent 60%), radial-gradient(circle at 85% 95%,#7c4dff,transparent 66%), #ff8fb8",
+    s: { rotX: 16, rotY: 24, zoom: 0.98, lens: 0.55, reflection: 0, shadow: 0.8, glare: 0.3, glow: 0, grain: 0, bgId: "candy", finishId: "bubblegum", lighting: "soft" },
+  },
+  {
+    id: "blueprint",
+    label: "Blueprint",
+    css: "linear-gradient(rgba(147,197,253,0.4) 1px, transparent 1px) 0 0 / 9px 9px, linear-gradient(90deg, rgba(147,197,253,0.4) 1px, transparent 1px) 0 0 / 9px 9px, #0b2a5b",
+    s: { rotX: 20, rotY: -32, zoom: 0.95, lens: 0.3, reflection: 0, shadow: 0.25, glare: 0.7, glow: 0.3, grain: 0, bgId: "blueprint", finishId: "crystal", lighting: "cyber" },
+  },
+  {
+    id: "porcelain",
+    label: "Porcelain",
+    css: "linear-gradient(180deg,#f3f4f6,#ffffff 55%,#d9dce1 66%,#eceef1)",
+    s: { rotX: 10, rotY: -24, zoom: 0.96, lens: 0.65, reflection: 0.2, shadow: 0.7, glare: 0.35, glow: 0, grain: 0, bgId: "studio-white", finishId: "porcelain", lighting: "daylight" },
   },
 ];
 
@@ -1427,25 +1483,30 @@ export function MockupTool() {
                 </Section>
 
                 <Section title="Finish">
-                  <div className="flex flex-wrap gap-2">
-                    {FINISHES.map((f) => (
-                      <button
-                        key={f.id}
-                        type="button"
-                        onClick={() => setFinishId(f.id)}
-                        title={f.label}
-                        className={cn(
-                          "size-8 rounded-full border-2 transition-transform hover:scale-110",
-                          finishId === f.id ? "border-emerald-500" : "border-border"
-                        )}
-                        style={{
-                          background: f.clay ? f.light : `linear-gradient(135deg, ${f.light}, ${f.dark})`,
-                        }}
-                        aria-label={`${f.label} finish`}
-                        aria-pressed={finishId === f.id}
-                      />
-                    ))}
-                  </div>
+                  {FINISH_GROUPS.map((group) => (
+                    <div key={group} className="space-y-1.5">
+                      <p className="text-muted-foreground/70 text-[10px] font-medium tracking-wider uppercase">{group}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {FINISHES.filter((f) => f.group === group).map((f) => (
+                          <button
+                            key={f.id}
+                            type="button"
+                            onClick={() => setFinishId(f.id)}
+                            title={f.label}
+                            className={cn(
+                              "size-8 rounded-full border-2 transition-transform hover:scale-110",
+                              finishId === f.id ? "border-emerald-500" : "border-border"
+                            )}
+                            style={{
+                              background: f.swatch ?? `linear-gradient(135deg, ${f.light}, ${f.dark})`,
+                            }}
+                            aria-label={`${f.label} finish`}
+                            aria-pressed={finishId === f.id}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                   <p className="text-muted-foreground text-xs">{finish.label}</p>
                 </Section>
               </>
@@ -1508,15 +1569,24 @@ export function MockupTool() {
             {panel === "light" && (
               <>
                 <Section title="Studio">
-                  <Tabs value={lighting} onValueChange={(v) => setLighting(v as LightingId)}>
-                    <TabsList className="w-full">
-                      {LIGHTINGS.map((l) => (
-                        <TabsTrigger key={l.id} value={l.id} className="flex-1">
-                          {l.label}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
+                  <div className="flex flex-wrap gap-1.5">
+                    {LIGHTINGS.map((l) => (
+                      <button
+                        key={l.id}
+                        type="button"
+                        onClick={() => setLighting(l.id)}
+                        aria-pressed={lighting === l.id}
+                        className={cn(
+                          "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                          lighting === l.id
+                            ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "border-border text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {l.label}
+                      </button>
+                    ))}
+                  </div>
                   <SliderRow label="Glass reflections" value={glare} min={0} max={1} step={0.05} reset={0.6} display={pct(glare)} onChange={setGlare} />
                 </Section>
                 <Section title="Ground">

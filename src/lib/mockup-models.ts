@@ -50,8 +50,10 @@ export interface DeviceModel {
   };
   /** Finish that leaves the model's own colors untouched. */
   originalFinish: string;
-  /** Meshes that take the light tone in clay mode; everything else goes dark. */
+  /** Meshes that take the body tone of a shell finish (clay, crystal…); the rest take the detail tone. */
   clayBody: RegExp;
+  /** Camera hardware set into a screen, flattened to black by shell finishes. */
+  shellDark?: RegExp;
 }
 
 export const DEVICE_MODELS: readonly DeviceModel[] = [
@@ -74,6 +76,7 @@ export const DEVICE_MODELS: readonly DeviceModel[] = [
     },
     originalFinish: "burgundy",
     clayBody: /^(Side_Panel|Back_Panel|Antenna|Side_Button|Screws)/,
+    shellDark: /^Front_(Cam|Sensor)/,
   },
   {
     id: "iphone-fold",
@@ -98,6 +101,7 @@ export const DEVICE_MODELS: readonly DeviceModel[] = [
     },
     originalFinish: "starwhite",
     clayBody: /^(Side_Panel|Back_Panel|Antenna|Side_Buttons|Screws|Axle|Back_Cam_Border$|Back_Cam_Detail)/,
+    shellDark: /^Inner_Cam/,
   },
   {
     // Exported with scrambled part names; each was identified by material and position.

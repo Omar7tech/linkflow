@@ -169,31 +169,95 @@ export function composeScene(
 
 export type Orientation = "portrait" | "landscape";
 
+/**
+ * How a finish treats the device's surfaces. Without one, the model keeps its
+ * own metal and glass and is only recolored.
+ */
+export type FinishSurface =
+  /** Matte single-color body, like a clay render. */
+  | { type: "clay" }
+  /** Stylized: soft sculpted shading under a color sweep laid across the whole device. */
+  | { type: "matcap"; stops: [number, string][]; angle: number }
+  /** A clear shell: nothing but reflections and a faint veil. */
+  | { type: "crystal" }
+  /** Polished to a mirror. */
+  | { type: "mirror" }
+  /** Deep color under a glossy lacquer. */
+  | { type: "paint" }
+  /** Thin-film color that shifts with the viewing angle. */
+  | { type: "holo" };
+
+export type FinishGroup = "Metal" | "Special" | "Clay" | "Art";
+
 export interface FrameFinish {
   id: string;
   label: string;
+  group: FinishGroup;
   light: string;
   dark: string;
-  /** Matte single-color "clay" body instead of metal and glass. */
-  clay?: boolean;
+  surface?: FinishSurface;
+  /** CSS for the picker chip, when a light→dark sweep doesn't describe it. */
+  swatch?: string;
+}
+
+/** Shell finishes replace every part of the body and drop the camera hardware. */
+export const isShellFinish = (f: FrameFinish) =>
+  f.surface?.type === "clay" || f.surface?.type === "matcap" || f.surface?.type === "crystal";
+
+const HOLO_SWATCH = "conic-gradient(from 210deg,#a5f3fc,#c4b5fd,#f9a8d4,#fde68a,#86efac,#a5f3fc)";
+
+function art(id: string, label: string, angle: number, stops: [number, string][]): FrameFinish {
+  return {
+    id,
+    label,
+    group: "Art",
+    light: stops[0][1],
+    dark: stops[stops.length - 1][1],
+    surface: { type: "matcap", stops, angle },
+    swatch: `linear-gradient(${angle + 90}deg, ${stops.map(([p, c]) => `${c} ${p * 100}%`).join(", ")})`,
+  };
 }
 
 export const FINISHES: readonly FrameFinish[] = [
-  { id: "titanium", label: "Natural Titanium", light: "#b3ada3", dark: "#5f5a53" },
-  { id: "starwhite", label: "Star White", light: "#b3b0a8", dark: "#e9e6e0" },
-  { id: "burgundy", label: "Burgundy", light: "#62464b", dark: "#46202a" },
-  { id: "black", label: "Space Black", light: "#3c3c3f", dark: "#151517" },
-  { id: "silver", label: "Silver", light: "#e2e3e6", dark: "#a2a4a9" },
-  { id: "gold", label: "Light Gold", light: "#eddcbd", dark: "#b39469" },
-  { id: "navy", label: "Navy", light: "#46536f", dark: "#1f2740" },
-  { id: "orange", label: "Cosmic Orange", light: "#e8873e", dark: "#9a4a18" },
-  { id: "deepblue", label: "Deep Blue", light: "#41567e", dark: "#141f3a" },
-  { id: "sage", label: "Sage", light: "#a7b89d", dark: "#5a6a52" },
-  { id: "lavender", label: "Lavender", light: "#cfc4e6", dark: "#8b7fae" },
-  { id: "skyblue", label: "Sky Blue", light: "#b9d4e7", dark: "#6d92ac" },
-  { id: "clay-white", label: "Clay White", light: "#eeeeec", dark: "#d6d6d3", clay: true },
-  { id: "clay-ink", label: "Clay Ink", light: "#2c2d31", dark: "#1b1c1f", clay: true },
-  { id: "clay-emerald", label: "Clay Emerald", light: "#4fb892", dark: "#3c9a78", clay: true },
+  { id: "titanium", label: "Natural Titanium", group: "Metal", light: "#b3ada3", dark: "#5f5a53" },
+  { id: "starwhite", label: "Star White", group: "Metal", light: "#b3b0a8", dark: "#e9e6e0" },
+  { id: "burgundy", label: "Burgundy", group: "Metal", light: "#62464b", dark: "#46202a" },
+  { id: "black", label: "Space Black", group: "Metal", light: "#3c3c3f", dark: "#151517" },
+  { id: "silver", label: "Silver", group: "Metal", light: "#e2e3e6", dark: "#a2a4a9" },
+  { id: "gold", label: "Light Gold", group: "Metal", light: "#eddcbd", dark: "#b39469" },
+  { id: "navy", label: "Navy", group: "Metal", light: "#46536f", dark: "#1f2740" },
+  { id: "orange", label: "Cosmic Orange", group: "Metal", light: "#e8873e", dark: "#9a4a18" },
+  { id: "deepblue", label: "Deep Blue", group: "Metal", light: "#41567e", dark: "#141f3a" },
+  { id: "sage", label: "Sage", group: "Metal", light: "#a7b89d", dark: "#5a6a52" },
+  { id: "lavender", label: "Lavender", group: "Metal", light: "#cfc4e6", dark: "#8b7fae" },
+  { id: "skyblue", label: "Sky Blue", group: "Metal", light: "#b9d4e7", dark: "#6d92ac" },
+
+  { id: "chrome", label: "Liquid Chrome", group: "Special", light: "#f4f6f9", dark: "#dfe3ea", surface: { type: "mirror" }, swatch: "linear-gradient(135deg,#ffffff,#8d96a3 45%,#f1f4f8 60%,#5d6570)" },
+  { id: "gold-mirror", label: "24K Gold", group: "Special", light: "#ffcf6b", dark: "#f2b544", surface: { type: "mirror" }, swatch: "linear-gradient(135deg,#fff3c4,#d99a1f 45%,#ffe08a 60%,#8a5a06)" },
+  { id: "rose-mirror", label: "Rose Chrome", group: "Special", light: "#f7b9ad", dark: "#e79a8f", surface: { type: "mirror" }, swatch: "linear-gradient(135deg,#ffe4de,#d77f73 45%,#ffc9bf 60%,#8a4238)" },
+  { id: "black-mirror", label: "Black Chrome", group: "Special", light: "#4a4d55", dark: "#2c2e34", surface: { type: "mirror" }, swatch: "linear-gradient(135deg,#8b909b,#17181c 45%,#5c606a 60%,#050506)" },
+  { id: "holo", label: "Holographic", group: "Special", light: "#e6ebff", dark: "#cfd6f5", surface: { type: "holo" }, swatch: HOLO_SWATCH },
+  { id: "oil", label: "Oil Slick", group: "Special", light: "#2b2d3a", dark: "#16171f", surface: { type: "holo" }, swatch: "conic-gradient(from 210deg,#0e7490,#6d28d9,#be185d,#b45309,#047857,#0e7490)" },
+  { id: "candy-red", label: "Candy Red", group: "Special", light: "#c40f20", dark: "#8d0715", surface: { type: "paint" }, swatch: "radial-gradient(circle at 32% 28%,#ff8d96,#c40f20 45%,#5b040d)" },
+  { id: "electric", label: "Electric Blue", group: "Special", light: "#1746ff", dark: "#0b2bb8", surface: { type: "paint" }, swatch: "radial-gradient(circle at 32% 28%,#9db2ff,#1746ff 45%,#06145c)" },
+  { id: "racing", label: "Racing Green", group: "Special", light: "#0b5a40", dark: "#063b2a", surface: { type: "paint" }, swatch: "radial-gradient(circle at 32% 28%,#7fd8b4,#0b5a40 45%,#02231a)" },
+  { id: "papaya", label: "Papaya", group: "Special", light: "#ff6a1a", dark: "#cf4a05", surface: { type: "paint" }, swatch: "radial-gradient(circle at 32% 28%,#ffc7a1,#ff6a1a 45%,#7a2a02)" },
+  { id: "crystal", label: "Crystal", group: "Special", light: "#ffffff", dark: "#dfe9f5", surface: { type: "crystal" }, swatch: "linear-gradient(135deg,rgba(255,255,255,0.9),rgba(160,190,220,0.25) 45%,rgba(255,255,255,0.7) 62%,rgba(120,150,190,0.3))" },
+
+  { id: "clay-white", label: "Clay White", group: "Clay", light: "#f4f4f2", dark: "#e3e3e0", surface: { type: "clay" }, swatch: "#f4f4f2" },
+  { id: "clay-ink", label: "Clay Ink", group: "Clay", light: "#34363c", dark: "#232429", surface: { type: "clay" }, swatch: "#34363c" },
+  { id: "clay-emerald", label: "Clay Emerald", group: "Clay", light: "#3fbf93", dark: "#2f9f79", surface: { type: "clay" }, swatch: "#3fbf93" },
+  { id: "clay-blush", label: "Clay Blush", group: "Clay", light: "#f6b8b8", dark: "#e99a9d", surface: { type: "clay" }, swatch: "#f6b8b8" },
+  { id: "clay-sky", label: "Clay Sky", group: "Clay", light: "#a9cff5", dark: "#86b4e6", surface: { type: "clay" }, swatch: "#a9cff5" },
+  { id: "clay-butter", label: "Clay Butter", group: "Clay", light: "#f8df8e", dark: "#ebc968", surface: { type: "clay" }, swatch: "#f8df8e" },
+  { id: "clay-lilac", label: "Clay Lilac", group: "Clay", light: "#c9b8f4", dark: "#ab97e6", surface: { type: "clay" }, swatch: "#c9b8f4" },
+
+  art("aurora-art", "Aurora", 35, [[0, "#7ef0c8"], [0.45, "#3b82f6"], [0.8, "#8b5cf6"], [1, "#ec4899"]]),
+  art("sunset-art", "Sunset", 60, [[0, "#fde68a"], [0.4, "#fb923c"], [0.75, "#e11d48"], [1, "#6d28d9"]]),
+  art("jade", "Jade", 50, [[0, "#d1fae5"], [0.4, "#34d399"], [0.8, "#047857"], [1, "#022c22"]]),
+  art("porcelain", "Porcelain", 45, [[0, "#ffffff"], [0.5, "#eef2f7"], [0.85, "#c3cedd"], [1, "#8ea0b8"]]),
+  art("bubblegum", "Bubblegum", 40, [[0, "#ffe4f1"], [0.4, "#f9a8d4"], [0.8, "#ec4899"], [1, "#9d174d"]]),
+  art("obsidian", "Obsidian", 45, [[0, "#6b7280"], [0.3, "#1f2937"], [0.75, "#0b0d12"], [1, "#000000"]]),
 ];
 
 export function roundRectPath(
@@ -430,6 +494,207 @@ function withGlow(base: ReturnType<typeof linear>, glows: [number, number, strin
   };
 }
 
+/**
+ * The same color at zero alpha. Canvas gradients blend unpremultiplied, so
+ * fading to plain transparent black drags a dark fringe through the middle.
+ */
+function clear(color: string): string {
+  if (color.startsWith("#")) return `rgba(${hexRgb(color).join(",")},0)`;
+  const m = color.match(/rgba?\(([^,]+),([^,]+),([^,)]+)/);
+  return m ? `rgba(${m[1]},${m[2]},${m[3]},0)` : "rgba(0,0,0,0)";
+}
+
+/** Soft blobs of color melting into each other over a base — a mesh gradient. */
+function mesh(base: string, blobs: [number, number, number, string][]) {
+  return (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, w, h);
+    const d = Math.max(w, h);
+    for (const [bx, by, br, color] of blobs) {
+      const g = ctx.createRadialGradient(w * bx, h * by, 0, w * bx, h * by, d * br);
+      g.addColorStop(0, color);
+      g.addColorStop(1, clear(color));
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    }
+  };
+}
+const meshCss = (base: string, blobs: [number, number, number, string][]) =>
+  [...blobs].reverse().map(([x, y, r, c]) => `radial-gradient(circle at ${x * 100}% ${y * 100}%, ${c}, transparent ${r * 100}%)`).join(", ") + `, ${base}`;
+
+/** A photo studio's seamless sweep: a wall falling into a floor, lit from above. */
+function cyclorama(wallTop: string, wallLow: string, floorFar: string, floorNear: string, pool: string) {
+  return (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    const horizon = 0.64;
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, wallTop);
+    g.addColorStop(horizon - 0.07, wallLow);
+    g.addColorStop(horizon + 0.05, floorFar);
+    g.addColorStop(1, floorNear);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+    // The pool of light the key throws on the wall behind the subject.
+    const d = Math.max(w, h);
+    const p = ctx.createRadialGradient(w * 0.5, h * 0.4, 0, w * 0.5, h * 0.4, d * 0.62);
+    p.addColorStop(0, pool);
+    p.addColorStop(1, clear(pool));
+    ctx.fillStyle = p;
+    ctx.fillRect(0, 0, w, h);
+  };
+}
+
+/** A dark stage with one beam coming down from above. */
+function spotlight(base: string, beam: string, floor: string) {
+  return (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, w, h);
+    // The cone, widening on its way down.
+    const cone = ctx.createLinearGradient(0, 0, 0, h * 0.9);
+    cone.addColorStop(0, beam);
+    cone.addColorStop(1, clear(beam));
+    ctx.fillStyle = cone;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.42, 0);
+    ctx.lineTo(w * 0.58, 0);
+    ctx.lineTo(w * 0.98, h);
+    ctx.lineTo(w * 0.02, h);
+    ctx.fill();
+    // Where it lands.
+    ctx.save();
+    ctx.translate(w / 2, h * 0.86);
+    ctx.scale(1, 0.28);
+    const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.5);
+    pool.addColorStop(0, floor);
+    pool.addColorStop(1, clear(floor));
+    ctx.fillStyle = pool;
+    ctx.fillRect(-w, -w * 2, w * 2, w * 4);
+    ctx.restore();
+  };
+}
+
+/** A glowing ring floating behind the device. */
+function halo(base: (ctx: CanvasRenderingContext2D, w: number, h: number) => void, ring: string, haze: string) {
+  return (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    base(ctx, w, h);
+    const cx = w / 2;
+    const cy = h * 0.47;
+    const r = Math.min(w, h) * 0.36;
+    const soft = ctx.createRadialGradient(cx, cy, r * 0.55, cx, cy, r * 1.7);
+    soft.addColorStop(0, clear(haze));
+    soft.addColorStop(0.32, haze);
+    soft.addColorStop(1, clear(haze));
+    ctx.fillStyle = soft;
+    ctx.fillRect(0, 0, w, h);
+    const line = ctx.createRadialGradient(cx, cy, r * 0.9, cx, cy, r * 1.1);
+    line.addColorStop(0, clear(ring));
+    line.addColorStop(0.5, ring);
+    line.addColorStop(1, clear(ring));
+    ctx.fillStyle = line;
+    ctx.fillRect(0, 0, w, h);
+  };
+}
+
+/** A low sun burning through a graded sky. */
+function sunSky(sky: [number, string][], sun: string, glow: string) {
+  const paintSky = linear(sky, 90);
+  return (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    paintSky(ctx, w, h);
+    const cx = w * 0.5;
+    const cy = h * 0.6;
+    const r = Math.min(w, h);
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 0.75);
+    g.addColorStop(0, glow);
+    g.addColorStop(1, clear(glow));
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+    const disc = ctx.createRadialGradient(cx, cy, r * 0.1, cx, cy, r * 0.2);
+    disc.addColorStop(0, sun);
+    disc.addColorStop(1, clear(sun));
+    ctx.fillStyle = disc;
+    ctx.fillRect(0, 0, w, h);
+  };
+}
+
+// Pattern tiles for the drafting-table backdrops, one per tile size.
+const patternTiles = new Map<string, HTMLCanvasElement>();
+function patternTile(kind: "dots" | "grid", size: number, color: string): HTMLCanvasElement {
+  const key = `${kind}|${size}|${color}`;
+  let c = patternTiles.get(key);
+  if (c) return c;
+  c = document.createElement("canvas");
+  c.width = c.height = size;
+  const g = c.getContext("2d")!;
+  g.fillStyle = color;
+  if (kind === "dots") {
+    g.beginPath();
+    g.arc(size / 2, size / 2, Math.max(0.8, size * 0.055), 0, Math.PI * 2);
+    g.fill();
+  } else {
+    const t = Math.max(1, Math.round(size * 0.03));
+    g.fillRect(0, 0, size, t);
+    g.fillRect(0, 0, t, size);
+  }
+  patternTiles.set(key, c);
+  return c;
+}
+
+/** A sheet of dots or grid lines, fading out toward the edges. */
+function drafting(kind: "dots" | "grid", base: string, mark: string, glow: string) {
+  return (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, w, h);
+    const d = Math.max(w, h);
+    const lift = ctx.createRadialGradient(w / 2, h * 0.45, 0, w / 2, h * 0.45, d * 0.6);
+    lift.addColorStop(0, glow);
+    lift.addColorStop(1, clear(glow));
+    ctx.fillStyle = lift;
+    ctx.fillRect(0, 0, w, h);
+    const size = Math.max(8, Math.round(Math.min(w, h) / (kind === "dots" ? 34 : 14)));
+    ctx.save();
+    // Centered, so the sheet lines up the same in every ratio.
+    ctx.translate((w / 2) % size, (h / 2) % size);
+    ctx.fillStyle = ctx.createPattern(patternTile(kind, size, mark), "repeat")!;
+    ctx.fillRect(-size, -size, w + size * 2, h + size * 2);
+    ctx.restore();
+    const fade = ctx.createRadialGradient(w / 2, h * 0.45, d * 0.22, w / 2, h * 0.45, d * 0.72);
+    fade.addColorStop(0, clear(base));
+    fade.addColorStop(1, base);
+    ctx.fillStyle = fade;
+    ctx.fillRect(0, 0, w, h);
+  };
+}
+
+const CANDY: [number, number, number, string][] = [
+  [0.1, 0.12, 0.62, "#ff5fa2"],
+  [0.92, 0.2, 0.6, "#ffb347"],
+  [0.85, 0.95, 0.66, "#7c4dff"],
+  [0.1, 0.95, 0.55, "#ff7ad9"],
+];
+const LAGOON: [number, number, number, string][] = [
+  [0.12, 0.1, 0.62, "#22d3ee"],
+  [0.92, 0.16, 0.6, "#34d399"],
+  [0.82, 0.95, 0.66, "#1d4ed8"],
+  [0.08, 0.92, 0.55, "#0d9488"],
+];
+const IRIS: [number, number, number, string][] = [
+  [0.14, 0.1, 0.62, "#6366f1"],
+  [0.9, 0.14, 0.58, "#a855f7"],
+  [0.86, 0.94, 0.66, "#06b6d4"],
+  [0.08, 0.9, 0.55, "#312e81"],
+];
+const PEACH: [number, number, number, string][] = [
+  [0.1, 0.1, 0.62, "#ffd6c2"],
+  [0.92, 0.18, 0.6, "#fff1b8"],
+  [0.85, 0.95, 0.66, "#ffc2d9"],
+  [0.08, 0.92, 0.55, "#ffe2b8"],
+];
+const MOSS: [number, number, number, string][] = [
+  [0.12, 0.1, 0.62, "#a7f3d0"],
+  [0.92, 0.16, 0.6, "#fef9c3"],
+  [0.85, 0.95, 0.66, "#6ee7b7"],
+  [0.08, 0.92, 0.55, "#d1fae5"],
+];
+
 export const BACKGROUNDS: readonly BackgroundPreset[] = [
   {
     id: "emerald",
@@ -513,6 +778,71 @@ export const BACKGROUNDS: readonly BackgroundPreset[] = [
     label: "Cream",
     css: "linear-gradient(135deg,#fffbeb,#fef3c7 60%,#fde68a)",
     paint: linear([[0, "#fffbeb"], [0.6, "#fef3c7"], [1, "#fde68a"]]),
+  },
+  { id: "candy", label: "Candy", css: meshCss("#ff8fb8", CANDY), paint: mesh("#ff8fb8", CANDY) },
+  { id: "lagoon", label: "Lagoon", css: meshCss("#0e7490", LAGOON), paint: mesh("#0e7490", LAGOON) },
+  { id: "iris", label: "Iris", css: meshCss("#4338ca", IRIS), paint: mesh("#4338ca", IRIS) },
+  { id: "peach", label: "Peach", css: meshCss("#ffe4d1", PEACH), paint: mesh("#ffe4d1", PEACH) },
+  { id: "moss", label: "Moss", css: meshCss("#d9f7e6", MOSS), paint: mesh("#d9f7e6", MOSS) },
+  {
+    id: "studio-white",
+    label: "Studio White",
+    css: "linear-gradient(180deg,#f3f4f6,#ffffff 55%,#d9dce1 66%,#eceef1)",
+    paint: cyclorama("#e6e8ec", "#fafbfc", "#d3d7dd", "#eef0f3", "rgba(255,255,255,0.75)"),
+  },
+  {
+    id: "studio-black",
+    label: "Studio Black",
+    css: "linear-gradient(180deg,#050506,#1b1c20 55%,#08080a 66%,#17181c)",
+    paint: cyclorama("#030304", "#1a1b20", "#070709", "#191a1f", "rgba(120,130,150,0.2)"),
+  },
+  {
+    id: "studio-emerald",
+    label: "Studio Emerald",
+    css: "linear-gradient(180deg,#022c22,#0b6b50 55%,#03231b 66%,#075540)",
+    paint: cyclorama("#01211a", "#0a6a4f", "#021f18", "#07553f", "rgba(52,211,153,0.28)"),
+  },
+  {
+    id: "spotlight",
+    label: "Spotlight",
+    css: "radial-gradient(ellipse 70% 30% at 50% 88%,rgba(255,255,255,0.28),transparent), linear-gradient(180deg,rgba(255,255,255,0.22),transparent 85%), #060607",
+    paint: spotlight("#050506", "rgba(255,255,255,0.2)", "rgba(255,255,255,0.3)"),
+  },
+  {
+    id: "halo",
+    label: "Halo",
+    css: "radial-gradient(circle at 50% 47%,transparent 30%,#34d399 36%,transparent 43%), radial-gradient(circle at 50% 47%,rgba(16,185,129,0.35),transparent 70%), #03120e",
+    paint: halo(linear([[0, "#020a08"], [1, "#04221a"]], 90), "rgba(110,231,183,0.95)", "rgba(16,185,129,0.4)"),
+  },
+  {
+    id: "eclipse",
+    label: "Eclipse",
+    css: "radial-gradient(circle at 50% 47%,transparent 30%,#fdba74 36%,transparent 43%), radial-gradient(circle at 50% 47%,rgba(244,63,94,0.4),transparent 70%), #0d0508",
+    paint: halo(linear([[0, "#080305"], [1, "#1c0a12"]], 90), "rgba(253,186,116,0.95)", "rgba(244,63,94,0.42)"),
+  },
+  {
+    id: "sunrise",
+    label: "Sunrise",
+    css: "radial-gradient(circle at 50% 60%,#fff7d6 0 18%,rgba(255,196,120,0.7) 30%,transparent 62%), linear-gradient(180deg,#27194d,#b4407a 48%,#ff9d5c 72%,#ffd9a0)",
+    paint: sunSky([[0, "#27194d"], [0.48, "#b4407a"], [0.72, "#ff9d5c"], [1, "#ffd9a0"]], "rgba(255,247,214,0.95)", "rgba(255,190,110,0.6)"),
+  },
+  {
+    id: "dots",
+    label: "Dot Grid",
+    css: "radial-gradient(rgba(255,255,255,0.35) 1px, transparent 1.5px) 0 0 / 7px 7px, #0c0d10",
+    paint: drafting("dots", "#0a0b0d", "rgba(255,255,255,0.3)", "rgba(52,211,153,0.16)"),
+  },
+  {
+    id: "blueprint",
+    label: "Blueprint",
+    css: "linear-gradient(rgba(147,197,253,0.4) 1px, transparent 1px) 0 0 / 9px 9px, linear-gradient(90deg, rgba(147,197,253,0.4) 1px, transparent 1px) 0 0 / 9px 9px, #0b2a5b",
+    paint: drafting("grid", "#082048", "rgba(147,197,253,0.34)", "rgba(59,130,246,0.45)"),
+  },
+  {
+    id: "graph",
+    label: "Graph Paper",
+    css: "linear-gradient(rgba(15,23,42,0.14) 1px, transparent 1px) 0 0 / 9px 9px, linear-gradient(90deg, rgba(15,23,42,0.14) 1px, transparent 1px) 0 0 / 9px 9px, #f6f4ee",
+    paint: drafting("grid", "#f4f1ea", "rgba(15,23,42,0.12)", "rgba(255,255,255,0.9)"),
   },
   {
     id: "transparent",
