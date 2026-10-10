@@ -8,6 +8,8 @@ import {
   ImageIcon,
   LaptopIcon,
   Loader2Icon,
+  MaximizeIcon,
+  MinimizeIcon,
   MinusIcon,
   Move3dIcon,
   PackageIcon,
@@ -81,6 +83,14 @@ const ASPECTS: { id: string; label: string; w: number; h: number }[] = [
 ];
 
 const EXPORT_SCALES = [1, 2, 4] as const;
+
+// View limits. Pan is in frame heights at 100% zoom, so it means the same in every ratio.
+const ZOOM_MIN = 0.4;
+const ZOOM_MAX = 6;
+const PAN_MAX = 1.2;
+const clampZoom = (z: number) => Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z));
+const clampPan = (p: number) => Math.max(-PAN_MAX, Math.min(PAN_MAX, p));
+const noSubscribe = () => () => {};
 
 type Anim = "off" | "orbit" | "float" | "reveal" | "scroll" | "pose";
 const ANIMS: { id: Anim; label: string; ms: number }[] = [
@@ -209,6 +219,9 @@ export function MockupTool() {
   const [rotX, setRotX] = React.useState(8);
   const [rotY, setRotY] = React.useState(-26);
   const [zoom, setZoom] = React.useState(1);
+  // Where the camera looks, off-center — lets a close-up frame any part of the device.
+  const [panX, setPanX] = React.useState(0);
+  const [panY, setPanY] = React.useState(0);
   const [lens, setLens] = React.useState(0.38); // 0 = wide angle, 1 = telephoto
   const [reflection, setReflection] = React.useState(0.3);
   const [shadow, setShadow] = React.useState(0.6);
@@ -239,9 +252,20 @@ export function MockupTool() {
   const [bgDim, setBgDim] = React.useState(0.3);
 
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const dragRef = React.useRef<{ x: number; y: number; rotX: number; rotY: number } | null>(null);
+  // Every pointer currently down on the canvas: one drags, two pinch.
+  const pointers = React.useRef(new Map<number, { x: number; y: number }>());
+  const dragRef = React.useRef<{
+    mode: "orbit" | "pan";
+    x: number;
+    y: number;
+    rotX: number;
+    rotY: number;
+    panX: number;
+    panY: number;
+  } | null>(null);
+  const pinchRef = React.useRef<{ dist: number; x: number; y: number; zoom: number; panX: number; panY: number } | null>(null);
+  const [grab, setGrab] = React.useState<"orbit" | "pan" | null>(null);
   // Coalesce high-frequency pointermove events into one state update per frame.
-  const pendingMove = React.useRef<{ x: number; y: number } | null>(null);
   const moveRaf = React.useRef(0);
   // WebGL engine instance, loaded on demand (three.js stays out of the initial bundle).
   const glRef = React.useRef<GLMockupRenderer | null>(null);
@@ -353,6 +377,8 @@ export function MockupTool() {
       rotX: (rotX * Math.PI) / 180,
       rotY: (rotY * Math.PI) / 180,
       zoom,
+      panX,
+      panY,
       camera,
       reflection,
       shadow,
@@ -361,7 +387,7 @@ export function MockupTool() {
       grain,
       background: background.paint,
     }),
-    [rotX, rotY, zoom, camera, reflection, shadow, glow, glowRgb, grain, background]
+    [rotX, rotY, zoom, panX, panY, camera, reflection, shadow, glow, glowRgb, grain, background]
   );
 
   // One render path for preview and every export: draw the current scene
@@ -385,7 +411,7 @@ export function MockupTool() {
         sources.slice(0, slotCount).map((s) => (!s ? null : s.kind === "image" ? s.media : s.el)),
         scroll
       );
-      gl.setView(sceneOpts.rotX, sceneOpts.rotY, sceneOpts.camera, sceneOpts.zoom, glare);
+      gl.setView(sceneOpts.rotX, sceneOpts.rotY, sceneOpts.camera, sceneOpts.zoom, glare, sceneOpts.panX, sceneOpts.panY);
       gl.render();
       composeScene(ctx, gl.domElement, sceneOpts, gl.floorScreenY());
     },
@@ -426,9 +452,9 @@ export function MockupTool() {
 
   // Animation. Each mode moves the camera from where the user left it; the
   // clock lives in a ref so a recording can restart the move from frame one.
-  const viewRef = React.useRef({ rotX, rotY, zoom, scroll, pose });
+  const viewRef = React.useRef({ rotX, rotY, zoom, panX, panY, scroll, pose });
   React.useEffect(() => {
-    viewRef.current = { rotX, rotY, zoom, scroll, pose };
+    viewRef.current = { rotX, rotY, zoom, panX, panY, scroll, pose };
   });
   const animClock = React.useRef(0);
   React.useEffect(() => {
@@ -441,7 +467,7 @@ export function MockupTool() {
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
       // Grabbing the device pauses the move.
-      if (!dragRef.current) {
+      if (!pointers.current.size) {
         const t = (animClock.current += dt);
         if (anim === "orbit") {
           setRotY((prev) => wrap(prev + 40 * dt));
@@ -480,27 +506,100 @@ export function MockupTool() {
     };
   }, [anim]);
 
+  // A canvas point as an offset from the frame's center, in frame heights (y up).
+  const framePoint = (x: number, y: number) => {
+    const r = canvasRef.current!.getBoundingClientRect();
+    return { x: (x - r.left - r.width / 2) / r.height, y: -(y - r.top - r.height / 2) / r.height };
+  };
+  // Zoom while keeping whatever is under (x, y) under it.
+  const zoomAt = (x: number, y: number, next: number, from = viewRef.current) => {
+    const z = clampZoom(next);
+    const p = framePoint(x, y);
+    // Pulled back past 100% there is nothing to frame, so the device drifts home to center.
+    const home = z < 1 && z < from.zoom ? (z - ZOOM_MIN) / (from.zoom - ZOOM_MIN) : 1;
+    const panX = clampPan((from.panX + p.x * (1 / from.zoom - 1 / z)) * home);
+    const panY = clampPan((from.panY + p.y * (1 / from.zoom - 1 / z)) * home);
+    // Kept current here too: wheel events can arrive faster than renders.
+    viewRef.current = { ...viewRef.current, zoom: z, panX, panY };
+    setZoom(z);
+    setPanX(panX);
+    setPanY(panY);
+  };
+  const zoomAtRef = React.useRef(zoomAt);
+  React.useEffect(() => {
+    zoomAtRef.current = zoomAt;
+  });
+
+  // Start (or restart) a one-pointer drag from the view as it is now.
+  const beginDrag = (x: number, y: number, mode: "orbit" | "pan") => {
+    const v = viewRef.current;
+    dragRef.current = { mode, x, y, rotX: v.rotX, rotY: v.rotY, panX: v.panX, panY: v.panY };
+    setGrab(mode);
+  };
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
-    dragRef.current = { x: e.clientX, y: e.clientY, rotX, rotY };
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.current.size === 2) {
+      // A second finger turns the drag into a pinch: zoom and pan together.
+      const [a, b] = [...pointers.current.values()];
+      const v = viewRef.current;
+      dragRef.current = null;
+      pinchRef.current = {
+        dist: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+        x: (a.x + b.x) / 2,
+        y: (a.y + b.y) / 2,
+        zoom: v.zoom,
+        panX: v.panX,
+        panY: v.panY,
+      };
+      setGrab("pan");
+    } else if (pointers.current.size === 1) {
+      // Left button orbits; right or middle button, or Shift, pans.
+      beginDrag(e.clientX, e.clientY, e.button !== 0 || e.shiftKey ? "pan" : "orbit");
+    }
   };
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!dragRef.current) return;
-    pendingMove.current = { x: e.clientX, y: e.clientY };
+    if (!pointers.current.has(e.pointerId)) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (moveRaf.current) return;
     moveRaf.current = requestAnimationFrame(() => {
       moveRaf.current = 0;
+      const canvas = canvasRef.current;
+      const [a, b] = [...pointers.current.values()];
+      if (!canvas || !a) return;
+      const pinch = pinchRef.current;
+      if (pinch && b) {
+        // The point that was between the fingers stays between them.
+        const z = clampZoom((pinch.zoom * Math.hypot(a.x - b.x, a.y - b.y)) / pinch.dist);
+        const from = framePoint(pinch.x, pinch.y);
+        const to = framePoint((a.x + b.x) / 2, (a.y + b.y) / 2);
+        setZoom(z);
+        setPanX(clampPan(pinch.panX + from.x / pinch.zoom - to.x / z));
+        setPanY(clampPan(pinch.panY + from.y / pinch.zoom - to.y / z));
+        return;
+      }
       const drag = dragRef.current;
-      const p = pendingMove.current;
-      if (!drag || !p) return;
+      if (!drag) return;
+      if (drag.mode === "pan") {
+        // The device follows the cursor one to one.
+        const h = canvas.getBoundingClientRect().height * viewRef.current.zoom;
+        setPanX(clampPan(drag.panX - (a.x - drag.x) / h));
+        setPanY(clampPan(drag.panY + (a.y - drag.y) / h));
+        return;
+      }
       const scale = 0.35;
-      setRotY(wrap(drag.rotY + (p.x - drag.x) * scale));
-      setRotX(Math.max(-60, Math.min(80, drag.rotX + (p.y - drag.y) * scale)));
+      setRotY(wrap(drag.rotY + (a.x - drag.x) * scale));
+      setRotX(Math.max(-60, Math.min(80, drag.rotX + (a.y - drag.y) * scale)));
     });
   };
-  const onPointerUp = () => {
+  const onPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    pointers.current.delete(e.pointerId);
+    pinchRef.current = null;
     dragRef.current = null;
-    pendingMove.current = null;
+    // Lifting one finger of a pinch carries on as an orbit, without a jump.
+    const [left] = [...pointers.current.values()];
+    if (left) beginDrag(left.x, left.y, "orbit");
+    else setGrab(null);
   };
 
   // Read the screen content's colors: the average drives the bloom tint, and
@@ -700,6 +799,8 @@ export function MockupTool() {
     setRotX(p.s.rotX);
     setRotY(p.s.rotY);
     setZoom(p.s.zoom);
+    setPanX(0);
+    setPanY(0);
     setLens(p.s.lens);
     setReflection(p.s.reflection);
     setShadow(p.s.shadow);
@@ -735,7 +836,9 @@ export function MockupTool() {
         const sliders: [unknown, (v: number) => void, number, number][] = [
           [s.rotX, setRotX, -60, 80],
           [s.rotY, setRotY, -180, 180],
-          [s.zoom, setZoom, 0.55, 1.6],
+          [s.zoom, setZoom, ZOOM_MIN, ZOOM_MAX],
+          [s.panX, setPanX, -PAN_MAX, PAN_MAX],
+          [s.panY, setPanY, -PAN_MAX, PAN_MAX],
           [s.lens, setLens, 0, 1],
           [s.reflection, setReflection, 0, 1],
           [s.shadow, setShadow, 0, 1],
@@ -775,6 +878,8 @@ export function MockupTool() {
             rotX,
             rotY,
             zoom,
+            panX,
+            panY,
             lens,
             reflection,
             shadow,
@@ -791,13 +896,13 @@ export function MockupTool() {
       }
     }, 400);
     return () => clearTimeout(t);
-  }, [anim, device, orientation, layout, lighting, finishId, bgId, aspectId, customBg, rotX, rotY, zoom, lens, reflection, shadow, glare, glow, grain, bgBlur, bgDim, exportScale]);
+  }, [anim, device, orientation, layout, lighting, finishId, bgId, aspectId, customBg, rotX, rotY, zoom, panX, panY, lens, reflection, shadow, glare, glow, grain, bgBlur, bgDim, exportScale]);
 
   // Undo / redo. A snapshot is everything that defines the scene (not the
   // uploaded media); one is recorded each time the scene comes to rest.
   const snapshot = React.useMemo(
-    () => ({ device, orientation, layout, lighting, finishId, bgId, aspectId, customBg, rotX, rotY, zoom, lens, reflection, shadow, glare, glow, grain, pose, scroll, bgBlur, bgDim }),
-    [device, orientation, layout, lighting, finishId, bgId, aspectId, customBg, rotX, rotY, zoom, lens, reflection, shadow, glare, glow, grain, pose, scroll, bgBlur, bgDim]
+    () => ({ device, orientation, layout, lighting, finishId, bgId, aspectId, customBg, rotX, rotY, zoom, panX, panY, lens, reflection, shadow, glare, glow, grain, pose, scroll, bgBlur, bgDim }),
+    [device, orientation, layout, lighting, finishId, bgId, aspectId, customBg, rotX, rotY, zoom, panX, panY, lens, reflection, shadow, glare, glow, grain, pose, scroll, bgBlur, bgDim]
   );
   type Snapshot = typeof snapshot;
   const history = React.useRef<{ stack: Snapshot[]; index: number }>({ stack: [], index: -1 });
@@ -833,6 +938,8 @@ export function MockupTool() {
     setRotX(s.rotX);
     setRotY(s.rotY);
     setZoom(s.zoom);
+    setPanX(s.panX);
+    setPanY(s.panY);
     setLens(s.lens);
     setReflection(s.reflection);
     setShadow(s.shadow);
@@ -847,11 +954,29 @@ export function MockupTool() {
     setCanRedo(h.index < h.stack.length - 1);
   };
 
-  const nudgeZoom = (factor: number) => setZoom((z) => Math.max(0.55, Math.min(1.6, z * factor)));
+  const nudgeZoom = (factor: number) => setZoom((z) => clampZoom(z * factor));
   const resetView = () => {
     setRotX(8);
     setRotY(-26);
     setZoom(1);
+    setPanX(0);
+    setPanY(0);
+  };
+
+  // Fullscreen hands the whole display to the stage.
+  const viewportRef = React.useRef<HTMLElement>(null);
+  const canFullscreen = React.useSyncExternalStore(noSubscribe, () => document.fullscreenEnabled, () => false);
+  const fullscreen = React.useSyncExternalStore(
+    (notify) => {
+      document.addEventListener("fullscreenchange", notify);
+      return () => document.removeEventListener("fullscreenchange", notify);
+    },
+    () => !!document.fullscreenElement && document.fullscreenElement === viewportRef.current,
+    () => false
+  );
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void viewportRef.current?.requestFullscreen?.();
   };
 
   // Page-wide shortcuts: undo, redo, and pasting a screenshot straight in.
@@ -884,7 +1009,7 @@ export function MockupTool() {
     };
   }, []);
 
-  // With the stage focused: arrows orbit, + and - zoom, 0 resets the view.
+  // With the stage focused: arrows orbit, + and - zoom, 0 resets the view, F goes fullscreen.
   const onStageKey = (e: React.KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const step = e.shiftKey ? 15 : 5;
@@ -895,19 +1020,21 @@ export function MockupTool() {
     else if (e.key === "+" || e.key === "=") nudgeZoom(1.08);
     else if (e.key === "-" || e.key === "_") nudgeZoom(1 / 1.08);
     else if (e.key === "0") resetView();
+    else if (e.key.toLowerCase() === "f" && canFullscreen) toggleFullscreen();
     else return;
     e.preventDefault();
   };
 
-  // Pinch, or Ctrl + scroll, zooms the stage. Plain scrolling is left to the page.
+  // The wheel zooms toward the cursor (a trackpad pinch arrives as Ctrl + wheel).
   const stageRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
     const onWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey) return;
+      if (!canvasRef.current) return;
       e.preventDefault();
-      setZoom((z) => Math.max(0.55, Math.min(1.6, z * Math.exp(-e.deltaY * 0.004))));
+      const delta = e.deltaY * (e.deltaMode === 1 ? 16 : 1);
+      zoomAtRef.current(e.clientX, e.clientY, viewRef.current.zoom * Math.exp(-delta * (e.ctrlKey ? 0.01 : 0.0018)));
     };
     stage.addEventListener("wheel", onWheel, { passive: false });
     return () => stage.removeEventListener("wheel", onWheel);
@@ -918,11 +1045,11 @@ export function MockupTool() {
   const busy = glFailed || modelFailed;
 
   return (
-    <div className="mx-auto w-full max-w-[1680px] px-4 py-5 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[1680px] px-4 py-3 sm:px-6 lg:px-8">
       {/* A slim title bar: the stage, not the copy, gets the first screen. */}
-      <header className="mb-4 flex items-center gap-3">
-        <span className="border-border bg-card flex size-10 items-center justify-center rounded-xl border">
-          <tool.icon className="text-foreground/80 size-5" aria-hidden />
+      <header className="mb-3 flex items-center gap-3">
+        <span className="border-border bg-card flex size-8 items-center justify-center rounded-lg border">
+          <tool.icon className="text-foreground/80 size-4" aria-hidden />
         </span>
         <h1 className="font-heading text-xl font-bold tracking-tight sm:text-2xl">{tool.name}</h1>
         <FavoriteButton toolId={tool.id} className="[&>svg]:size-5" />
@@ -930,7 +1057,13 @@ export function MockupTool() {
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
         {/* ------------------------------------------------------- viewport */}
-        <section className="border-border bg-card overflow-hidden rounded-2xl border lg:sticky lg:top-20">
+        <section
+          ref={viewportRef}
+          className={cn(
+            "border-border bg-card overflow-hidden rounded-2xl border lg:sticky lg:top-20",
+            fullscreen && "flex h-screen flex-col rounded-none border-0"
+          )}
+        >
           <div className="border-border flex flex-wrap items-center gap-2 border-b px-3 py-2">
             <Tabs
               value={device}
@@ -986,6 +1119,17 @@ export function MockupTool() {
                   ))}
                 </TabsList>
               </Tabs>
+              {canFullscreen && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleFullscreen}
+                  title={fullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
+                  aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+                >
+                  {fullscreen ? <MinimizeIcon /> : <MaximizeIcon />}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -993,10 +1137,11 @@ export function MockupTool() {
             ref={stageRef}
             tabIndex={0}
             role="application"
-            aria-label="Mockup stage. Arrow keys orbit, plus and minus zoom, zero resets the view."
+            aria-label="Mockup stage. Drag to orbit, scroll to zoom, right-drag to pan. Arrow keys orbit, plus and minus zoom, zero resets the view."
             onKeyDown={onStageKey}
             className={cn(
-              "bg-muted/40 relative flex h-[58vh] min-h-80 items-center justify-center p-4 outline-none transition-shadow sm:p-6 lg:h-[calc(100vh-16.5rem)]",
+              "bg-muted/40 relative flex items-center justify-center p-2 outline-none transition-shadow sm:p-3",
+              fullscreen ? "min-h-0 flex-1" : "h-[64vh] min-h-80 lg:h-[calc(100vh-14rem)]",
               "focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:ring-inset",
               dragOver && "ring-2 ring-emerald-500 ring-inset"
             )}
@@ -1015,7 +1160,10 @@ export function MockupTool() {
           >
             <canvas
               ref={canvasRef}
-              className="block h-auto max-h-full w-auto max-w-full cursor-grab touch-none rounded-lg shadow-xl shadow-black/20 active:cursor-grabbing"
+              className={cn(
+                "block h-auto max-h-full w-auto max-w-full touch-none rounded-lg shadow-xl shadow-black/20",
+                grab === "pan" ? "cursor-move" : grab ? "cursor-grabbing" : "cursor-grab"
+              )}
               style={
                 bgId === "transparent"
                   ? {
@@ -1028,6 +1176,7 @@ export function MockupTool() {
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
+              onContextMenu={(e) => e.preventDefault()}
               onDoubleClick={resetView}
             />
 
@@ -1094,7 +1243,7 @@ export function MockupTool() {
 
           <div className="border-border flex flex-wrap items-center gap-2 border-t px-3 py-2">
             <p className="text-muted-foreground mr-auto hidden text-xs xl:block">
-              Drag to orbit <Dot /> <Kbd>Ctrl</Kbd> + scroll to zoom <Dot /> <Kbd>Ctrl</Kbd> <Kbd>V</Kbd> pastes a screenshot
+              Drag to orbit <Dot /> Scroll to zoom <Dot /> Right-drag to pan <Dot /> <Kbd>Ctrl</Kbd> <Kbd>V</Kbd> pastes a screenshot
             </p>
             <Tabs
               value={String(exportScale)}
@@ -1329,7 +1478,7 @@ export function MockupTool() {
                   <SliderRow label="Turn" value={rotY} min={-180} max={180} step={1} reset={-26} display={`${Math.round(rotY)}°`} onChange={setRotY} />
                 </Section>
                 <Section title="Lens">
-                  <SliderRow label="Zoom" value={zoom} min={0.55} max={1.6} step={0.01} reset={1} display={`${Math.round(zoom * 100)}%`} onChange={setZoom} />
+                  <SliderRow label="Zoom" value={zoom} min={ZOOM_MIN} max={ZOOM_MAX} step={0.01} reset={1} display={`${Math.round(zoom * 100)}%`} onChange={setZoom} />
                   <SliderRow label="Focal length" value={lens} min={0} max={1} step={0.01} reset={0.38} display={`${Math.round(camera / 13.3)}mm`} onChange={setLens} />
                 </Section>
                 <Section title="Motion">

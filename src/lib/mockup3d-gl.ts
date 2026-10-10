@@ -813,7 +813,8 @@ export class GLMockupRenderer {
     }
   }
 
-  setView(rotX: number, rotY: number, camDist: number, zoom: number, glare: number) {
+  /** `panX`/`panY` slide the camera sideways, in frame heights at 100% zoom. */
+  setView(rotX: number, rotY: number, camDist: number, zoom: number, glare: number, panX = 0, panY = 0) {
     this.rig.rotation.x = rotX;
     this.rig.rotation.y = rotY;
     for (const { mat, gain } of this.glassMats) {
@@ -830,7 +831,7 @@ export class GLMockupRenderer {
     // Same lens feel for every device: camera distance scales with subject size.
     const dist = camDist * (Math.max(this.spanW, this.spanH) / 156);
     const visH = Math.max(this.spanH / 0.68, this.spanW / 0.76 / this.aspect) / zoom;
-    this.camera.position.set(0, 0, dist);
+    this.camera.position.set(panX * visH * zoom, panY * visH * zoom, dist);
     this.camera.aspect = this.aspect;
     this.camera.fov = (2 * Math.atan(visH / 2 / dist) * 180) / Math.PI;
     this.camera.near = dist / 10;
