@@ -1,16 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { Code2Icon, DownloadIcon, SlidersHorizontalIcon, TypeIcon } from "lucide-react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CopyIcon,
+  DownloadIcon,
+  Loader2Icon,
+  ShuffleIcon,
+  SlidersHorizontalIcon,
+  TypeIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -32,15 +35,28 @@ import {
   CODE_FONTS,
   CODE_THEMES,
   DEFAULT_CODESHOT,
+  FRAME_RATIOS,
   LANGUAGES,
+  backdropCss,
   highlightCode,
+  langFromFilename,
+  plainTokens,
   renderCodeshot,
   resolveFontFamily,
+  warmHighlighter,
   type CodeshotConfig,
+  type Highlighted,
   type Lang,
 } from "@/lib/codeshot";
-import { dataUrlToBlob, downloadDataUrl } from "@/lib/qr";
 import { cn } from "@/lib/utils";
+
+const CHECKER: React.CSSProperties = {
+  backgroundImage: "repeating-conic-gradient(#d4d4d833 0% 25%, transparent 0% 50%)",
+  backgroundSize: "16px 16px",
+};
+
+const canvasBlob = (canvas: HTMLCanvasElement) =>
+  new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
 
 export function CodeshotTool() {
   const history = useHistory("codeshot");
@@ -50,46 +66,86 @@ export function CodeshotTool() {
   const set = <K extends keyof CodeshotConfig>(key: K, value: CodeshotConfig[K]) =>
     setConfig((prev) => ({ ...prev, [key]: value }));
 
-  const transparent = config.backdropId === "none";
-  const configKey = JSON.stringify(config);
-
+  // Colored tokens, tagged with what they were made from. Highlighting only
+  // reruns when the code, language, theme or tab width change — never for a
+  // padding or backdrop tweak.
+  const sourceKey = `${config.language}\u0000${config.themeId}\u0000${config.tabSize}\u0000${config.code}`;
+  const [colored, setColored] = React.useState<{ key: string; hl: Highlighted } | null>(null);
   React.useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    let cancelled = false;
-    const id = setTimeout(async () => {
-      // Make sure the chosen webfont is loaded before measuring/drawing.
-      try {
-        await document.fonts.load(`${config.fontSize}px ${resolveFontFamily(config.fontFamily)}`);
-      } catch {
-        /* fall back to whatever's available */
-      }
-      const hl = await highlightCode(config.code, config.language, config.themeId, config.tabSize);
-      if (!cancelled && canvasRef.current) renderCodeshot(canvasRef.current, config, hl);
-    }, 120);
+    let live = true;
+    highlightCode(config.code, config.language, config.themeId, config.tabSize).then(
+      (hl) => live && setColored({ key: sourceKey, hl }),
+      () => {}
+    );
     return () => {
-      cancelled = true;
-      clearTimeout(id);
+      live = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- configKey captures config
-  }, [configKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sourceKey covers them
+  }, [sourceKey]);
+  React.useEffect(() => void warmHighlighter(), []);
 
+  // What gets drawn: the colored tokens if they match the code on screen,
+  // otherwise the same code plain, in the last theme's colors — so typing is
+  // never a frame behind and there is a picture before the highlighter lands.
+  const tokens = React.useMemo(
+    () =>
+      colored?.key === sourceKey
+        ? colored.hl
+        : plainTokens(config.code, config.tabSize, colored?.hl.bg, colored?.hl.fg),
+    [colored, sourceKey, config.code, config.tabSize]
+  );
+  const pending = colored?.key !== sourceKey;
+
+  // Redraw once the chosen webfont is really there (measuring before gives the wrong grid).
+  const [fontReady, setFontReady] = React.useState(0);
+  React.useEffect(() => {
+    let live = true;
+    document.fonts
+      .load(`${config.fontSize}px ${resolveFontFamily(config.fontFamily)}`)
+      .then(() => live && setFontReady((n) => n + 1), () => {});
+    return () => {
+      live = false;
+    };
+  }, [config.fontFamily, config.fontSize]);
+
+  // The preview is drawn at screen resolution; the export is drawn separately at its own.
+  const [size, setSize] = React.useState({ width: 0, height: 0 });
+  React.useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const drawn = renderCodeshot(canvas, config, tokens, Math.min(2, window.devicePixelRatio || 1));
+      setSize((s) => (s.width === drawn.width && s.height === drawn.height ? s : drawn));
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [config, tokens, fontReady]);
+
+  const transparent = config.backdropId === "none";
   const filename = (config.title || "code").replace(/\.[^.]+$/, "").replace(/[^a-z0-9_-]+/gi, "-") || "code";
-
   const commit = () => history.add(`${config.language} · ${config.title || "snippet"}`, config.code);
 
-  const downloadPng = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    downloadDataUrl(canvas.toDataURL("image/png"), `${filename}.png`);
+  const exportBlob = () => {
+    const out = document.createElement("canvas");
+    renderCodeshot(out, config, tokens, config.scale);
+    return canvasBlob(out);
+  };
+
+  const downloadPng = async () => {
+    const blob = await exportBlob();
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${filename}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
     commit();
   };
 
   const copyImage = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
     try {
-      const blob = await dataUrlToBlob(canvas.toDataURL("image/png"));
+      const blob = await exportBlob();
+      if (!blob) throw new Error("no image");
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
       toast.success("Image copied to clipboard");
       commit();
@@ -98,100 +154,67 @@ export function CodeshotTool() {
     }
   };
 
+  const stepTheme = (by: number) => {
+    const i = CODE_THEMES.findIndex((t) => t.id === config.themeId);
+    set("themeId", CODE_THEMES[(i + by + CODE_THEMES.length) % CODE_THEMES.length].id);
+  };
+  const shuffle = () => {
+    const pick = <T,>(from: readonly T[]) => from[Math.floor(Math.random() * from.length)];
+    const backdrops = BACKDROPS.filter((b) => b.id !== "none");
+    setConfig((c) => ({ ...c, themeId: pick(CODE_THEMES).id, backdropId: pick(backdrops).id }));
+  };
+
+  // Naming the window after a file picks its language.
+  const setTitle = (title: string) => {
+    const lang = langFromFilename(title);
+    setConfig((c) => ({ ...c, title, ...(lang ? { language: lang } : {}) }));
+  };
+  const loadFile = async (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > 200_000) {
+      toast.error("That file is too long for one image");
+      return;
+    }
+    const code = (await file.text()).replace(/\r\n/g, "\n").trimEnd();
+    const lang = langFromFilename(file.name);
+    setConfig((c) => ({ ...c, code, title: file.name, ...(lang ? { language: lang } : {}) }));
+  };
+  // Tab indents instead of leaving the box.
+  const onCodeKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== "Tab" || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    const el = e.currentTarget;
+    const { selectionStart: a, selectionEnd: b, value } = el;
+    const pad = " ".repeat(config.tabSize);
+    set("code", value.slice(0, a) + pad + value.slice(b));
+    requestAnimationFrame(() => el.setSelectionRange(a + pad.length, a + pad.length));
+  };
+
   return (
     <GeneratorLayout tool={TOOL_BY_ID.codeshot} output={null} footer={<HistoryPanel history={history} />}>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        {/* Preview — leads on mobile, sticky on desktop. */}
-        <div className="min-w-0 lg:col-start-1 lg:row-start-1">
-          <div className="lg:sticky lg:top-20 space-y-3">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Code2Icon className="text-primary size-4" /> Preview
-                </CardTitle>
-                <CardDescription>Rendered on-canvas — exactly what you download.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div
-                  className={cn("overflow-auto rounded-xl", transparent && "p-2")}
-                  style={
-                    transparent
-                      ? {
-                          backgroundImage:
-                            "linear-gradient(45deg,#e5e5e5 25%,transparent 25%),linear-gradient(-45deg,#e5e5e5 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e5e5e5 75%),linear-gradient(-45deg,transparent 75%,#e5e5e5 75%)",
-                          backgroundSize: "18px 18px",
-                          backgroundPosition: "0 0,0 9px,9px -9px,-9px 0",
-                        }
-                      : undefined
-                  }
-                >
-                  <canvas ref={canvasRef} className="h-auto w-full rounded-xl" />
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={downloadPng} className="flex-1 font-semibold">
-                    <DownloadIcon className="size-4" /> Download PNG
-                  </Button>
-                  <Button variant="outline" onClick={copyImage}>
-                    Copy image
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="min-w-0 space-y-6 lg:col-start-2 lg:row-start-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <TypeIcon className="text-primary size-4" /> Code
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Textarea
-                value={config.code}
-                onChange={(e) => set("code", e.target.value)}
-                rows={8}
-                spellCheck={false}
-                className="font-mono text-xs leading-relaxed"
-                aria-label="Code"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="cs-lang">Language</Label>
-                  <Select value={config.language} onValueChange={(v) => set("language", v as Lang)}>
-                    <SelectTrigger id="cs-lang" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LANGUAGES.map((l) => (
-                        <SelectItem key={l.id} value={l.id}>
-                          {l.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="cs-title">Window title</Label>
-                  <Input id="cs-title" value={config.title} onChange={(e) => set("title", e.target.value)} placeholder="app.ts" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <SlidersHorizontalIcon className="text-primary size-4" /> Style
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="space-y-1.5">
-                <Label htmlFor="cs-theme">Theme</Label>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0 space-y-6">
+          {/* The picture, with the two choices that change it most right above it. */}
+          <Card className="overflow-hidden py-0">
+            <div className="border-border flex flex-wrap items-center gap-2 border-b px-3 py-2">
+              <Select value={config.language} onValueChange={(v) => set("language", v as Lang)}>
+                <SelectTrigger className="w-36" aria-label="Language">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {LANGUAGES.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex items-center">
+                <Button variant="ghost" size="icon" onClick={() => stepTheme(-1)} aria-label="Previous theme" title="Previous theme">
+                  <ChevronLeftIcon />
+                </Button>
                 <Select value={config.themeId} onValueChange={(v) => set("themeId", v)}>
-                  <SelectTrigger id="cs-theme" className="w-full">
+                  <SelectTrigger className="w-44" aria-label="Theme">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="max-h-72">
@@ -203,28 +226,127 @@ export function CodeshotTool() {
                     ))}
                   </SelectContent>
                 </Select>
+                <Button variant="ghost" size="icon" onClick={() => stepTheme(1)} aria-label="Next theme" title="Next theme">
+                  <ChevronRightIcon />
+                </Button>
               </div>
+              <Button variant="outline" size="sm" onClick={shuffle} className="ml-auto">
+                <ShuffleIcon /> Shuffle
+              </Button>
+            </div>
 
+            <div
+              className="bg-muted/40 relative flex min-h-64 items-center justify-center overflow-auto p-4 sm:p-6"
+              style={transparent ? CHECKER : undefined}
+            >
+              <canvas
+                ref={canvasRef}
+                className="block h-auto max-w-full rounded-lg"
+                style={{ width: size.width || undefined }}
+                aria-label="Code image preview"
+              />
+              {pending && (
+                <span className="bg-background/90 border-border text-muted-foreground absolute top-3 right-3 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px]">
+                  <Loader2Icon className="size-3 animate-spin" /> Coloring
+                </span>
+              )}
+            </div>
+
+            <div className="border-border flex flex-wrap items-center gap-2 border-t px-3 py-2">
+              <p className="text-muted-foreground mr-auto font-mono text-[11px] tabular-nums">
+                {size.width * config.scale} × {size.height * config.scale} px
+              </p>
+              <Select value={String(config.scale)} onValueChange={(v) => set("scale", Number(v))}>
+                <SelectTrigger className="w-20" aria-label="Export size">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1×</SelectItem>
+                  <SelectItem value="2">2×</SelectItem>
+                  <SelectItem value="3">3×</SelectItem>
+                  <SelectItem value="4">4×</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={copyImage}>
+                <CopyIcon /> Copy
+              </Button>
+              <Button size="sm" onClick={downloadPng} className="font-semibold">
+                <DownloadIcon /> Download PNG
+              </Button>
+            </div>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <TypeIcon className="text-primary size-4" /> Code
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Textarea
+                value={config.code}
+                onChange={(e) => set("code", e.target.value)}
+                onKeyDown={onCodeKey}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  const file = e.dataTransfer.files?.[0];
+                  if (!file) return;
+                  e.preventDefault();
+                  void loadFile(file);
+                }}
+                rows={10}
+                spellCheck={false}
+                autoCapitalize="off"
+                autoCorrect="off"
+                className="font-mono text-[13px] leading-relaxed"
+                aria-label="Code"
+                placeholder="Paste or type code, or drop a file here"
+              />
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cs-title">Window title</Label>
+                  <Input id="cs-title" value={config.title} onChange={(e) => setTitle(e.target.value)} placeholder="app.ts" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="cs-focus">Spotlight lines</Label>
+                  <Input id="cs-focus" value={config.focus} onChange={(e) => set("focus", e.target.value)} placeholder="2-4, 7" inputMode="numeric" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="cs-caption">Credit</Label>
+                  <Input id="cs-caption" value={config.caption} onChange={(e) => set("caption", e.target.value)} placeholder="@yourhandle" />
+                </div>
+              </div>
+              <p className="text-muted-foreground text-xs">
+                A title like <code className="font-mono">main.py</code> sets the language. Spotlighted lines stay bright and the rest dim.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Style */}
+        <div className="min-w-0">
+          <Card className="lg:sticky lg:top-20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <SlidersHorizontalIcon className="text-primary size-4" /> Style
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
               <div className="space-y-2">
-                <Label>Background</Label>
-                <div className="flex flex-wrap gap-2">
+                <Label>Backdrop</Label>
+                <div className="grid grid-cols-8 gap-1.5">
                   {BACKDROPS.map((b) => (
                     <button
                       key={b.id}
                       type="button"
                       onClick={() => set("backdropId", b.id)}
                       className={cn(
-                        "size-8 rounded-lg border-2 transition-transform",
+                        "aspect-square rounded-lg border-2 transition-transform",
                         config.backdropId === b.id ? "border-primary scale-110" : "border-border/40 hover:scale-105"
                       )}
-                      style={{
-                        background: b.stops
-                          ? `linear-gradient(135deg,${b.stops[0]},${b.stops[1]})`
-                          : b.id === "theme"
-                            ? "linear-gradient(135deg,#475569,#1e293b)"
-                            : "repeating-conic-gradient(#ddd 0 25%, #fff 0 50%) 0 0 / 8px 8px",
-                      }}
+                      style={{ background: backdropCss(b) }}
                       aria-label={b.name}
+                      aria-pressed={config.backdropId === b.id}
                       title={b.name}
                     />
                   ))}
@@ -232,11 +354,12 @@ export function CodeshotTool() {
                     type="button"
                     onClick={() => set("backdropId", "custom")}
                     className={cn(
-                      "size-8 rounded-lg border-2 transition-transform",
+                      "aspect-square rounded-lg border-2 transition-transform",
                       config.backdropId === "custom" ? "border-primary scale-110" : "border-border/40 hover:scale-105"
                     )}
                     style={{ background: `linear-gradient(135deg,${config.customBg1},${config.customBg2})` }}
-                    aria-label="Custom background"
+                    aria-label="Custom backdrop"
+                    aria-pressed={config.backdropId === "custom"}
                     title="Custom"
                   />
                 </div>
@@ -248,20 +371,25 @@ export function CodeshotTool() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="cs-chrome">Window</Label>
-                  <Select value={config.windowChrome} onValueChange={(v) => set("windowChrome", v as CodeshotConfig["windowChrome"])}>
-                    <SelectTrigger id="cs-chrome" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mac">Mac dots</SelectItem>
-                      <SelectItem value="minimal">Title only</SelectItem>
-                      <SelectItem value="none">None</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <Choice
+                label="Shape"
+                value={config.ratio}
+                onChange={(v) => set("ratio", v)}
+                options={FRAME_RATIOS.map((r) => ({ value: r.id, label: r.label }))}
+              />
+              <Choice
+                label="Window"
+                value={config.windowChrome}
+                onChange={(v) => set("windowChrome", v)}
+                options={[
+                  { value: "mac", label: "Dots" },
+                  { value: "outline", label: "Rings" },
+                  { value: "minimal", label: "Title" },
+                  { value: "none", label: "None" },
+                ]}
+              />
+
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="cs-font">Font</Label>
                   <Select value={config.fontFamily} onValueChange={(v) => set("fontFamily", v)}>
@@ -274,6 +402,19 @@ export function CodeshotTool() {
                           {fnt.label}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="cs-tab">Tab size</Label>
+                  <Select value={String(config.tabSize)} onValueChange={(v) => set("tabSize", Number(v))}>
+                    <SelectTrigger id="cs-tab" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2">2 spaces</SelectItem>
+                      <SelectItem value="4">4 spaces</SelectItem>
+                      <SelectItem value="8">8 spaces</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -293,40 +434,45 @@ export function CodeshotTool() {
                   <span className="text-sm">Shadow</span>
                 </label>
               </div>
-
-              <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="cs-tab">Tab size</Label>
-                  <Select value={String(config.tabSize)} onValueChange={(v) => set("tabSize", Number(v))}>
-                    <SelectTrigger id="cs-tab" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2">2 spaces</SelectItem>
-                      <SelectItem value="4">4 spaces</SelectItem>
-                      <SelectItem value="8">8 spaces</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="cs-scale">Export size</Label>
-                  <Select value={String(config.scale)} onValueChange={(v) => set("scale", Number(v))}>
-                  <SelectTrigger id="cs-scale" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1× (standard)</SelectItem>
-                    <SelectItem value="2">2× (retina)</SelectItem>
-                    <SelectItem value="3">3× (print)</SelectItem>
-                  </SelectContent>
-                </Select>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
       </div>
     </GeneratorLayout>
+  );
+}
+
+function Choice<T extends string>({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: string }[];
+}) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <div className="bg-muted/60 flex gap-1 rounded-lg p-1">
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            aria-pressed={value === o.value}
+            className={cn(
+              "flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors",
+              value === o.value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
