@@ -43,6 +43,7 @@ const RETIRED_TOOLS: Record<string, string> = {
   "brand-personality": "/tools/theme-foundry",
   "reading-time": "/tools",
   slugify: "/tools",
+  "website-builder": "/tools",
 };
 
 /**

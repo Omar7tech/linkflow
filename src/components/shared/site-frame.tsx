@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 
 /** Tools that take over the whole window: no site header, no footer, no page scroll. */
-const WORKSPACES = ["/tools/website-builder"];
+const WORKSPACES: string[] = [];
 
 export function SiteFrame({
   children,
