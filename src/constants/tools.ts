@@ -242,13 +242,16 @@ export const TOOLS = [
     name: "Favicon Generator",
     shortName: "Favicon",
     description:
-      "Turn any image into a full favicon set — favicon.ico, PNGs for every platform, Apple touch icon, web manifest and paste-ready HTML — then download it all as a ZIP. Includes setup steps for HTML, Next.js, Vite, Nuxt and WordPress.",
+      "Make a favicon from your logo, a couple of letters or an emoji. See it in a browser tab, a search result and on a phone before you download, with a dark-theme version, readability checks and the full package: favicon.ico, PNGs, Apple and Android icons, manifest and paste-ready tags.",
     keywords: [
       "favicon generator",
       "favicon.ico generator",
       "apple touch icon",
       "web app manifest",
       "favicon package",
+      "emoji favicon",
+      "letter favicon",
+      "dark mode favicon",
     ],
     icon: SparkleIcon,
     category: "studio",
