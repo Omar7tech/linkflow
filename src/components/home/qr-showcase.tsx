@@ -20,7 +20,6 @@ interface QrArtboardProps {
  */
 export function QrArtboard({ value, options, label }: QrArtboardProps) {
   const [svg, setSvg] = React.useState<string | null>(null);
-  const [modules, setModules] = React.useState<number | null>(null);
   const [failed, setFailed] = React.useState(false);
 
   // Re-render on any option change without listing each field by hand.
@@ -30,17 +29,10 @@ export function QrArtboard({ value, options, label }: QrArtboardProps) {
     let cancelled = false;
     (async () => {
       try {
-        const [{ buildQrSvg }, qrcode] = await Promise.all([
-          import("@/lib/qr"),
-          import("qrcode"),
-        ]);
+        const { buildQrSvg } = await import("@/lib/qr");
         if (cancelled) return;
-        const matrix = qrcode.default.create(value, {
-          errorCorrectionLevel: options.errorLevel,
-        });
         const markup = buildQrSvg(value, options);
         if (cancelled) return;
-        setModules(matrix.modules.size);
         setSvg(markup);
         setFailed(false);
       } catch {
@@ -53,51 +45,70 @@ export function QrArtboard({ value, options, label }: QrArtboardProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- optionsKey captures all option fields
   }, [value, optionsKey]);
 
-  return (
-    <figure className="w-full max-w-[15rem] sm:max-w-xs lg:max-w-sm">
-      {/* A white plate in both themes: real codes are printed dark-on-light,
-          and an inverted code is unreliable on a fair share of scanners. */}
-      <div className="relative">
-        <CropMark className="-top-2 -left-2 border-t border-l" />
-        <CropMark className="-top-2 -right-2 border-t border-r" />
-        <CropMark className="-bottom-2 -left-2 border-b border-l" />
-        <CropMark className="-right-2 -bottom-2 border-r border-b" />
+  // Resting pose: a card lying at an angle on a desk. The pointer leans it.
+  const [tilt, setTilt] = React.useState(REST);
+  const printed = printedLine(label);
 
-        <div className="border-border/70 rounded-sm border bg-white p-[12%] dark:shadow-[0_24px_70px_-30px_rgba(0,0,0,0.9)]">
-          {svg && !failed ? (
-            <div
-              key={svg.length}
-              role="img"
-              aria-label={`QR code for ${label}`}
-              className={styles.qr}
-              dangerouslySetInnerHTML={{ __html: svg }}
-            />
-          ) : (
-            <div className={styles.skeleton} aria-hidden />
-          )}
+  return (
+    <figure className="w-full max-w-[17rem] [perspective:1400px] sm:max-w-xs lg:max-w-[21rem]">
+      <div
+        onPointerMove={(event) => {
+          if (event.pointerType !== "mouse") return;
+          const box = event.currentTarget.getBoundingClientRect();
+          const x = (event.clientX - box.left) / box.width - 0.5;
+          const y = (event.clientY - box.top) / box.height - 0.5;
+          setTilt({ x: -y * 14, y: x * 18 });
+        }}
+        onPointerLeave={() => setTilt(REST)}
+        style={{ transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` }}
+        className="relative rounded-[1.4rem] bg-[#f3f2ec] px-[10%] pt-[10%] pb-[7%] shadow-[0_1px_0_rgb(255_255_255/0.9)_inset,0_0_0_1px_rgb(0_0_0/0.06),0_2px_2px_rgb(0_0_0/0.15),0_40px_80px_-30px_rgb(0_0_0/0.75)] transition-transform duration-500 ease-out will-change-transform motion-reduce:transform-none"
+      >
+        {/* Light across the paper. Codes are printed dark-on-light: an
+            inverted code is unreliable on a fair share of scanners. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(135deg,rgb(255_255_255/0.75),transparent_42%,rgb(0_0_0/0.05))]"
+        />
+        {svg && !failed ? (
+          <div
+            key={svg.length}
+            role="img"
+            aria-label={`QR code for ${label}`}
+            className={styles.qr}
+            dangerouslySetInnerHTML={{ __html: svg }}
+          />
+        ) : (
+          <div className={styles.skeleton} aria-hidden />
+        )}
+        <div className="relative mt-[8%] flex items-baseline justify-between gap-3 text-neutral-500">
+          <span className="text-[10px] font-semibold tracking-[0.2em] text-neutral-800">
+            SCAN ME
+          </span>
+          <span className="truncate text-[11px]">{printed}</span>
         </div>
       </div>
-
-      <figcaption className="text-muted-foreground/80 mt-3 flex items-center justify-between gap-3 font-mono text-[10px] tracking-[0.14em] uppercase tabular-nums sm:text-[11px]">
+      <figcaption className="text-muted-foreground mt-7 text-center text-xs">
         {failed ? (
-          <span className="text-destructive normal-case">Too much data for one code</span>
+          <span className="text-destructive">Too much text for one code</span>
         ) : (
-          <span>
-            {modules ? `${modules} × ${modules}` : "···"} · ECC {options.errorLevel}
-          </span>
+          "Point your phone camera at it"
         )}
-        <span className="shrink-0">Scan it</span>
       </figcaption>
     </figure>
   );
 }
 
-/** Hairline crop mark, print-plate style. */
-function CropMark({ className }: { className: string }) {
-  return (
-    <span
-      aria-hidden
-      className={`border-foreground/20 pointer-events-none absolute size-3.5 ${className}`}
-    />
-  );
+const REST = { x: 10, y: -16 };
+
+/** What a printer would put under the code: the host of a link, or the start of the text. */
+function printedLine(value: string): string {
+  try {
+    const url = new URL(
+      /^[a-z]+:\/\//i.test(value) ? value : `https://${value}`,
+    );
+    if (url.hostname.includes(".")) return url.hostname.replace(/^www\./, "");
+  } catch {
+    // Not a link; fall through to the text itself.
+  }
+  return value.length > 28 ? `${value.slice(0, 27)}…` : value;
 }

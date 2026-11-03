@@ -3,12 +3,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { ArrowRightIcon, XIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Reveal } from "@/components/home/reveal";
 import { QrArtboard } from "@/components/home/qr-showcase";
 import { SITE } from "@/constants/site";
-import { DEFAULT_QR_OPTIONS, type QrEyeStyle, type QrModuleStyle, type QrOptions } from "@/types";
+import {
+  DEFAULT_QR_OPTIONS,
+  type QrEyeStyle,
+  type QrModuleStyle,
+  type QrOptions,
+} from "@/types";
 
 type Shape = { id: QrModuleStyle; eye: QrEyeStyle; label: string };
 type Ink = {
@@ -30,8 +33,20 @@ const SHAPES: readonly Shape[] = [
  * a light-on-dark inversion is unreliable on a fair share of scanners.
  */
 const INKS: readonly Ink[] = [
-  { id: "ink", label: "Ink", swatch: "bg-neutral-900", fg: "#0a0a0a", gradient: null },
-  { id: "emerald", label: "Emerald", swatch: "bg-emerald-600", fg: "#059669", gradient: null },
+  {
+    id: "ink",
+    label: "Ink",
+    swatch: "bg-neutral-900",
+    fg: "#0a0a0a",
+    gradient: null,
+  },
+  {
+    id: "emerald",
+    label: "Emerald",
+    swatch: "bg-emerald-600",
+    fg: "#059669",
+    gradient: null,
+  },
   {
     id: "fade",
     label: "Fade",
@@ -75,7 +90,7 @@ function ShapeGlyph({ shape }: { shape: QrModuleStyle }) {
 }
 
 const SWATCH_BASE =
-  "focus-visible:ring-ring/50 flex size-11 cursor-pointer items-center justify-center rounded-lg border transition-colors duration-200 focus-visible:ring-3 focus-visible:outline-none";
+  "focus-visible:ring-ring/50 flex size-9 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 focus-visible:ring-3 focus-visible:outline-none";
 
 /**
  * Flagship section: a working QR generator rather than a picture of one.
@@ -116,49 +131,42 @@ export function QrSpotlight() {
       fgColor: ink.fg,
       gradient: ink.gradient,
     }),
-    [shape, ink]
+    [shape, ink],
   );
 
   const href = `/tools/qr?v=${encodeURIComponent(payload)}&m=${shape.id}&e=${shape.eye}&c=${ink.id}`;
 
   return (
-    <section aria-labelledby="qr-spotlight-heading" className="border-border/70 border-t">
-      <div className="mx-auto grid w-full max-w-7xl gap-y-8 px-6 py-14 sm:py-20 lg:grid-cols-12 lg:gap-x-14">
-        {/* Copy */}
-        <Reveal className="lg:col-span-5 lg:row-start-1 lg:self-end">
+    <section
+      aria-labelledby="qr-spotlight-heading"
+      className="px-4 py-20 sm:px-6 sm:py-28"
+    >
+      <Reveal className="border-border/70 bg-card/40 relative isolate mx-auto grid w-full max-w-6xl items-center gap-12 overflow-hidden rounded-[2rem] border px-6 py-12 sm:px-12 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:px-16">
+        {/* One soft light behind the code, nothing else. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-1/3 right-[-10%] -z-10 aspect-square w-[60%] rounded-full bg-[radial-gradient(circle,var(--glow),transparent_65%)] blur-2xl"
+        />
+
+        <div>
           <h2
             id="qr-spotlight-heading"
-            className="font-heading text-[2rem] leading-[1.05] font-bold tracking-tight sm:text-4xl lg:text-[2.75rem]"
+            className="font-heading text-[2rem] leading-[1.05] font-semibold tracking-[-0.03em] text-balance sm:text-5xl"
           >
-            Make a QR code
-            <br />
-            you&rsquo;d actually print<span className="text-primary">.</span>
+            A QR code you&rsquo;d actually print
+            <span className="text-primary">.</span>
           </h2>
-
-          <p className="text-muted-foreground mt-4 max-w-[48ch] text-sm leading-relaxed sm:text-base">
-            Type below and it becomes a working code as you go. Scan it off the screen to check.
-            Pick a shape and a fill, then continue in the full generator for logos, WiFi and vCards.
+          <p className="text-muted-foreground mt-4 max-w-[42ch] text-base leading-relaxed">
+            Type a link and it becomes a working code. Scan it right off the
+            screen.
           </p>
-        </Reveal>
 
-        {/* Live code */}
-        <Reveal
-          delay={0.05}
-          className="flex justify-center lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1 lg:justify-end lg:self-center"
-        >
-          <QrArtboard value={payload} options={options} label={payload} />
-        </Reveal>
-
-        {/* Controls */}
-        <Reveal delay={0.1} className="lg:col-span-5 lg:row-start-2 lg:self-start">
-          <label
-            htmlFor="qr-spotlight-input"
-            className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase"
-          >
-            Link or text
-          </label>
-          <div className="relative mt-2">
-            <Input
+          {/* One field, one action. */}
+          <div className="bg-background border-border focus-within:border-primary/60 mt-8 flex h-14 items-center gap-2 rounded-full border pr-1.5 pl-5 transition-colors">
+            <label htmlFor="qr-spotlight-input" className="sr-only">
+              Link or text
+            </label>
+            <input
               id="qr-spotlight-input"
               ref={inputRef}
               value={draft}
@@ -168,9 +176,8 @@ export function QrSpotlight() {
               autoCapitalize="none"
               enterKeyHint="done"
               spellCheck={false}
-              placeholder={SITE.url}
-              aria-describedby="qr-spotlight-hint"
-              className="h-12 rounded-xl px-4 pr-12 md:text-base"
+              placeholder={SITE.url.replace(/^https?:\/\//, "")}
+              className="placeholder:text-muted-foreground/60 h-full min-w-0 flex-1 bg-transparent text-base outline-none"
             />
             {draft.length > 0 && (
               <button
@@ -180,93 +187,89 @@ export function QrSpotlight() {
                   inputRef.current?.focus();
                 }}
                 aria-label="Clear the field"
-                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 absolute inset-y-0 right-0 flex w-12 cursor-pointer items-center justify-center rounded-r-xl transition-colors focus-visible:ring-3 focus-visible:outline-none"
+                className="text-muted-foreground hover:text-foreground grid size-8 shrink-0 cursor-pointer place-items-center rounded-full transition-colors"
               >
                 <XIcon className="size-4" aria-hidden />
               </button>
             )}
-          </div>
-          <p id="qr-spotlight-hint" className="text-muted-foreground/80 mt-2 text-xs">
-            {usingFallback
-              ? "Showing this site as an example. Type to replace it."
-              : "Encoded exactly as written. Static, so it never expires."}
-          </p>
-
-          <div className="mt-5 flex flex-wrap items-end gap-x-6 gap-y-4">
-            <fieldset>
-              <legend className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase">
-                Shape
-              </legend>
-              <div className="mt-1.5 flex gap-1.5" role="radiogroup" aria-label="Module shape">
-                {SHAPES.map((s) => {
-                  const on = s.id === shapeId;
-                  return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={on}
-                      aria-label={s.label}
-                      title={s.label}
-                      onClick={() => setShapeId(s.id)}
-                      className={`${SWATCH_BASE} ${
-                        on
-                          ? "border-primary/60 bg-primary/10 text-primary"
-                          : "border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground"
-                      }`}
-                    >
-                      <ShapeGlyph shape={s.id} />
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <legend className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase">
-                Fill
-              </legend>
-              <div className="mt-1.5 flex gap-1.5" role="radiogroup" aria-label="Module fill">
-                {INKS.map((i) => {
-                  const on = i.id === inkId;
-                  return (
-                    <button
-                      key={i.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={on}
-                      aria-label={i.label}
-                      title={i.label}
-                      onClick={() => setInkId(i.id)}
-                      className={`${SWATCH_BASE} ${
-                        on
-                          ? "border-primary/60 bg-primary/10"
-                          : "border-border hover:border-foreground/30"
-                      }`}
-                    >
-                      <span className={`size-4 rounded-full ${i.swatch}`} aria-hidden />
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
-          </div>
-
-          <Button
-            asChild
-            size="lg"
-            className="group mt-6 h-12 w-full rounded-full px-8 font-semibold sm:w-auto"
-          >
-            <Link href={href}>
-              Continue in the generator
+            <Link
+              href={href}
+              aria-label="Open it in the QR generator"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 group inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-5 text-sm font-semibold transition-colors"
+            >
+              <span className="hidden sm:inline">Make it</span>
               <ArrowRightIcon
                 className="size-4 transition-transform group-hover:translate-x-0.5"
                 aria-hidden
               />
             </Link>
-          </Button>
-        </Reveal>
-      </div>
+          </div>
+
+          {/* Style, as two quiet groups of swatches. */}
+          <div className="mt-5 flex items-center gap-4 pl-1">
+            <div
+              className="flex gap-1"
+              role="radiogroup"
+              aria-label="Module shape"
+            >
+              {SHAPES.map((s) => {
+                const on = s.id === shapeId;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    aria-label={s.label}
+                    title={s.label}
+                    onClick={() => setShapeId(s.id)}
+                    className={`${SWATCH_BASE} ${on ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <ShapeGlyph shape={s.id} />
+                  </button>
+                );
+              })}
+            </div>
+            <span className="bg-border h-5 w-px" aria-hidden />
+            <div
+              className="flex gap-1"
+              role="radiogroup"
+              aria-label="Module fill"
+            >
+              {INKS.map((i) => {
+                const on = i.id === inkId;
+                return (
+                  <button
+                    key={i.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    aria-label={i.label}
+                    title={i.label}
+                    onClick={() => setInkId(i.id)}
+                    className={`${SWATCH_BASE} ${on ? "bg-muted" : "hover:bg-muted/60"}`}
+                  >
+                    <span
+                      className={`size-4 rounded-full ring-1 ring-white/10 ${i.swatch}`}
+                      aria-hidden
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <p className="text-muted-foreground/70 mt-4 pl-1 text-xs">
+            {usingFallback
+              ? "Showing this site as an example."
+              : "Static, so it never expires."}{" "}
+            Logos, WiFi and vCards are in the full generator.
+          </p>
+        </div>
+
+        <div className="flex justify-center lg:justify-end">
+          <QrArtboard value={payload} options={options} label={payload} />
+        </div>
+      </Reveal>
     </section>
   );
 }
