@@ -9,7 +9,8 @@ import { Logo } from "./logo";
 import { MobileNavPanel, MobileNavTrigger } from "./mobile-nav";
 import { ThemeToggle } from "./theme-toggle";
 
-type NavLink = { href: string; label: string; badge?: string };
+/** `wide` links only fit inline from xl; below that they live in the menu. */
+type NavLink = { href: string; label: string; badge?: string; wide?: boolean };
 
 const PRIMARY_LINKS: NavLink[] = [
   { href: "/", label: "Home" },
@@ -17,8 +18,8 @@ const PRIMARY_LINKS: NavLink[] = [
   { href: "/tools/live-editor", label: "Editor" },
   { href: "/icons", label: "Icons" },
   { href: "/docs", label: "Docs" },
-  { href: "/books", label: "Books" },
-  { href: "/experiments", label: "Experiments" },
+  { href: "/books", label: "Books", wide: true },
+  { href: "/experiments", label: "Experiments", wide: true },
 ];
 
 const SECONDARY_LINKS: NavLink[] = [
@@ -31,7 +32,8 @@ function NavItem({ link, active }: { link: NavLink; active: boolean }) {
     <Link
       href={link.href}
       className={cn(
-        "text-muted-foreground hover:text-foreground inline-flex items-center rounded-lg px-3 py-1.5 text-sm transition-colors",
+        "text-muted-foreground hover:text-foreground inline-flex items-center rounded-lg px-3 py-1.5 text-sm whitespace-nowrap transition-colors",
+        link.wide && "hidden xl:inline-flex",
         active && "text-foreground bg-muted"
       )}
     >
@@ -56,13 +58,13 @@ export function Header() {
           <Logo className="h-4 sm:h-5" />
         </Link>
 
-        <nav className="ml-4 hidden items-center gap-1 md:flex" aria-label="Main">
+        <nav className="ml-4 hidden items-center gap-1 lg:flex" aria-label="Main">
           {PRIMARY_LINKS.map((link) => (
             <NavItem key={link.href} link={link} active={pathname === link.href} />
           ))}
         </nav>
 
-        <div className="hidden min-w-fit flex-1 justify-center md:flex">
+        <div className="hidden min-w-fit flex-1 justify-center lg:flex">
           <Link
             href="/tools/qr"
             aria-current={pathname === "/tools/qr" ? "page" : undefined}
@@ -75,8 +77,8 @@ export function Header() {
           </Link>
         </div>
 
-        <div className="ml-auto flex items-center gap-2 md:ml-0">
-          <nav className="mr-1 hidden items-center gap-1 md:flex" aria-label="Secondary">
+        <div className="ml-auto flex shrink-0 items-center gap-2 lg:ml-0">
+          <nav className="mr-1 hidden items-center gap-1 xl:flex" aria-label="Secondary">
             {SECONDARY_LINKS.map((link) => (
               <NavItem key={link.href} link={link} active={pathname === link.href} />
             ))}

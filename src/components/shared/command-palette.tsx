@@ -51,7 +51,7 @@ export function CommandPalette() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-muted-foreground hover:text-foreground border-border bg-muted/40 hover:bg-muted inline-flex h-8 items-center gap-2 rounded-lg border px-3 text-sm transition-colors"
+        className="text-muted-foreground hover:text-foreground border-border bg-muted/40 hover:bg-muted inline-flex h-8 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm whitespace-nowrap transition-colors"
         aria-label="Open command palette"
       >
         <span className="hidden sm:inline">Search tools…</span>

@@ -1,79 +1,69 @@
-import { SITE } from "@/constants/site";
-import styles from "./free-receipt.module.css";
+import Link from "next/link";
+import { ArrowRightIcon, CheckIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 /**
  * Every line is checked against the repo, not asserted: no auth library, no
  * analytics or tracker scripts, no paywalled routes, and the FAQ already states
  * no usage limits, accounts or watermarks.
  */
-const LINE_ITEMS = [
-  "Every tool",
-  "Sign-up",
-  "Credit card",
-  "Watermark removal",
+const INCLUDED = [
+  "Every tool and every feature",
+  "No sign-up and no email",
+  "No watermarks on anything you export",
   "Links that never expire",
-  "Ads and trackers",
-  "Unlocking a feature",
+  "No ads and no trackers",
 ];
 
 /**
- * The "it's free" claim as an itemised receipt. A list of prices that are all
- * zero makes the point far harder than a paragraph saying so, and the mono
- * type, dotted leaders and torn edge are already the site's own vocabulary.
+ * "It's free" told in the format people already trust for prices: a plan card.
+ * There is only one plan, and it costs nothing.
  */
 export function FreeReceipt() {
   return (
-    <div className="w-full max-w-md">
-      <div className="border-border/60 bg-card relative rounded-t-xl border border-b-0 px-6 pt-7 pb-8 font-mono">
-        <p className="text-foreground text-center text-sm font-semibold tracking-[0.3em] uppercase">
-          {SITE.name}
-        </p>
-        <p className="text-muted-foreground/60 mt-1.5 text-center text-[10px] tracking-[0.22em] uppercase">
-          Everyday tool studio
-        </p>
+    <div className="border-border/60 bg-card relative w-full max-w-md overflow-hidden rounded-2xl border p-7 shadow-[0_24px_48px_-28px_rgb(0_0_0/0.35)]">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_60%_100%_at_50%_0%,color-mix(in_oklab,var(--primary)_14%,transparent),transparent)]"
+      />
 
-        <div className="border-border/70 mt-6 border-t border-dashed pt-5">
-          <ul className="space-y-2.5">
-            {LINE_ITEMS.map((item, i) => (
-              <li
-                key={item}
-                className={`${styles.row} flex items-baseline gap-2 text-[13px]`}
-                style={{ animationDelay: `${i * 55}ms` }}
-              >
-                <span className="text-muted-foreground shrink-0">{item}</span>
-                <span
-                  className="border-border/70 min-w-4 flex-1 translate-y-[-3px] border-b border-dotted"
-                  aria-hidden
-                />
-                <span className="text-muted-foreground shrink-0 tabular-nums">0.00</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="border-border/70 mt-5 flex items-baseline gap-2 border-t border-dashed pt-5">
-          <span className="text-foreground shrink-0 text-sm font-semibold tracking-[0.16em] uppercase">
-            Total
+      <div className="relative">
+        <div className="flex items-center justify-between">
+          <span className="bg-primary/10 text-primary rounded-full px-2.5 py-1 text-xs font-medium">
+            Free
           </span>
-          <span className="min-w-4 flex-1" aria-hidden />
-          <span className="text-primary shrink-0 text-lg font-bold tabular-nums">0.00</span>
+          <span className="text-muted-foreground text-xs">The only plan</span>
         </div>
 
-        <p className="text-muted-foreground/60 mt-6 text-center text-[10px] tracking-[0.18em] uppercase">
-          Nothing to settle
+        <p className="mt-6 flex items-baseline gap-2">
+          <span className="font-heading text-6xl font-bold tracking-tight">$0</span>
+          <span className="text-muted-foreground text-sm">forever</span>
+        </p>
+        <p className="text-muted-foreground mt-2 text-sm">
+          Everything is included. There is nothing to unlock later.
         </p>
 
-        <span
-          className={`${styles.stamp} border-primary/50 text-primary/70 absolute right-5 -bottom-2 rounded-md border-2 px-3 py-1 text-xs font-bold tracking-[0.25em] uppercase`}
-          style={{ animationDelay: `${LINE_ITEMS.length * 55 + 120}ms` }}
-          aria-hidden
-        >
-          Paid
-        </span>
-      </div>
+        <ul className="border-border/60 mt-6 space-y-3 border-t pt-6">
+          {INCLUDED.map((item) => (
+            <li key={item} className="flex items-center gap-3 text-sm">
+              <span className="bg-primary/10 text-primary grid size-5 shrink-0 place-items-center rounded-full">
+                <CheckIcon className="size-3" strokeWidth={3} aria-hidden />
+              </span>
+              {item}
+            </li>
+          ))}
+        </ul>
 
-      {/* Torn off, rather than squared off */}
-      <div className={styles.tear} aria-hidden />
+        <Button asChild className="mt-7 h-11 w-full rounded-full">
+          <Link href="/tools">
+            Browse all tools
+            <ArrowRightIcon className="size-4" aria-hidden />
+          </Link>
+        </Button>
+        <p className="text-muted-foreground/70 mt-3 text-center text-xs">
+          No card, no trial, no upgrade page.
+        </p>
+      </div>
     </div>
   );
 }

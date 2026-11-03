@@ -8,6 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { TM_GLYPHS } from "@/components/shared/logo";
 import { FavoritesSection } from "@/components/home/favorites-section";
 import { FeaturedPair } from "@/components/home/featured-pair";
 import { MockupShowcase } from "@/components/home/mockup-showcase";
@@ -191,7 +192,7 @@ export default function HomePage() {
           three equal cards: the whole point is that one of them matters most. */}
       <section className="border-border/70 border-t" aria-labelledby="principles-heading">
         <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
-          <div className="grid gap-x-16 gap-y-12 lg:grid-cols-12">
+          <div className="grid gap-x-16 gap-y-12 lg:grid-cols-12 lg:items-center">
             <Reveal className="lg:col-span-7">
               <p className="text-muted-foreground/70 text-xs font-medium tracking-wide">
                 Why TM TOOLS
@@ -220,14 +221,16 @@ export default function HomePage() {
 
               {/* Kept in this column rather than in a row underneath, so the
                   copy side carries the same vertical weight as the receipt. */}
-              <div className="border-border/60 mt-10 grid gap-x-12 gap-y-7 border-t pt-8 sm:grid-cols-2">
-                {PRINCIPLES.map((item) => (
-                  <div key={item.title}>
+              {/* Type only: the titles already say private and fast, so an icon
+                  for each would just repeat them. */}
+              <div className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2">
+                {PRINCIPLES.map(({ title, text }) => (
+                  <div key={title} className="border-border/60 border-t pt-5">
                     <h3 className="font-heading text-base font-semibold tracking-tight">
-                      {item.title}
+                      {title}
                     </h3>
-                    <p className="text-muted-foreground mt-2 text-[13px] leading-relaxed">
-                      {item.text}
+                    <p className="text-muted-foreground mt-1.5 text-[13px] leading-relaxed">
+                      {text}
                     </p>
                   </div>
                 ))}
@@ -241,56 +244,95 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* FAQ: an intro that stays put on the left, open numbered rows on the right. */}
       <section className="border-border/70 border-t" aria-labelledby="faq-heading">
-        <div className="mx-auto max-w-7xl gap-12 px-6 py-24 lg:grid lg:grid-cols-[1fr_1.6fr]">
-          <SectionHeader
-            label="FAQ"
-            title="Good questions, honest answers"
-            id="faq-heading"
-            className="mb-10 lg:mb-0"
-          />
-          <Reveal>
-            <Accordion
-              type="single"
-              collapsible
-              className="border-border/60 bg-card w-full rounded-2xl border px-6"
-            >
+        <div className="mx-auto grid max-w-7xl gap-x-16 gap-y-10 px-6 py-16 sm:py-24 lg:grid-cols-12">
+          <Reveal className="lg:col-span-4">
+            <div className="lg:sticky lg:top-24">
+              <p className="text-muted-foreground/70 text-xs font-medium tracking-wide">FAQ</p>
+              <h2
+                id="faq-heading"
+                className="font-heading mt-2 text-4xl font-bold tracking-tight text-balance sm:text-5xl"
+              >
+                Good questions, honest answers<span className="text-primary">.</span>
+              </h2>
+              <p className="text-muted-foreground mt-5 max-w-sm leading-relaxed">
+                The short version: it is free, there is no account, and the links you make keep
+                working.
+              </p>
+              <Button asChild variant="outline" className="mt-7 h-10 rounded-full px-5">
+                <Link href="/faq">
+                  Read the full FAQ
+                  <ArrowRightIcon className="size-4" aria-hidden />
+                </Link>
+              </Button>
+            </div>
+          </Reveal>
+
+          <Reveal className="lg:col-span-8">
+            <Accordion type="single" collapsible className="border-border/60 border-t">
               {HOME_FAQ.map((item, i) => (
-                <AccordionItem key={item.question} value={`item-${i}`} className="last:border-b-0">
-                  <AccordionTrigger className="text-left">{item.question}</AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground leading-relaxed">
+                <AccordionItem
+                  key={item.question}
+                  value={`item-${i}`}
+                  className="border-border/60 border-b last:border-b"
+                >
+                  <AccordionTrigger className="items-center gap-5 rounded-none py-6 text-base font-medium hover:no-underline sm:text-lg [&_[data-slot=accordion-trigger-icon]]:size-5">
+                    <span className="flex items-baseline gap-5">
+                      <span className="text-muted-foreground/60 font-mono text-xs tabular-nums">
+                        0{i + 1}
+                      </span>
+                      {item.question}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground max-w-2xl pb-7 pl-10 text-[15px] leading-relaxed">
                     {item.answer}
                   </AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>
-            <p className="text-muted-foreground mt-6 text-sm">
-              More questions?{" "}
-              <Link href="/faq" className="text-foreground underline underline-offset-4">
-                Read the full FAQ
-              </Link>
-            </p>
           </Reveal>
         </div>
       </section>
 
-      {/* CTA — Swiss closing statement */}
+      {/* Closing call to action: one panel, all of it a way in. The logo's two
+          gears sit oversized in the back and turn when the pointer arrives. */}
       <section className="border-border/70 border-t">
-        <Reveal className="mx-auto grid max-w-7xl gap-10 px-6 py-28 sm:grid-cols-12 sm:items-end">
-          <h2 className="font-heading text-5xl font-bold tracking-tight sm:col-span-8 sm:text-7xl">
-            Pick a tool<span className="text-primary">.</span>
-            <br />
-            Get to work<span className="text-primary">.</span>
-          </h2>
-          <div className="flex flex-col items-start gap-4 sm:col-span-4 sm:items-end">
-            <Button asChild size="lg" className="h-12 rounded-full px-8 text-base font-semibold">
-              <Link href="/tools">Browse all tools</Link>
-            </Button>
-            <p className="text-muted-foreground font-mono text-[11px] tracking-[0.18em] uppercase">
-              Free / Private / No sign-up
-            </p>
-          </div>
+        <Reveal className="mx-auto max-w-7xl px-6 py-16 sm:py-24">
+          <Link
+            href="/tools"
+            className="group border-border/60 relative block overflow-hidden rounded-[2rem] border bg-[radial-gradient(ellipse_70%_80%_at_50%_0%,#ffffff,transparent),linear-gradient(#f4f4f5,#e9e9ec)] px-8 py-14 sm:px-14 sm:py-20 dark:bg-[radial-gradient(ellipse_70%_80%_at_50%_0%,#1f1f22,transparent),linear-gradient(#111113,#09090b)]"
+          >
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(ellipse_50%_80%_at_80%_100%,color-mix(in_oklab,var(--primary)_16%,transparent),transparent)]"
+            />
+            <svg
+              viewBox="430 26 264 143"
+              aria-hidden
+              className="text-foreground/[0.06] pointer-events-none absolute top-1/2 -right-[3%] hidden h-[120%] w-auto -translate-y-1/2 fill-current sm:block"
+            >
+              {TM_GLYPHS[3]}
+            </svg>
+
+            <div className="relative max-w-2xl">
+              <h2 className="font-heading text-5xl leading-[1.02] font-bold tracking-tight sm:text-7xl">
+                Pick a tool<span className="text-primary">.</span>
+                <br />
+                Get to work<span className="text-primary">.</span>
+              </h2>
+              <p className="text-muted-foreground mt-6 max-w-md text-lg leading-relaxed">
+                Every tool is free, needs no account and is ready the moment it opens.
+              </p>
+              <span className="bg-primary text-primary-foreground mt-9 inline-flex h-12 items-center gap-2 rounded-full px-7 text-base font-semibold">
+                Browse all tools
+                <ArrowRightIcon
+                  className="size-4 transition-transform duration-300 group-hover:translate-x-1"
+                  aria-hidden
+                />
+              </span>
+            </div>
+          </Link>
         </Reveal>
       </section>
     </>

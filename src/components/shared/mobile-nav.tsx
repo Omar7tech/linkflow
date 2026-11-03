@@ -46,7 +46,7 @@ export function MobileNavTrigger({ open, onToggle }: { open: boolean; onToggle: 
       ref={ref}
       type="button"
       onClick={onToggle}
-      className="flex size-9 flex-col items-center justify-center gap-[6px] md:hidden"
+      className="flex size-9 flex-col items-center justify-center gap-[6px] xl:hidden"
       aria-label={open ? "Close menu" : "Open menu"}
       aria-expanded={open}
     >
@@ -99,7 +99,7 @@ export function MobileNavPanel({ open, onNavigate }: { open: boolean; onNavigate
   );
 
   return (
-    <div ref={panelRef} className="h-0 overflow-hidden md:hidden">
+    <div ref={panelRef} className="h-0 overflow-hidden xl:hidden">
       <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3" aria-label="Mobile">
         {MOBILE_NAV_LINKS.map((link, i) => {
           const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
