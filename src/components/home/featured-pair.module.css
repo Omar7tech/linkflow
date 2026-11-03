@@ -13,6 +13,32 @@
   animation: divider 7s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 
+/* While the pointer holds it, the wipe follows the pointer. */
+.cutoutHeld {
+  clip-path: inset(0 0 0 var(--cut));
+}
+
+.dividerHeld {
+  left: var(--cut);
+}
+
+/* Marching ants around the cut-out. */
+.ants {
+  animation: ants 0.8s linear infinite;
+}
+
+.steam path {
+  animation: steam 3s ease-in-out infinite;
+}
+
+.steam path:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.steam path:nth-child(3) {
+  animation-delay: 0.8s;
+}
+
 @keyframes wipe {
   0%,
   18% {
@@ -43,19 +69,59 @@
   }
 }
 
+@keyframes ants {
+  to {
+    stroke-dashoffset: -9;
+  }
+}
+
+@keyframes steam {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
 /* --------------------------------------------------------------------- chat */
 
-/* One beat on a loop: the link lands, the other side types, the message arrives. */
+/* One trip on an eight second loop: tap the link, the chat opens with the
+   message sent, it is read, the shop types and answers. */
 .link {
-  animation: link 6s ease-out infinite;
+  animation: link 8s ease-out infinite;
+}
+
+.tap {
+  opacity: 0;
+  animation: tap 8s ease-out infinite;
+}
+
+.window {
+  animation: window 8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+.sent {
+  animation: sent 8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+.unread {
+  animation: unread 8s steps(1) infinite;
+}
+
+.read {
+  animation: read 8s steps(1) infinite;
 }
 
 .typing {
-  animation: typing 6s ease-out infinite;
+  animation: typing 8s ease-out infinite;
 }
 
-.message {
-  animation: message 6s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+.reply {
+  animation: reply 8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
 }
 
 .dot {
@@ -75,42 +141,118 @@
     opacity: 0;
     transform: translateY(6px);
   }
-  8%,
-  88% {
+  6%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+  12% {
+    transform: scale(0.97);
+  }
+  16% {
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes tap {
+  0%,
+  10% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  12% {
+    opacity: 1;
+  }
+  22%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(6);
+  }
+}
+
+@keyframes window {
+  0%,
+  14% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  22%,
+  92% {
     opacity: 1;
     transform: none;
   }
   100% {
     opacity: 0;
+  }
+}
+
+@keyframes sent {
+  0%,
+  24% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  30%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes unread {
+  0%,
+  42% {
+    opacity: 1;
+  }
+  43%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes read {
+  0%,
+  42% {
+    opacity: 0;
+  }
+  43%,
+  100% {
+    opacity: 1;
   }
 }
 
 @keyframes typing {
   0%,
-  14% {
+  46% {
     opacity: 0;
     transform: scale(0.9);
   }
-  20%,
-  40% {
+  50%,
+  62% {
     opacity: 1;
     transform: none;
   }
-  44%,
+  64%,
   100% {
     opacity: 0;
     transform: scale(0.9);
   }
 }
 
-@keyframes message {
+@keyframes reply {
   0%,
-  42% {
+  63% {
     opacity: 0;
-    transform: translateY(10px) scale(0.96);
+    transform: translateY(8px) scale(0.95);
   }
-  50%,
-  88% {
+  68%,
+  92% {
     opacity: 1;
     transform: none;
   }
@@ -134,13 +276,20 @@
 @media (prefers-reduced-motion: reduce) {
   .cutout,
   .divider,
+  .ants,
+  .steam path,
   .link,
-  .message {
+  .window,
+  .sent,
+  .read,
+  .reply {
     animation: none;
     opacity: 1;
     transform: none;
   }
+  .tap,
   .typing,
+  .unread,
   .dot {
     animation: none;
     opacity: 0;
