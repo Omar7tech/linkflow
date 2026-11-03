@@ -31,6 +31,8 @@ declare module "imagetracerjs" {
     desc?: boolean;
     blurradius?: number;
     blurdelta?: number;
+    /** A starting palette; k-means refines it instead of sampling its own. */
+    pal?: TraceColor[];
   }
 
   const ImageTracer: {

@@ -906,10 +906,10 @@ export const TOOLS = [
   {
     id: "vectorforge",
     slug: "/tools/vector-forge",
-    name: "VectorForge Image to SVG",
-    shortName: "VectorForge",
+    name: "Image to SVG Converter",
+    shortName: "Image to SVG",
     description:
-      "Turn PNG and JPG artwork into clean, editable SVG paths — compare the trace against the original, remove flat backgrounds, tune detail and smoothing, recolor every layer and export production-ready SVG or PNG.",
+      "Turn PNG and JPG artwork into clean, editable SVG paths. Compare against the original, drop flat backgrounds, recolour every layer and export SVG or PNG.",
     keywords: [
       "image to svg converter",
       "png to svg",

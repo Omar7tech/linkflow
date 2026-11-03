@@ -110,6 +110,65 @@ function loadImage(url: string): Promise<HTMLImageElement> {
   });
 }
 
+/**
+ * A starting palette of distinct colours for the tracer. Its own sampling reads
+ * a grid, so on artwork that is mostly background it picks that background
+ * several times and small but important colours (a wordmark, an accent) are
+ * lost. Here the colours are counted in coarse buckets and taken by popularity,
+ * skipping any too close to one already chosen.
+ */
+export function buildPalette(imageData: ImageData, count: number): TraceColor[] {
+  const { data } = imageData;
+  const pixels = data.length / 4;
+  const stride = Math.max(1, Math.floor(pixels / 250_000));
+  const buckets = new Map<number, { n: number; r: number; g: number; b: number }>();
+  let transparent = 0;
+  let seen = 0;
+
+  for (let p = 0; p < pixels; p += stride) {
+    const i = p * 4;
+    seen++;
+    if (data[i + 3] < 128) {
+      transparent++;
+      continue;
+    }
+    const key = ((data[i] >> 3) << 10) | ((data[i + 1] >> 3) << 5) | (data[i + 2] >> 3);
+    const bucket = buckets.get(key);
+    if (bucket) {
+      bucket.n++;
+      bucket.r += data[i];
+      bucket.g += data[i + 1];
+      bucket.b += data[i + 2];
+    } else {
+      buckets.set(key, { n: 1, r: data[i], g: data[i + 1], b: data[i + 2] });
+    }
+  }
+
+  const palette: TraceColor[] = [];
+  if (transparent / seen > 0.002) palette.push({ r: 0, g: 0, b: 0, a: 0 });
+
+  const ranked = [...buckets.values()]
+    .map(({ n, r, g, b }) => ({ n, r: Math.round(r / n), g: Math.round(g / n), b: Math.round(b / n) }))
+    .sort((x, y) => y.n - x.n);
+  /* Ignore specks: a colour needs a share of the image to be worth a layer. */
+  const floor = seen * 0.0005;
+
+  for (let minDistance = 60; minDistance >= 8 && palette.length < count; minDistance /= 2) {
+    for (const color of ranked) {
+      if (palette.length >= count) break;
+      if (color.n < floor) break;
+      const distinct = palette.every(
+        (picked) =>
+          picked.a === 0 ||
+          Math.hypot(picked.r - color.r, picked.g - color.g, picked.b - color.b) >= minDistance
+      );
+      if (distinct) palette.push({ ...color, a: 255 });
+    }
+  }
+
+  return palette.length ? palette : [{ r: 0, g: 0, b: 0, a: 255 }];
+}
+
 export function removeCornerBackground(imageData: ImageData, threshold: number): ImageData {
   const copy = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);
   const { data, width, height } = copy;

@@ -273,6 +273,147 @@
   }
 }
 
+/* ----------------------------------------------------------------------- qr */
+
+/* The ink moves through the four swatches; the ring follows it. */
+.ink {
+  color: #111111;
+  animation: ink 10s ease-in-out infinite;
+}
+
+.swatch {
+  left: -3px;
+  top: -3px;
+  animation: swatch 10s ease-in-out infinite;
+}
+
+.scanFrame {
+  animation: frame 5s ease-in-out infinite;
+}
+
+.scanLine {
+  top: 10%;
+  opacity: 0;
+  animation: scan 5s ease-in-out infinite;
+}
+
+@keyframes ink {
+  0%,
+  22% {
+    color: #111111;
+  }
+  25%,
+  47% {
+    color: #047857;
+  }
+  50%,
+  72% {
+    color: #1e3a8a;
+  }
+  75%,
+  97% {
+    color: #c2410c;
+  }
+  100% {
+    color: #111111;
+  }
+}
+
+@keyframes swatch {
+  0%,
+  22% {
+    transform: translateX(0);
+  }
+  25%,
+  47% {
+    transform: translateX(20px);
+  }
+  50%,
+  72% {
+    transform: translateX(40px);
+  }
+  75%,
+  97% {
+    transform: translateX(60px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes frame {
+  0%,
+  15% {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+  25%,
+  70% {
+    opacity: 1;
+    transform: none;
+  }
+  85%,
+  100% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes scan {
+  0%,
+  25% {
+    top: 10%;
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  55% {
+    top: 88%;
+    opacity: 1;
+  }
+  60%,
+  100% {
+    top: 88%;
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------------- mockup */
+
+/* A slow turntable: the phone swings from one three-quarter view to the other. */
+.turntable {
+  transform: translateX(-50%) rotateY(-30deg) rotateX(8deg);
+  animation: turn 9s ease-in-out infinite alternate;
+}
+
+.glare {
+  background-position: 90% 0;
+  animation: glare 9s ease-in-out infinite alternate;
+}
+
+.floor {
+  animation: floor 9s ease-in-out infinite alternate;
+}
+
+@keyframes turn {
+  to {
+    transform: translateX(-50%) rotateY(24deg) rotateX(6deg);
+  }
+}
+
+@keyframes glare {
+  to {
+    background-position: 10% 0;
+  }
+}
+
+@keyframes floor {
+  50% {
+    width: 26%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cutout,
   .divider,
@@ -282,14 +423,23 @@
   .window,
   .sent,
   .read,
-  .reply {
+  .reply,
+  .ink,
+  .swatch,
+  .glare,
+  .floor {
     animation: none;
     opacity: 1;
     transform: none;
   }
+  .turntable {
+    animation: none;
+  }
   .tap,
   .typing,
   .unread,
+  .scanFrame,
+  .scanLine,
   .dot {
     animation: none;
     opacity: 0;

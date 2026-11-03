@@ -2,34 +2,26 @@
 
 import * as React from "react";
 import {
-  CheckIcon,
+  ChevronDownIcon,
   CopyIcon,
   DownloadIcon,
   ImageIcon,
-  Layers3Icon,
   LoaderCircleIcon,
-  Maximize2Icon,
-  PaletteIcon,
-  RefreshCwIcon,
-  ShieldCheckIcon,
-  SparklesIcon,
-  UploadCloudIcon,
-  WandSparklesIcon,
+  RepeatIcon,
   XIcon,
 } from "lucide-react";
 import type { TraceColor, TraceData } from "imagetracerjs";
 import { toast } from "sonner";
 import { GeneratorLayout } from "@/components/shared/generator-layout";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TOOL_BY_ID } from "@/constants/tools";
 import {
   DEFAULT_VECTOR_SETTINGS,
+  buildPalette,
   VECTOR_PRESETS,
   colorToHex,
   downloadBlob,
@@ -55,19 +47,22 @@ interface VectorResult {
   bytes: number;
 }
 
+type View = "original" | "split" | "vector";
+
 const PRESET_COPY: Record<VectorPreset, { label: string; description: string }> = {
-  logo: { label: "Logo", description: "Clean edges, fewer colors" },
-  illustration: { label: "Illustration", description: "Balanced curves and detail" },
-  detailed: { label: "Detailed", description: "More shades and texture" },
+  logo: { label: "Logo", description: "Clean edges and few colours. Best for marks, icons and lettering." },
+  illustration: { label: "Illustration", description: "Balanced curves and detail for flat artwork." },
+  detailed: { label: "Detailed", description: "More shades and texture, at the cost of a bigger file." },
 };
 
-const CHECKER_STYLE = {
-  backgroundColor: "var(--background)",
-  backgroundImage:
-    "linear-gradient(45deg,var(--muted) 25%,transparent 25%),linear-gradient(-45deg,var(--muted) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--muted) 75%),linear-gradient(-45deg,transparent 75%,var(--muted) 75%)",
-  backgroundPosition: "0 0,0 8px,8px -8px,-8px 0",
-  backgroundSize: "16px 16px",
-};
+const VIEWS: { value: View; label: string }[] = [
+  { value: "original", label: "Before" },
+  { value: "split", label: "Compare" },
+  { value: "vector", label: "Vector" },
+];
+
+const CHECKER =
+  "bg-[length:16px_16px] [background-image:linear-gradient(45deg,var(--muted)_25%,transparent_25%,transparent_75%,var(--muted)_75%),linear-gradient(45deg,var(--muted)_25%,transparent_25%,transparent_75%,var(--muted)_75%)] [background-position:0_0,8px_8px]";
 
 function basename(name: string) {
   return name.replace(/\.[^.]+$/, "").replace(/[^a-z0-9-_]+/gi, "-").replace(/^-|-$/g, "") || "vector";
@@ -85,10 +80,11 @@ export function VectorForgeTool() {
   const [result, setResult] = React.useState<VectorResult | null>(null);
   const [isTracing, setIsTracing] = React.useState(false);
   const [compare, setCompare] = React.useState(50);
-  const [view, setView] = React.useState<"split" | "vector" | "original">("split");
+  const [view, setView] = React.useState<View>("split");
   const [advanced, setAdvanced] = React.useState(false);
   const runId = React.useRef(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const dragging = React.useRef(false);
 
   const loadFile = React.useCallback(async (file: File) => {
     try {
@@ -98,7 +94,6 @@ export function VectorForgeTool() {
         return next;
       });
       setResult(null);
-      toast.success("Image ready to vectorize");
     } catch (error) {
       toast.error((error as Error).message);
     }
@@ -127,7 +122,13 @@ export function VectorForgeTool() {
           ? removeCornerBackground(source.data, settings.backgroundThreshold)
           : new ImageData(new Uint8ClampedArray(source.data.data), source.data.width, source.data.height);
         const options = settingsToTraceOptions(settings);
-        const traceData = tracer.imagedataToTracedata(imageData, { ...options });
+        const traceData = tracer.imagedataToTracedata(imageData, {
+          ...options,
+          pal: buildPalette(imageData, settings.colors),
+          // Refine the seeded colours, but never swap a small one for a random pick.
+          colorquantcycles: 2,
+          mincolorratio: 0,
+        });
         const svg = sanitizeSvg(tracer.getsvgstring(traceData, { ...options }));
         if (currentRun !== runId.current) return;
         setResult({ traceData, palette: traceData.palette.map((color) => ({ ...color })), svg, ...traceStats(svg, traceData) });
@@ -166,7 +167,7 @@ export function VectorForgeTool() {
   const exportSvg = () => {
     if (!result || !source) return;
     downloadBlob(new Blob([result.svg], { type: "image/svg+xml;charset=utf-8" }), `${basename(source.name)}.svg`);
-    toast.success("Editable SVG downloaded");
+    toast.success("SVG downloaded");
   };
 
   const exportPng = async () => {
@@ -193,133 +194,146 @@ export function VectorForgeTool() {
     setIsTracing(false);
   };
 
+  /* In compare view the divider follows the pointer while it is held. */
+  const moveDivider = (event: React.PointerEvent<HTMLDivElement>) => {
+    const box = event.currentTarget.getBoundingClientRect();
+    setCompare(Math.min(97, Math.max(3, ((event.clientX - box.left) / box.width) * 100)));
+  };
+
+  const splitting = view === "split" && !!result;
+
   return (
     <GeneratorLayout
       tool={TOOL_BY_ID.vectorforge}
       wideOutput
-      fullBleed
       output={
-        <Card className="overflow-hidden border-foreground/10 bg-card/80 shadow-xl shadow-foreground/5 backdrop-blur">
-          <CardHeader className="flex-row items-start justify-between gap-4 border-b">
+        <Card>
+          <CardHeader className="flex-row flex-wrap items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1.5">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <SparklesIcon className="size-4 text-primary" aria-hidden />
-                Vector canvas
-              </CardTitle>
+              <CardTitle className="text-base">Preview</CardTitle>
               <CardDescription>
-                {source ? `${source.originalWidth} x ${source.originalHeight} source` : "Drop in artwork to begin"}
+                {!source
+                  ? "Upload an image to begin."
+                  : splitting
+                    ? "Drag across the image to compare."
+                    : `${source.originalWidth} × ${source.originalHeight} source`}
               </CardDescription>
             </div>
             {source && (
-              <Tabs value={view} onValueChange={(value) => setView(value as typeof view)}>
-                <TabsList>
-                  <TabsTrigger value="original">Before</TabsTrigger>
-                  <TabsTrigger value="split">Split</TabsTrigger>
-                  <TabsTrigger value="vector">Vector</TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <div className="w-56">
+                <Segmented label="Preview mode" value={view} options={VIEWS} onChange={(value) => setView(value as View)} />
+              </div>
             )}
           </CardHeader>
-          <CardContent className="flex flex-col gap-4 p-3 sm:p-5">
+
+          <CardContent className="space-y-4">
             <div
-              className="relative flex min-h-[360px] items-center justify-center overflow-hidden rounded-2xl border sm:min-h-[560px]"
-              style={CHECKER_STYLE}
+              className={cn(
+                "border-border relative flex min-h-80 items-center justify-center overflow-hidden rounded-xl border select-none sm:min-h-[520px]",
+                source && CHECKER,
+                splitting && "cursor-ew-resize touch-none"
+              )}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault();
                 const file = event.dataTransfer.files[0];
                 if (file) void loadFile(file);
               }}
+              onPointerDown={(event) => {
+                if (!splitting) return;
+                dragging.current = true;
+                event.currentTarget.setPointerCapture(event.pointerId);
+                moveDivider(event);
+              }}
+              onPointerMove={(event) => {
+                if (splitting && dragging.current) moveDivider(event);
+              }}
+              onPointerUp={() => {
+                dragging.current = false;
+              }}
             >
               {!source ? (
-                <button
-                  type="button"
-                  onClick={() => inputRef.current?.click()}
-                  className="group m-5 flex max-w-md flex-col items-center gap-5 rounded-3xl border border-dashed border-foreground/20 bg-background/90 px-8 py-12 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg"
-                >
-                  <span className="flex size-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition group-hover:rotate-3 group-hover:scale-105">
-                    <UploadCloudIcon className="size-7" aria-hidden />
-                  </span>
-                  <span className="flex flex-col gap-2">
-                    <span className="font-heading text-xl font-semibold">Drop a raster image here</span>
-                    <span className="text-muted-foreground text-sm">PNG, JPG or WebP up to 20 MB. You can also paste.</span>
-                  </span>
-                  <Badge variant="secondary">Nothing leaves your device</Badge>
-                </button>
+                <EmptyState onPick={() => inputRef.current?.click()} />
               ) : (
                 <>
                   {/* Blob URLs stay local and cannot use Next's remote image optimizer. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={source.previewUrl}
-                    alt="Original uploaded artwork"
-                    className={cn(
-                      "absolute inset-0 size-full object-contain p-5 sm:p-10",
-                      view === "vector" && "hidden"
-                    )}
+                    alt="Original image"
+                    draggable={false}
+                    className={cn("absolute inset-0 size-full object-contain p-6 sm:p-10", view === "vector" && "hidden")}
                   />
                   {result && view !== "original" && (
                     <div
-                      className="absolute inset-0 flex items-center justify-center overflow-hidden"
+                      className="absolute inset-0 overflow-hidden"
                       style={view === "split" ? { clipPath: `inset(0 0 0 ${compare}%)` } : undefined}
                     >
                       <div
-                        aria-label="Generated vector preview"
+                        aria-label="Vector preview"
                         role="img"
-                        className="size-full p-5 [&_svg]:size-full sm:p-10"
+                        className="size-full p-6 sm:p-10 [&_svg]:size-full"
                         dangerouslySetInnerHTML={{ __html: result.svg }}
                       />
                     </div>
                   )}
-                  {view === "split" && result && (
-                    <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-primary shadow-[0_0_0_1px_var(--background)]" style={{ left: `${compare}%` }}>
-                      <span className="absolute top-1/2 left-1/2 flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
-                        <Maximize2Icon className="size-3.5 rotate-45" aria-hidden />
+                  {splitting && (
+                    <div
+                      className="pointer-events-none absolute inset-y-0 w-px -translate-x-1/2 bg-white shadow-[0_0_12px_rgb(0_0_0/0.35)]"
+                      style={{ left: `${compare}%` }}
+                    >
+                      <span className="absolute top-1/2 left-1/2 grid size-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-neutral-700 shadow-md">
+                        <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden>
+                          <path d="M6 4 2 8l4 4M10 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                       </span>
                     </div>
                   )}
+                  {splitting && (
+                    <>
+                      <span className="bg-background/85 border-border pointer-events-none absolute top-3 left-3 rounded-full border px-2.5 py-1 font-mono text-[10px] backdrop-blur">
+                        Pixels
+                      </span>
+                      <span className="bg-background/85 border-border pointer-events-none absolute top-3 right-3 rounded-full border px-2.5 py-1 font-mono text-[10px] backdrop-blur">
+                        Vector
+                      </span>
+                    </>
+                  )}
                   {isTracing && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/55 backdrop-blur-sm">
-                      <div className="flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm font-medium shadow-lg">
-                        <LoaderCircleIcon className="size-4 animate-spin text-primary" aria-hidden />
-                        Forging paths...
-                      </div>
-                    </div>
+                    <span className="bg-background/90 border-border absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border px-3 py-1.5 text-xs shadow-sm backdrop-blur">
+                      <LoaderCircleIcon className="text-primary size-3.5 animate-spin" aria-hidden />
+                      Tracing
+                    </span>
                   )}
                 </>
               )}
             </div>
 
-            {source && view === "split" && result && (
-              <div className="flex items-center gap-3 px-1">
-                <span className="text-muted-foreground text-xs font-medium">Raster</span>
-                <Slider value={[compare]} min={5} max={95} step={1} onValueChange={([value]) => setCompare(value)} aria-label="Before and after split" />
-                <span className="text-muted-foreground text-xs font-medium">Vector</span>
-              </div>
-            )}
-
             {source && result && (
-              <div className="flex flex-wrap items-center gap-2">
-                <Metric icon={Layers3Icon} value={result.paths.toLocaleString()} label="paths" />
-                <Metric icon={PaletteIcon} value={String(result.colors)} label="colors" />
-                <Metric icon={ImageIcon} value={formatBytes(result.bytes)} label="SVG" />
-                <span className="flex-1" />
-                <Button variant="outline" size="sm" onClick={copySvg}>
-                  <CopyIcon data-icon="inline-start" /> Copy SVG
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => void exportPng()}>
-                  <DownloadIcon data-icon="inline-start" /> PNG
-                </Button>
-                <Button size="sm" onClick={exportSvg}>
-                  <DownloadIcon data-icon="inline-start" /> Download SVG
-                </Button>
-              </div>
+              <>
+                <dl className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs">
+                  <Stat label="paths" value={result.paths.toLocaleString()} />
+                  <Stat label="colours" value={String(result.colors)} />
+                  <Stat label="size" value={formatBytes(result.bytes)} />
+                </dl>
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={exportSvg} className="flex-1">
+                    <DownloadIcon /> SVG
+                  </Button>
+                  <Button variant="outline" onClick={() => void exportPng()} className="flex-1">
+                    <DownloadIcon /> PNG
+                  </Button>
+                  <Button variant="outline" onClick={() => void copySvg()}>
+                    <CopyIcon /> Copy code
+                  </Button>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
       }
     >
-      <div className="flex flex-col gap-5">
+      <div className="space-y-6">
         <input
           ref={inputRef}
           type="file"
@@ -332,77 +346,72 @@ export function VectorForgeTool() {
           }}
         />
 
+        {/* Until there is a file, the preview itself is the drop zone. */}
         {source && (
           <Card>
-            <CardContent className="flex items-center gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted">
-                <ImageIcon className="size-4" aria-hidden />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{source.name}</p>
-                <p className="text-muted-foreground text-xs">{formatBytes(source.originalBytes)}</p>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <ImageIcon className="text-muted-foreground size-4 shrink-0" aria-hidden />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm">{source.name}</span>
+                  <span className="text-muted-foreground block text-xs">{formatBytes(source.originalBytes)}</span>
+                </span>
+                <Button variant="ghost" size="sm" onClick={() => inputRef.current?.click()}>
+                  <RepeatIcon /> Replace
+                </Button>
+                <Button variant="ghost" size="icon-sm" onClick={removeSource} aria-label="Remove image">
+                  <XIcon />
+                </Button>
               </div>
-              <Button variant="ghost" size="icon-sm" onClick={() => inputRef.current?.click()} aria-label="Replace image">
-                <RefreshCwIcon />
-              </Button>
-              <Button variant="ghost" size="icon-sm" onClick={removeSource} aria-label="Remove image">
-                <XIcon />
-              </Button>
             </CardContent>
           </Card>
         )}
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Choose the result</CardTitle>
-            <CardDescription>Start with a smart preset. Fine-tuning is optional.</CardDescription>
+            <CardTitle className="text-base">Style</CardTitle>
+            <CardDescription>{PRESET_COPY[settings.preset].description}</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            {(Object.keys(PRESET_COPY) as VectorPreset[]).map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => applyPreset(preset)}
-                className={cn(
-                  "flex items-center gap-3 rounded-xl border p-3 text-left transition hover:border-primary/40 hover:bg-muted/40",
-                  settings.preset === preset && "border-primary bg-primary/5"
-                )}
-              >
-                <span className={cn("flex size-9 items-center justify-center rounded-lg bg-muted", settings.preset === preset && "bg-primary text-primary-foreground")}>
-                  {settings.preset === preset ? <CheckIcon className="size-4" /> : <WandSparklesIcon className="size-4" />}
-                </span>
-                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="text-sm font-semibold">{PRESET_COPY[preset].label}</span>
-                  <span className="text-muted-foreground text-xs">{PRESET_COPY[preset].description}</span>
-                </span>
-              </button>
-            ))}
+          <CardContent className="space-y-5">
+            <Segmented
+              label="Style"
+              value={settings.preset}
+              options={(Object.keys(PRESET_COPY) as VectorPreset[]).map((preset) => ({
+                value: preset,
+                label: PRESET_COPY[preset].label,
+              }))}
+              onChange={(preset) => applyPreset(preset as VectorPreset)}
+            />
+            <Control label="Colours" value={settings.colors} suffix="" min={2} max={24} step={1} onChange={(value) => updateSetting("colors", value)} />
+            <Control label="Detail" value={settings.detail} suffix="%" min={10} max={100} step={1} onChange={(value) => updateSetting("detail", value)} />
+
+            <button
+              type="button"
+              onClick={() => setAdvanced((value) => !value)}
+              aria-expanded={advanced}
+              className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
+            >
+              <ChevronDownIcon className={cn("size-3.5 transition-transform", advanced && "rotate-180")} aria-hidden />
+              {advanced ? "Fewer options" : "More options"}
+            </button>
+            {advanced && (
+              <div className="space-y-5">
+                <Control label="Curve smoothing" value={settings.smoothing} suffix="%" min={0} max={100} step={1} onChange={(value) => updateSetting("smoothing", value)} />
+                <Control label="Noise cleanup" value={settings.cleanup} suffix="%" min={0} max={100} step={1} onChange={(value) => updateSetting("cleanup", value)} />
+                <SwitchRow label="Sharp corners" description="Keeps corners crisp on icons, lettering and geometric marks." checked={settings.sharpCorners} onCheckedChange={(value) => updateSetting("sharpCorners", value)} />
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex-row items-center justify-between gap-3">
-            <div className="flex flex-col gap-1.5">
-              <CardTitle className="text-base">Refine</CardTitle>
-              <CardDescription>Changes update the vector automatically.</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => setAdvanced((value) => !value)}>
-              {advanced ? "Simple" : "Advanced"}
-            </Button>
+          <CardHeader>
+            <CardTitle className="text-base">Background</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-6">
-            <Control label="Colors" value={settings.colors} suffix="" min={2} max={24} step={1} onChange={(value) => updateSetting("colors", value)} />
-            <Control label="Detail" value={settings.detail} suffix="%" min={10} max={100} step={1} onChange={(value) => updateSetting("detail", value)} />
-            {advanced && (
-              <>
-                <Control label="Curve smoothing" value={settings.smoothing} suffix="%" min={0} max={100} step={1} onChange={(value) => updateSetting("smoothing", value)} />
-                <Control label="Noise cleanup" value={settings.cleanup} suffix="%" min={0} max={100} step={1} onChange={(value) => updateSetting("cleanup", value)} />
-                <SwitchRow label="Preserve sharp corners" description="Best for icons, lettering and geometric marks." checked={settings.sharpCorners} onCheckedChange={(value) => updateSetting("sharpCorners", value)} />
-              </>
-            )}
-            <SwitchRow label="Remove solid background" description="Samples the image corners and makes matching pixels transparent." checked={settings.removeBackground} onCheckedChange={(value) => updateSetting("removeBackground", value)} />
+          <CardContent className="space-y-5">
+            <SwitchRow label="Remove solid background" description="Reads the colour in the corners and drops it from the vector." checked={settings.removeBackground} onCheckedChange={(value) => updateSetting("removeBackground", value)} />
             {settings.removeBackground && (
-              <Control label="Background tolerance" value={settings.backgroundThreshold} suffix="%" min={2} max={60} step={1} onChange={(value) => updateSetting("backgroundThreshold", value)} />
+              <Control label="Tolerance" value={settings.backgroundThreshold} suffix="%" min={2} max={60} step={1} onChange={(value) => updateSetting("backgroundThreshold", value)} />
             )}
           </CardContent>
         </Card>
@@ -410,35 +419,97 @@ export function VectorForgeTool() {
         {result && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Editable palette</CardTitle>
-              <CardDescription>Recolor the vector instantly, without tracing again.</CardDescription>
+              <CardTitle className="text-base">Palette</CardTitle>
+              <CardDescription>Click a colour to change it in the vector.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
               {result.palette.map((color, index) => color.a > 0 && (
-                <label key={`${index}-${colorToHex(color)}`} className="group relative cursor-pointer" title={`Color ${index + 1}: ${colorToHex(color)}`}>
-                  <span className="block size-10 rounded-xl border shadow-sm transition group-hover:-translate-y-0.5 group-hover:shadow-md" style={{ backgroundColor: colorToHex(color), opacity: color.a / 255 }} />
+                <label key={`${index}-${colorToHex(color)}`} className="group cursor-pointer" title={colorToHex(color)}>
+                  <span
+                    className="border-border block size-9 rounded-lg border transition-transform group-hover:-translate-y-0.5"
+                    style={{ backgroundColor: colorToHex(color), opacity: color.a / 255 }}
+                  />
                   <input type="color" className="sr-only" value={colorToHex(color)} onChange={(event) => void updatePalette(index, event.target.value)} />
                 </label>
               ))}
             </CardContent>
           </Card>
         )}
-
-        <p className="text-muted-foreground flex items-start gap-2 px-1 text-xs">
-          <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-          Private by design. VectorForge runs locally and never uploads your artwork.
-        </p>
       </div>
     </GeneratorLayout>
   );
 }
 
+/** The empty preview: a pixel staircase turning into a smooth curve, which is what the tool does. */
+function EmptyState({ onPick }: { onPick: () => void }) {
+  return (
+    <button type="button" onClick={onPick} className="group flex flex-col items-center gap-4 p-8 text-center">
+      <svg viewBox="0 0 120 60" className="w-40" aria-hidden>
+        {[
+          [4, 44], [12, 44], [12, 36], [20, 36], [20, 28], [28, 28], [28, 20], [36, 20], [44, 20], [44, 12],
+        ].map(([x, y], index) => (
+          <rect key={index} x={x} y={y} width={8} height={8} className="fill-muted-foreground/30" />
+        ))}
+        <path d="M58 30h10m-4-4 4 4-4 4" fill="none" className="stroke-muted-foreground/60" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M76 52C84 52 88 44 92 34S104 16 116 16"
+          fill="none"
+          className="stroke-primary"
+          strokeWidth={3}
+          strokeLinecap="round"
+        />
+        <circle cx={76} cy={52} r={2.5} className="fill-background stroke-primary" strokeWidth={1.5} />
+        <circle cx={116} cy={16} r={2.5} className="fill-background stroke-primary" strokeWidth={1.5} />
+      </svg>
+      <span className="space-y-1">
+        <span className="block text-sm font-medium">Drop, paste or click to upload</span>
+        <span className="text-muted-foreground block text-xs">Pixels in, editable SVG paths out.</span>
+      </span>
+    </button>
+  );
+}
+
+function Segmented({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div role="radiogroup" aria-label={label} className="bg-muted/60 flex w-full gap-0.5 rounded-lg p-0.5">
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          role="radio"
+          aria-checked={value === option.value}
+          onClick={() => onChange(option.value)}
+          className={cn(
+            "flex-1 rounded-md px-2 py-1.5 text-xs transition-colors",
+            value === option.value ? "bg-background text-foreground font-medium shadow-xs" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Control({ label, value, suffix, min, max, step, onChange }: { label: string; value: number; suffix: string; min: number; max: number; step: number; onChange: (value: number) => void }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="space-y-2.5">
       <div className="flex items-center justify-between gap-3">
         <Label>{label}</Label>
-        <span className="rounded-md bg-muted px-2 py-1 font-mono text-xs tabular-nums">{value}{suffix}</span>
+        <span className="text-muted-foreground font-mono text-xs tabular-nums">
+          {value}
+          {suffix}
+        </span>
       </div>
       <Slider value={[value]} min={min} max={max} step={step} onValueChange={([next]) => onChange(next)} aria-label={label} />
     </div>
@@ -448,7 +519,7 @@ function Control({ label, value, suffix, min, max, step, onChange }: { label: st
 function SwitchRow({ label, description, checked, onCheckedChange }: { label: string; description: string; checked: boolean; onCheckedChange: (checked: boolean) => void }) {
   return (
     <div className="flex items-start justify-between gap-4">
-      <div className="flex flex-col gap-1">
+      <div className="space-y-1">
         <Label>{label}</Label>
         <p className="text-muted-foreground text-xs leading-relaxed">{description}</p>
       </div>
@@ -457,10 +528,13 @@ function SwitchRow({ label, description, checked, onCheckedChange }: { label: st
   );
 }
 
-function Metric({ icon: Icon, value, label }: { icon: React.ComponentType<{ className?: string }>; value: string; label: string }) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <Badge variant="secondary" className="gap-1.5 font-normal">
-      <Icon className="size-3" /> <strong>{value}</strong> {label}
-    </Badge>
+    <div className="flex gap-1.5">
+      <dt className="sr-only">{label}</dt>
+      <dd>
+        <span className="text-foreground">{value}</span> {label}
+      </dd>
+    </div>
   );
 }
