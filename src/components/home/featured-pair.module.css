@@ -1,0 +1,148 @@
+/* Featured tools: two small illustrations drawn in code instead of pictures. */
+
+/* ---------------------------------------------------------- background remover */
+
+/* The wipe moves between the photo and its cut-out and back, and rests at each end. */
+.cutout {
+  clip-path: inset(0 0 0 62%);
+  animation: wipe 7s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+.divider {
+  left: 62%;
+  animation: divider 7s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes wipe {
+  0%,
+  18% {
+    clip-path: inset(0 0 0 62%);
+  }
+  45%,
+  68% {
+    clip-path: inset(0 0 0 22%);
+  }
+  95%,
+  100% {
+    clip-path: inset(0 0 0 62%);
+  }
+}
+
+@keyframes divider {
+  0%,
+  18% {
+    left: 62%;
+  }
+  45%,
+  68% {
+    left: 22%;
+  }
+  95%,
+  100% {
+    left: 62%;
+  }
+}
+
+/* --------------------------------------------------------------------- chat */
+
+/* One beat on a loop: the link lands, the other side types, the message arrives. */
+.link {
+  animation: link 6s ease-out infinite;
+}
+
+.typing {
+  animation: typing 6s ease-out infinite;
+}
+
+.message {
+  animation: message 6s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+.dot {
+  animation: dot 1s ease-in-out infinite;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes link {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  8%,
+  88% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes typing {
+  0%,
+  14% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  20%,
+  40% {
+    opacity: 1;
+    transform: none;
+  }
+  44%,
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes message {
+  0%,
+  42% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  50%,
+  88% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes dot {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cutout,
+  .divider,
+  .link,
+  .message {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .typing,
+  .dot {
+    animation: none;
+    opacity: 0;
+  }
+}
