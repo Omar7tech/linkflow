@@ -267,3 +267,11 @@ a:hover .tm-gear[data-gear="b"] {
     transform: rotate(360deg);
   }
 }
+
+/* Home hero: the conveyor of tool previews. The list is doubled, so half its
+   width is exactly one loop. */
+@keyframes hero-belt {
+  to {
+    transform: translateX(-50%);
+  }
+}

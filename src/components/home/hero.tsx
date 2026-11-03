@@ -2,85 +2,75 @@
 
 import * as React from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { ArrowRightIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import SideRays from "./side-rays";
+import { ArrowRightIcon, CornerDownLeftIcon, SearchIcon } from "lucide-react";
+import { useTheme } from "next-themes";
+import { CATALOG } from "@/constants/tools";
+import { cn } from "@/lib/utils";
 import { TM_GLYPHS, TM_VIEWBOX } from "@/components/shared/logo";
-import { TwoMindsLogo } from "@/components/shared/two-minds-logo";
-import TextType from "./text-type";
+import GradientASCII from "./gradient-ascii";
 
 gsap.registerPlugin(useGSAP);
 
-/** Typed after "Free tools" — each reads as one full statement. */
-const HERO_STATEMENTS = [
-  "for every mind.",
-  "for developers.",
-  "for designers.",
-  "for everyone in between.",
-  "with no strings attached.",
-  "built by two minds.",
+type Tool = (typeof CATALOG)[number];
+
+const subscribeNever = () => () => undefined;
+
+/** What the search box suggests while it waits. Each one is a real tool. */
+const EXAMPLES = [
+  "a QR code with my logo",
+  "a favicon from an emoji",
+  "an iPhone mockup of my app",
+  "a gradient for my hero",
+  "a share image for my post",
+  "a code screenshot",
 ];
+
+/** Shortcuts under the search box. */
+const POPULAR = ["qr", "favicon", "mockup", "codeshot", "bgremover"];
+
+const byId = new Map(CATALOG.map((tool) => [tool.id as string, tool]));
+
+/** Name first, then the short name, then keywords and description: what a person means by a word. */
+function findTools(query: string): Tool[] {
+  const words = query.toLowerCase().split(/\s+/).filter((word) => word.length > 1 && !["a", "an", "the", "my", "for", "with", "from", "of"].includes(word));
+  if (!words.length) return [];
+  return CATALOG.map((tool) => {
+    const name = `${tool.name} ${tool.shortName}`.toLowerCase();
+    const keywords = (tool.keywords as readonly string[]).join(" ").toLowerCase();
+    const description = tool.description.toLowerCase();
+    let score = 0;
+    for (const word of words) {
+      if (name.startsWith(word)) score += 6;
+      else if (name.includes(word)) score += 4;
+      else if (keywords.includes(word)) score += 2;
+      else if (description.includes(word)) score += 1;
+    }
+    return { tool, score };
+  })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6)
+    .map((entry) => entry.tool);
+}
 
 export function Hero() {
   const sectionRef = React.useRef<HTMLElement>(null);
+  const hydrated = React.useSyncExternalStore(subscribeNever, () => true, () => false);
+  const { resolvedTheme } = useTheme();
+  const theme = hydrated ? resolvedTheme : undefined;
 
   useGSAP(
     () => {
-      const mm = gsap.matchMedia();
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
+      gsap.matchMedia().add("(prefers-reduced-motion: no-preference)", () => {
         gsap
           .timeline({ defaults: { ease: "power4.out" } })
-          .from(
-            "[data-hero-char]",
-            { y: 170, duration: 1.15, stagger: 0.05 },
-            0,
-          )
-          .from(
-            "[data-hero-byline]",
-            { y: 8, autoAlpha: 0, duration: 0.7 },
-            0.55,
-          )
-          .from(
-            "[data-hero-rule]",
-            {
-              scaleX: 0,
-              transformOrigin: "left center",
-              duration: 1,
-              ease: "power3.inOut",
-            },
-            0.35,
-          )
-          .from(
-            "[data-hero-row] > *",
-            { y: 16, autoAlpha: 0, duration: 0.7, stagger: 0.1 },
-            0.6,
-          )
-          .from(
-            "[data-hero-art]",
-            {
-              autoAlpha: 0,
-              scale: 0.6,
-              rotate: -12,
-              y: 40,
-              duration: 1,
-              ease: "back.out(1.5)",
-            },
-            0.4,
-          );
-
-        // Gentle continuous float — transform only, no layout/paint cost.
-        gsap.to("[data-hero-art]", {
-          y: -14,
-          rotate: 3,
-          duration: 3.2,
-          ease: "sine.inOut",
-          repeat: -1,
-          yoyo: true,
-          delay: 1.6,
-        });
+          .from("[data-hero-char]", { yPercent: 115, duration: 1.15, stagger: 0.05 }, 0.15)
+          .from("[data-hero-line]", { y: 18, autoAlpha: 0, filter: "blur(8px)", duration: 1 }, 0.6)
+          .from("[data-hero-sub]", { y: 12, autoAlpha: 0, duration: 0.9 }, 0.75)
+          .from("[data-hero-finder]", { y: 16, autoAlpha: 0, duration: 0.9 }, 0.9);
       });
     },
     { scope: sectionRef },
@@ -89,124 +79,234 @@ export function Hero() {
   return (
     <section
       ref={sectionRef}
-      aria-label="TM TOOLS, the everyday tool studio"
-      className="relative overflow-hidden"
+      aria-labelledby="hero-title"
+      className="relative isolate flex min-h-[calc(100svh-3.5rem)] flex-col items-center justify-center overflow-hidden px-6 pt-10 pb-20"
     >
-      {/* Faded dot grid, weighted to the top-left like the composition */}
-      <div
-        aria-hidden
-        className="absolute inset-0 -z-10 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[size:22px_22px] mask-[radial-gradient(ellipse_75%_85%_at_0%_0%,black_10%,transparent_75%)]"
-      />
+      <Field theme={theme} />
 
-      {/* WebGL light rays from the top-right. Dark mode only — additive light
-          glow doesn't read well against a white background. */}
-      <div
-        aria-hidden
-        className="absolute top-0 right-0 -z-10 hidden h-[420px] w-full sm:h-[520px] sm:w-[70%] dark:block mask-[radial-gradient(ellipse_90%_95%_at_100%_0%,black_55%,transparent_92%)]"
-      >
-        <SideRays
-          speed={2}
-          rayColor1="#34d399"
-          rayColor2="#5eead4"
-          intensity={2.4}
-          spread={3}
-          origin="top-right"
-          saturation={1.5}
-          blend={0.6}
-          falloff={1.5}
-          opacity={0.9}
-        />
-      </div>
+      <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">
+        <h1 id="hero-title" aria-label="TM TOOLS" className="w-[min(100%,46rem)]">
+          <svg viewBox={TM_VIEWBOX} aria-hidden className="text-foreground tm-gears-spin block h-auto w-full overflow-hidden fill-current">
+            {TM_GLYPHS.map((glyph) => (
+              <g key={glyph.key} data-hero-char>
+                {glyph}
+              </g>
+            ))}
+          </svg>
+        </h1>
 
-      <div className="relative mx-auto w-full max-w-7xl px-6 pt-24 sm:pt-32">
-        {/* Floating 3D craft icon — anchored top-right, clear of the flush-left wordmark */}
-        <Image
-          src="/images/3d-rendering-mechanism-bulb-icon.png"
-          alt=""
-          data-hero-art
-          width={512}
-          height={512}
-          priority
-          className="pointer-events-none absolute top-6 right-4 z-0 hidden w-36 drop-shadow-xl select-none sm:top-10 sm:right-6 md:block lg:w-52 xl:w-60"
-        />
+        <p data-hero-line className="font-heading mt-10 text-[clamp(1.6rem,3.6vw,2.75rem)] leading-tight font-semibold tracking-[-0.03em] text-balance">
+          Every tool you need to make the thing<span className="text-primary">.</span>
+        </p>
 
-        {/* Wordmark — flush left, each character rising out of its own mask */}
-        <div className="relative z-10 w-[min(100%,56rem)] md:w-[62%]">
-          <h1 aria-label="TM TOOLS">
-            <svg
-              viewBox={TM_VIEWBOX}
-              aria-hidden
-              className="text-foreground tm-gears-spin block h-auto w-full overflow-hidden fill-current"
-            >
-              {TM_GLYPHS.map((glyph) => (
-                <g key={glyph.key} data-hero-char>
-                  {glyph}
-                </g>
-              ))}
-            </svg>
-          </h1>
+        <p data-hero-sub className="text-muted-foreground mt-4 max-w-xl text-base leading-relaxed text-pretty sm:text-lg">
+          Free design and developer tools. QR codes, favicons, mockups, gradients, share images and more, ready in
+          a click.
+        </p>
 
-          {/* Parent brand byline, right-aligned to the end of the wordmark */}
-          <p
-            data-hero-byline
-            className="text-muted-foreground mt-2 flex items-center justify-end gap-2.5 text-[11px] leading-none font-semibold tracking-[0.18em] sm:mt-3 sm:gap-3 sm:text-xs lg:text-sm"
-          >
-            BY
-            <a
-              href="https://twomindsengine.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Two Minds Engine (opens in a new tab)"
-              className="hover:text-foreground focus-visible:ring-ring rounded-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
-            >
-              <TwoMindsLogo className="block h-4 sm:h-5 lg:h-6" />
-            </a>
-          </p>
-        </div>
-
-        {/* Asymmetric bottom row on a second hairline */}
-        <div
-          data-hero-rule
-          className="bg-border mt-12 h-px w-full"
-          aria-hidden
-        />
-        <div
-          data-hero-row
-          className="grid gap-6 pt-7 pb-16 sm:grid-cols-12 sm:items-baseline"
-        >
-          <p className="font-heading text-xl font-medium tracking-tight sm:col-span-7 sm:text-2xl">
-            Free tools
-            <br />
-            <span className="sr-only">for every mind.</span>
-            <TextType
-              as="span"
-              aria-hidden
-              text={HERO_STATEMENTS}
-              typingSpeed={55}
-              deletingSpeed={25}
-              pauseDuration={2200}
-              initialDelay={1200}
-              className="text-primary"
-              cursorClassName="text-primary font-normal"
-            />
-          </p>
-          <div className="flex items-center sm:col-span-5 sm:justify-end">
-            <Button
-              asChild
-              size="lg"
-              className="group h-12 w-full rounded-full px-8 text-base font-semibold sm:w-auto"
-            >
-              <Link href="/tools">
-                Browse all tools
-                <ArrowRightIcon
-                  className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"
-                  aria-hidden
-                />
-              </Link>
-            </Button>
-          </div>
+        <div data-hero-finder className="mt-10 w-full max-w-xl">
+          <ToolFinder />
         </div>
       </div>
     </section>
+  );
+}
+
+/* --------------------------------------------------------------- backdrop */
+
+/**
+ * Light falling from the top edge, drawn in characters a developer would type.
+ * The cursor scrambles them and a click sends a ring through. Tuned to stay
+ * cheap: no glow pass, one pixel per pixel, and it stops drawing off screen.
+ * Emerald on dark pages, graphite ink on light ones.
+ */
+function Field({ theme }: { theme: string | undefined }) {
+  const [mono, setMono] = React.useState<string>();
+  React.useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const family = getComputedStyle(document.documentElement).getPropertyValue("--font-geist-mono").trim();
+      setMono(family ? `${family}, ui-monospace, monospace` : "ui-monospace, monospace");
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const dark = theme === "dark";
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+      {theme && mono && (
+        <GradientASCII
+          shape="horizon"
+          colors={dark ? ["#064e3b", "#10b981", "#34d399", "#a7f3d0"] : ["#f4f4f5", "#d4d4d8", "#71717a", "#27272a"]}
+          lightMode={!dark}
+          characters=" .:-=+*<>{}/#%"
+          cellSize={18}
+          density={0.7}
+          glyphOpacity={dark ? 0.95 : 0.7}
+          gradientOpacity={dark ? 0.5 : 0.3}
+          glow={0}
+          flicker={0.15}
+          softness={0.7}
+          flow={0.5}
+          speed={0.5}
+          grain={0}
+          scrambleRadius={0.08}
+          dpr={1}
+          fontFamily={mono}
+        />
+      )}
+      {/* A pool of calm behind the words, and a clean floor for the next section. */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_40%_34%_at_50%_50%,var(--background)_35%,transparent_100%)]" />
+      <div className="from-background absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t to-transparent" />
+    </div>
+  );
+}
+
+/* ----------------------------------------------------------------- finder */
+
+/** The front door: say what you are making, get the tool. */
+function ToolFinder() {
+  const router = useRouter();
+  const [query, setQuery] = React.useState("");
+  const [active, setActive] = React.useState(0);
+  const [focused, setFocused] = React.useState(false);
+  const [hint, setHint] = React.useState(EXAMPLES[0]);
+  const results = React.useMemo(() => findTools(query), [query]);
+  const open = focused && query.trim().length > 1;
+  const listId = React.useId();
+
+  // The placeholder types out real examples while the box is idle.
+  React.useEffect(() => {
+    if (focused || query) return;
+    let example = 0;
+    let shown = EXAMPLES[0].length;
+    let deleting = true;
+    const timer = window.setInterval(() => {
+      const target = EXAMPLES[example];
+      if (deleting) {
+        shown -= 2;
+        if (shown <= 0) {
+          deleting = false;
+          example = (example + 1) % EXAMPLES.length;
+          shown = 0;
+        }
+      } else {
+        shown += 1;
+        if (shown >= EXAMPLES[example].length + 18) deleting = true;
+      }
+      setHint((deleting ? target : EXAMPLES[example]).slice(0, Math.max(0, shown)));
+    }, 55);
+    return () => window.clearInterval(timer);
+  }, [focused, query]);
+
+  const go = (tool: Tool | undefined) => {
+    if (tool) router.push(tool.slug);
+    else router.push("/tools");
+  };
+
+  return (
+    <div className="relative">
+      <form
+        role="search"
+        onSubmit={(event) => {
+          event.preventDefault();
+          go(results[active] ?? results[0]);
+        }}
+        className={cn(
+          "bg-background/80 border-border group flex h-16 items-center gap-3 rounded-2xl border pr-2 pl-5 shadow-[0_1px_0_0_rgb(255_255_255/0.04)_inset,0_24px_60px_-28px_rgb(0_0_0/0.6)] backdrop-blur-xl transition-[border-color,box-shadow]",
+          "focus-within:border-primary/60 focus-within:shadow-[0_0_0_4px_var(--glow),0_24px_60px_-28px_rgb(0_0_0/0.6)]",
+          open && results.length > 0 && "rounded-b-none",
+        )}
+      >
+        <SearchIcon className="text-muted-foreground size-5 shrink-0" aria-hidden />
+        <label htmlFor="hero-finder" className="sr-only">What are you making?</label>
+        <input
+          id="hero-finder"
+          role="combobox"
+          aria-expanded={open && results.length > 0}
+          aria-controls={listId}
+          aria-autocomplete="list"
+          aria-activedescendant={open && results[active] ? `${listId}-${results[active].id}` : undefined}
+          autoComplete="off"
+          spellCheck={false}
+          value={query}
+          placeholder={focused ? "What are you making?" : `I need ${hint}`}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setTimeout(() => setFocused(false), 120)}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setActive(0);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setActive((index) => Math.min(index + 1, Math.max(results.length - 1, 0)));
+            } else if (event.key === "ArrowUp") {
+              event.preventDefault();
+              setActive((index) => Math.max(index - 1, 0));
+            } else if (event.key === "Escape") setQuery("");
+          }}
+          className="placeholder:text-muted-foreground/70 h-full min-w-0 flex-1 bg-transparent text-base outline-none sm:text-lg"
+        />
+        <button
+          type="submit"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-12 shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition-colors sm:px-5"
+        >
+          <span className="hidden sm:inline">{query.trim() ? "Open" : "Browse tools"}</span>
+          {query.trim() ? <CornerDownLeftIcon className="size-4" aria-hidden /> : <ArrowRightIcon className="size-4" aria-hidden />}
+        </button>
+      </form>
+
+      {open && (
+        <ul
+          id={listId}
+          role="listbox"
+          className="bg-background/95 border-border absolute inset-x-0 top-full z-20 overflow-hidden rounded-b-2xl border border-t-0 p-1.5 shadow-2xl backdrop-blur-xl"
+        >
+          {results.length ? (
+            results.map((tool, index) => (
+              <li
+                key={tool.id}
+                id={`${listId}-${tool.id}`}
+                role="option"
+                aria-selected={index === active}
+                onMouseEnter={() => setActive(index)}
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  go(tool);
+                }}
+                className={cn("flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5", index === active && "bg-muted")}
+              >
+                <span className="border-border bg-card grid size-9 shrink-0 place-items-center rounded-lg border">
+                  <tool.icon className="size-4" aria-hidden />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">{tool.name}</span>
+                  <span className="text-muted-foreground block truncate text-xs">{tool.description}</span>
+                </span>
+                {index === active && <CornerDownLeftIcon className="text-muted-foreground size-3.5 shrink-0" aria-hidden />}
+              </li>
+            ))
+          ) : (
+            <li className="text-muted-foreground px-3 py-4 text-sm">
+              Nothing by that name yet.{" "}
+              <Link href="/tools" className="text-foreground underline underline-offset-4">See every tool</Link>
+            </li>
+          )}
+        </ul>
+      )}
+
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-sm">
+        {POPULAR.map((id) => byId.get(id)).filter((tool): tool is Tool => !!tool).map((tool) => (
+          <Link
+            key={tool.id}
+            href={tool.slug}
+            className="border-border bg-background/60 hover:border-primary/50 hover:text-foreground text-muted-foreground inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs backdrop-blur transition-colors"
+          >
+            <tool.icon className="size-3.5" aria-hidden />
+            {tool.shortName}
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
