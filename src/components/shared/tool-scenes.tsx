@@ -252,7 +252,7 @@ export const SCENES: Record<string, () => ReactNode> = {
         {Array.from({ length: 7 }, (_, index) => (
           <span
             key={index}
-            className="absolute inset-0 rounded-[22px]"
+            className="absolute inset-0 rounded-[15px]"
             style={{
               transform: `translateZ(${-(index + 1)}px)`,
               background: `linear-gradient(90deg, #6b6b70, #c9c9ce ${30 + index * 4}%, #77777c)`,
@@ -260,7 +260,7 @@ export const SCENES: Record<string, () => ReactNode> = {
           />
         ))}
 
-        <div className="relative aspect-[9/19.5] h-full rounded-[22px] bg-[linear-gradient(135deg,#e7e7ea,#8c8c92_35%,#d5d5d9_60%,#7a7a80)] p-[2.5px] shadow-[0_30px_60px_-20px_rgb(0_0_0/0.8)]">
+        <div className="relative aspect-[9/19.5] h-full rounded-[15px] bg-[linear-gradient(135deg,#e7e7ea,#8c8c92_35%,#d5d5d9_60%,#7a7a80)] p-[2.5px] shadow-[0_30px_60px_-20px_rgb(0_0_0/0.8)]">
           {/* Side buttons. */}
           <span className="absolute top-[17%] -left-[2px] h-[5%] w-[2.5px] rounded-l-full bg-[#9a9aa0]" />
           <span className="absolute top-[25%] -left-[2px] h-[9%] w-[2.5px] rounded-l-full bg-[#9a9aa0]" />
@@ -268,51 +268,42 @@ export const SCENES: Record<string, () => ReactNode> = {
           <span className="absolute top-[28%] -right-[2px] h-[13%] w-[2.5px] rounded-r-full bg-[#9a9aa0]" />
 
           {/* Black bezel, then the display. */}
-          <div className="h-full rounded-[20px] bg-black p-[3px]">
+          <div className="h-full rounded-[13px] bg-black p-[3px]">
             <div
-              className="relative h-full overflow-hidden rounded-[17px]"
+              className="relative h-full overflow-hidden rounded-[10px]"
               style={{
                 background: `radial-gradient(120% 70% at 20% 10%, ${soft(90, "#fff")}, transparent 55%), radial-gradient(100% 80% at 90% 100%, ${soft(85, "#000")}, transparent 60%), linear-gradient(170deg, ${soft(70, "#111")}, ${soft(40, "#050505")})`,
               }}
             >
-              {/* Status bar and Dynamic Island. */}
-              <div className="flex items-center justify-between px-[11%] pt-[6%] text-[6px] font-semibold text-white">
-                <span>9:41</span>
+              {/* Status bar, drawn: a time pill on the left, signal and battery on the right. */}
+              <div className="flex items-center justify-between px-[11%] pt-[6%]">
+                <span className="h-[4px] w-[16%] rounded-full bg-white/85" />
                 <span className="flex items-center gap-[2px]">
-                  <span className="flex items-end gap-[1px]">
-                    {[3, 4, 5, 6].map((h) => (
-                      <span
-                        key={h}
-                        className="w-[1.5px] rounded-full bg-white"
-                        style={{ height: h }}
-                      />
-                    ))}
-                  </span>
-                  <span className="ml-[2px] h-[5px] w-[9px] rounded-[2px] border border-white/80 p-[1px]">
-                    <span className="block h-full w-3/4 rounded-[1px] bg-white" />
-                  </span>
+                  <span className="h-[4px] w-[7px] rounded-full bg-white/70" />
+                  <span className="h-[4px] w-[9px] rounded-[1.5px] bg-white/85" />
                 </span>
               </div>
               <span className="absolute top-[2.4%] left-1/2 h-[4.2%] w-[30%] -translate-x-1/2 rounded-full bg-black" />
 
-              {/* Lock screen. */}
-              <div className="mt-[9%] text-center text-white">
-                <p className="text-[7px] font-medium opacity-85">
-                  Tuesday, June 9
-                </p>
-                <p className="font-heading text-[30px] leading-none font-semibold tracking-tight">
-                  9:41
-                </p>
+              {/* The clock, as shapes: a short date line over two big digit blocks. */}
+              <div className="mt-[10%] flex flex-col items-center gap-[5px]">
+                <span className="h-[3px] w-[30%] rounded-full bg-white/60" />
+                <span className="flex items-center gap-[3px]">
+                  <span className="h-[18px] w-[17px] rounded-[4px] bg-white/90" />
+                  <span className="flex flex-col gap-[3px]">
+                    <span className="size-[2.5px] rounded-full bg-white/90" />
+                    <span className="size-[2.5px] rounded-full bg-white/90" />
+                  </span>
+                  <span className="h-[18px] w-[17px] rounded-[4px] bg-white/90" />
+                </span>
               </div>
 
-              <div className="absolute inset-x-[7%] bottom-[18%] space-y-[4px]">
-                {[
-                  ["Your app", "New build is live"],
-                  ["Studio", "Render finished · 4×"],
-                ].map(([title, body], index) => (
+              {/* Notifications, as shapes: an icon square and two lines each. */}
+              <div className="absolute inset-x-[8%] bottom-[18%] space-y-[4px]">
+                {[0, 1].map((index) => (
                   <div
-                    key={title}
-                    className={`flex items-center gap-[5px] rounded-[7px] bg-white/18 px-[5px] py-[4px] ring-1 ring-white/15 ${move} group-hover:translate-y-0`}
+                    key={index}
+                    className={`flex items-center gap-[5px] rounded-[6px] bg-white/15 px-[5px] py-[5px] ring-1 ring-white/15 ${move} group-hover:translate-y-0`}
                     style={{
                       transform: `translateY(${index * 2}px)`,
                       ...delay(index * 80),
@@ -320,27 +311,21 @@ export const SCENES: Record<string, () => ReactNode> = {
                   >
                     <span
                       className="size-[11px] shrink-0 rounded-[3px]"
-                      style={{ background: index ? "#fff" : A }}
+                      style={{
+                        background: index ? "rgb(255 255 255 / 0.85)" : A,
+                      }}
                     />
-                    <span className="min-w-0 leading-tight">
-                      <span className="block truncate text-[5.5px] font-semibold text-white">
-                        {title}
-                      </span>
-                      <span className="block truncate text-[5px] text-white/75">
-                        {body}
-                      </span>
+                    <span className="flex flex-1 flex-col gap-[3px]">
+                      <span className="h-[3px] w-[55%] rounded-full bg-white/80" />
+                      <span className="h-[3px] w-[80%] rounded-full bg-white/40" />
                     </span>
                   </div>
                 ))}
               </div>
 
               <div className="absolute inset-x-[12%] bottom-[6%] flex items-center justify-between">
-                <span className="grid size-[14px] place-items-center rounded-full bg-black/35 ring-1 ring-white/10">
-                  <span className="h-[5px] w-[3px] rounded-[1px] bg-white/80" />
-                </span>
-                <span className="grid size-[14px] place-items-center rounded-full bg-black/35 ring-1 ring-white/10">
-                  <span className="size-[5px] rounded-full border border-white/80" />
-                </span>
+                <span className="size-[13px] rounded-full bg-black/35 ring-1 ring-white/10" />
+                <span className="size-[13px] rounded-full bg-black/35 ring-1 ring-white/10" />
               </div>
               <span className="absolute bottom-[2%] left-1/2 h-[1.5px] w-[34%] -translate-x-1/2 rounded-full bg-white/85" />
 

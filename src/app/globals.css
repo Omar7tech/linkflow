@@ -4,6 +4,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* An extra step past 2xl for very wide monitors (the tools grid goes to five columns). */
+@theme {
+  --breakpoint-3xl: 112.5rem;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
