@@ -58,6 +58,7 @@ import {
   PenToolIcon,
   FlaskConicalIcon,
   type LucideIcon,
+  SignatureIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolCategory, ToolMeta } from "@/types";
@@ -736,6 +737,25 @@ export const TOOLS = [
     ],
     icon: SunIcon,
     category: "css",
+  },
+  {
+    id: "fontmaker",
+    slug: "/tools/font-maker",
+    name: "Handwriting Font Maker",
+    shortName: "Font Maker",
+    description:
+      "Turn your handwriting into a real font. Draw every letter on screen with a fineliner, brush or calligraphy pen, or print a template, write on it and photograph it. Letters are seated on the baseline, evened out and auto-kerned, doubled letters use your second versions, and you download an installable .ttf and a .woff for the web.",
+    keywords: [
+      "handwriting font maker",
+      "turn handwriting into a font",
+      "create your own font",
+      "font creator",
+      "handwriting to ttf",
+      "custom font generator",
+      "make a font from handwriting",
+    ],
+    icon: SignatureIcon,
+    category: "type",
   },
   {
     id: "typography",

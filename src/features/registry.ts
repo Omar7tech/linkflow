@@ -81,5 +81,6 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
     import("./pathfinding/pathfinding-tool").then((m) => m.PathfindingTool)
   ),
   sorting: dynamic(() => import("./sorting/sorting-tool").then((m) => m.SortingTool)),
+  fontmaker: dynamic(() => import("./font-maker/font-maker-tool").then((m) => m.FontMakerTool)),
   markdown: dynamic(() => import("./markdown/markdown-tool").then((m) => m.MarkdownTool)),
 };

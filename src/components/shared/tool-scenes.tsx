@@ -1542,6 +1542,43 @@ export const SCENES: Record<string, () => ReactNode> = {
     </Fill>
   ),
 
+  fontmaker: () => (
+    // Handwriting on the guides in, an installable font file out.
+    <Center className="gap-4 px-[7%]">
+      <div className="bg-card border-border relative aspect-square w-[34%] max-w-32 overflow-hidden rounded-xl border">
+        <span className="border-border absolute inset-x-0 top-[22%] border-t border-dashed" />
+        <span className="border-border absolute inset-x-0 top-[42%] border-t border-dashed" />
+        <span className="absolute inset-x-0 top-[74%] border-t" style={{ borderColor: A }} />
+        <svg viewBox="0 0 100 100" className="absolute inset-0 size-full" fill="none" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 74 L31 24 L48 74 M21 55 Q31 52 42 54" />
+          <path d="M84 50 Q70 40 62 54 Q57 72 71 73 Q81 72 84 54 L86 70 Q88 76 94 71" />
+        </svg>
+      </div>
+
+      <span className={`text-sm ${move} group-hover:translate-x-1`} style={{ color: A }}>
+        →
+      </span>
+
+      <div className="flex w-[44%] flex-col gap-1.5">
+        <div className="bg-card border-border flex items-center gap-2.5 rounded-xl border p-2 shadow-sm">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg text-[11px] font-bold text-white" style={{ background: A }}>
+            Aa
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate font-mono text-[9px] font-semibold">hand.ttf</span>
+            <span className="text-muted-foreground block font-mono text-[7.5px]">82 glyphs · kerned</span>
+          </span>
+        </div>
+        <span
+          className={`self-start rounded-full px-2 py-0.5 text-[8px] font-semibold text-white opacity-0 ${move} translate-y-1 transition-opacity group-hover:translate-y-0 group-hover:opacity-100`}
+          style={{ background: A }}
+        >
+          ✓ Installed
+        </span>
+      </div>
+    </Center>
+  ),
+
   typography: () => (
     <Center className="flex-col gap-1">
       <span
