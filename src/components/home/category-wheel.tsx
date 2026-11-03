@@ -2,7 +2,7 @@
 
 import { useState, type CSSProperties } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { Emblem } from "@/components/shared/tool-grid";
 import { ArrowRightIcon, ArrowUpRightIcon } from "lucide-react";
 import OptionWheel from "@/components/reactbits/option-wheel";
 import { TOOLS, TOOL_CATEGORIES } from "@/constants/tools";
@@ -13,9 +13,6 @@ const LABELS = TOOL_CATEGORIES.map((c) => c.label);
 
 /** Same running order the rest of the site uses to surface flagship tools. */
 const FEATURED = ["mockup", "logo3d", "codeshot", "invoice", "qr", "bgremover"];
-
-/** Every tool ships a banner at /tools/<slug>.webp. */
-const shotFor = (slug: string) => `/tools${slug.replace("/tools", "")}.webp`;
 
 const PICKS_BY_CATEGORY = Object.fromEntries(
   TOOL_CATEGORIES.map((category) => [
@@ -30,34 +27,6 @@ const PICKS_BY_CATEGORY = Object.fromEntries(
       .slice(0, 4),
   ])
 );
-
-/** One piece of the mosaic. Dims when a sibling row is the one being hovered. */
-function Tile({
-  tool,
-  dim,
-  className,
-}: {
-  tool: (typeof TOOLS)[number];
-  dim: boolean;
-  className: string;
-}) {
-  return (
-    <div className={`relative overflow-hidden ${className}`}>
-      {/* Accent plate behind the shot, so no piece is blank while its banner
-          is still loading. */}
-      <span aria-hidden className="absolute inset-0 bg-[var(--cat-active)] opacity-[0.07]" />
-      <Image
-        src={shotFor(tool.slug)}
-        alt={`${tool.name} preview`}
-        fill
-        sizes="(max-width: 1024px) 0px, 280px"
-        className={`object-cover transition-all duration-300 ease-out ${
-          dim ? "scale-100 opacity-35" : "scale-[1.02] opacity-100"
-        }`}
-      />
-    </div>
-  );
-}
 
 /**
  * Desktop-only category browser: the ten categories ride a wheel that curves
@@ -118,24 +87,25 @@ export function CategoryWheel() {
       {/* Result. Keyed on the category so the whole panel remounts and the
           cascade replays on every change. No divider: the gap does that job. */}
       <div key={category.id} className="max-w-md">
-        {/* One frame, every tool inside it. Flex rather than fixed grid spans
-            so a category with three tools composes as cleanly as one with
-            four. Hairline seams keep it reading as a single plate. */}
+        {/* The same drawn scene each tool has on the tools page, no pictures.
+            It shows the lead tool and swaps to whichever row is hovered. */}
         <div
-          className={`${styles.item} border-border/60 bg-border/70 relative flex aspect-[2/1] gap-px overflow-hidden rounded-xl border`}
+          className={`${styles.item} group border-border/60 bg-card/60 relative grid overflow-hidden rounded-xl border [--card-accent:var(--cat-active)]`}
           style={{ animationDelay: "0ms" }}
         >
-          <Tile tool={picks[0]} dim={hovered !== null && hovered !== 0} className="flex-[1.7]" />
-          <div className="flex flex-1 flex-col gap-px">
-            {picks.slice(1).map((tool, j) => (
-              <Tile
-                key={tool.id}
-                tool={tool}
-                dim={hovered !== null && hovered !== j + 1}
-                className="flex-1"
-              />
-            ))}
-          </div>
+          {picks.map((tool, j) => (
+            <div
+              key={tool.id}
+              className={`col-start-1 row-start-1 transition-opacity duration-300 ease-out ${
+                (hovered ?? 0) === j ? "opacity-100" : "pointer-events-none opacity-0"
+              }`}
+            >
+              <Emblem tool={tool} />
+            </div>
+          ))}
+          <span className="bg-background/80 border-border/60 text-muted-foreground absolute bottom-3 left-3 rounded-full border px-2.5 py-1 font-mono text-[10px] backdrop-blur">
+            {picks[hovered ?? 0].shortName}
+          </span>
         </div>
 
         <div className={styles.item} style={{ animationDelay: "60ms" }}>

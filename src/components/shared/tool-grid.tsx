@@ -27,7 +27,7 @@ function seedOf(text: string): number {
  * makes (see tool-scenes.tsx), over a dot grid lit in the category's colour.
  * A tool without a scene yet shows its icon on a tile framed by rings.
  */
-function Emblem({ tool }: { tool: ToolMeta }) {
+export function Emblem({ tool }: { tool: ToolMeta }) {
   const Icon = tool.icon;
   const Scene = SCENES[tool.id];
   const seed = seedOf(tool.id);
