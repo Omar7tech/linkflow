@@ -239,3 +239,31 @@
     0 0 24px var(--glow),
     0 0 64px var(--glow);
 }
+
+/* Logo gears: the double O of TOOLS. A link holding the logo turns them one
+   tooth against each other on hover; the hero keeps them turning slowly. Both
+   gears have eight teeth, so equal and opposite turns stay meshed. */
+.tm-gear {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+a:hover .tm-gear[data-gear="a"] {
+  transform: rotate(45deg);
+}
+a:hover .tm-gear[data-gear="b"] {
+  transform: rotate(-45deg);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tm-gears-spin .tm-gear[data-gear="a"] {
+    animation: tm-gear-turn 18s linear infinite;
+  }
+  .tm-gears-spin .tm-gear[data-gear="b"] {
+    animation: tm-gear-turn 18s linear infinite reverse;
+  }
+}
+@keyframes tm-gear-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}

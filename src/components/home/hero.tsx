@@ -136,7 +136,7 @@ export function Hero() {
             <svg
               viewBox={TM_VIEWBOX}
               aria-hidden
-              className="text-foreground block h-auto w-full overflow-hidden fill-current"
+              className="text-foreground tm-gears-spin block h-auto w-full overflow-hidden fill-current"
             >
               {TM_GLYPHS.map((glyph) => (
                 <g key={glyph.key} data-hero-char>
