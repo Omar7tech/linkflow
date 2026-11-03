@@ -2,8 +2,7 @@ import Link from "next/link";
 import { ArrowUpRightIcon } from "lucide-react";
 import { TOOL_BY_ID } from "@/constants/tools";
 import type { ToolId } from "@/constants/tools";
-import { ChatVisual, CutoutVisual } from "./featured-visuals";
-import { QrVisual } from "./featured-visuals-more";
+import { ChatVisual, CutoutVisual, QrVisual } from "./featured-visuals";
 
 type Spotlight = {
   id: ToolId;

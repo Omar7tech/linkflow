@@ -34,7 +34,12 @@
 /* ----------------------------------------------------------------------- qr */
 
 .ink {
-  color: #111111;
+  color: var(--foreground);
+  transition: color 0.6s ease;
+}
+
+:global(.group):hover .ink {
+  color: var(--primary);
 }
 
 .scanFrame,
@@ -93,12 +98,6 @@
     animation-delay: 0.3s;
   }
 
-  :global(.group):hover .ink {
-    animation: ink 8s ease-in-out infinite;
-  }
-  :global(.group):hover .swatch {
-    animation: swatch 8s ease-in-out infinite;
-  }
   :global(.group):hover .scanFrame {
     animation: frame 4s ease-in-out infinite;
   }
@@ -266,50 +265,6 @@
   50% {
     opacity: 1;
     transform: translateY(-2px);
-  }
-}
-
-@keyframes ink {
-  0%,
-  22% {
-    color: #111111;
-  }
-  25%,
-  47% {
-    color: #047857;
-  }
-  50%,
-  72% {
-    color: #1e3a8a;
-  }
-  75%,
-  97% {
-    color: #c2410c;
-  }
-  100% {
-    color: #111111;
-  }
-}
-
-@keyframes swatch {
-  0%,
-  22% {
-    transform: translateX(0);
-  }
-  25%,
-  47% {
-    transform: translateX(20px);
-  }
-  50%,
-  72% {
-    transform: translateX(40px);
-  }
-  75%,
-  97% {
-    transform: translateX(60px);
-  }
-  100% {
-    transform: translateX(0);
   }
 }
 
