@@ -46,9 +46,6 @@ export function CutoutVisual() {
         className={`${held ? styles.cutoutHeld : styles.cutout} absolute inset-0 bg-[#ececec] bg-[length:18px_18px] [background-image:linear-gradient(45deg,#d9d9d9_25%,transparent_25%,transparent_75%,#d9d9d9_75%),linear-gradient(45deg,#d9d9d9_25%,transparent_25%,transparent_75%,#d9d9d9_75%)] [background-position:0_0,9px_9px] dark:bg-[#1b1b1b] dark:[background-image:linear-gradient(45deg,#242424_25%,transparent_25%,transparent_75%,#242424_75%),linear-gradient(45deg,#242424_25%,transparent_25%,transparent_75%,#242424_75%)]`}
       >
         <Mug traced />
-        <span className="bg-background/85 border-border absolute top-3 right-3 rounded-full border px-2.5 py-1 font-mono text-[10px] backdrop-blur">
-          PNG · transparent
-        </span>
       </div>
 
       {/* The wipe's handle. */}
@@ -110,7 +107,6 @@ function Mug({ shadow, traced }: { shadow?: boolean; traced?: boolean }) {
         strokeWidth="3"
         strokeLinecap="round"
         opacity={traced ? 0 : 0.7}
-        className={styles.steam}
       >
         <path d="M150 52c-6-8 6-14 0-24" />
         <path d="M168 50c-6-8 6-14 0-24" />
@@ -160,7 +156,7 @@ export function ChatVisual() {
   return (
     <div
       aria-hidden
-      className="bg-muted/40 absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[radial-gradient(circle,rgb(127_127_127/0.14)_1px,transparent_1px)] bg-[length:16px_16px] px-6"
+      className="bg-muted/40 absolute inset-0 flex flex-col items-center justify-center gap-3 px-6"
     >
       <div
         className={`${styles.link} bg-background border-border relative flex max-w-full items-center gap-2 overflow-hidden rounded-full border px-3.5 py-2 text-xs shadow-sm`}

@@ -1,19 +1,19 @@
-/* Featured tools: two small illustrations drawn in code instead of pictures. */
+/* Featured tools: small illustrations drawn in code instead of pictures.
+   Each one rests on a finished, readable frame and only plays while its card
+   is hovered. Motion is skipped entirely for people who ask for less. */
 
 /* ---------------------------------------------------------- background remover */
 
-/* The wipe moves between the photo and its cut-out and back, and rests at each end. */
+/* At rest: half photo, half cut-out. */
 .cutout {
-  clip-path: inset(0 0 0 62%);
-  animation: wipe 7s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  clip-path: inset(0 0 0 52%);
 }
 
 .divider {
-  left: 62%;
-  animation: divider 7s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  left: 52%;
 }
 
-/* While the pointer holds it, the wipe follows the pointer. */
+/* While the pointer is on the picture, the wipe follows it. */
 .cutoutHeld {
   clip-path: inset(0 0 0 var(--cut));
 }
@@ -22,50 +22,116 @@
   left: var(--cut);
 }
 
-/* Marching ants around the cut-out. */
-.ants {
-  animation: ants 0.8s linear infinite;
+/* --------------------------------------------------------------------- chat */
+
+/* At rest: the conversation as it ends, message read and answered. */
+.tap,
+.typing,
+.unread {
+  opacity: 0;
 }
 
-.steam path {
-  animation: steam 3s ease-in-out infinite;
+/* ----------------------------------------------------------------------- qr */
+
+.ink {
+  color: #111111;
 }
 
-.steam path:nth-child(2) {
-  animation-delay: 0.4s;
+.scanFrame,
+.scanLine {
+  opacity: 0;
 }
 
-.steam path:nth-child(3) {
-  animation-delay: 0.8s;
+.scanLine {
+  top: 10%;
 }
+
+/* ------------------------------------------------------------------- hover */
+
+@media (prefers-reduced-motion: no-preference) {
+  :global(.group):hover .cutout {
+    animation: wipe 5s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+  :global(.group):hover .divider {
+    animation: divider 5s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+  :global(.group):hover .ants {
+    animation: ants 0.8s linear infinite;
+  }
+
+  :global(.group):hover .link {
+    animation: link 8s ease-out infinite;
+  }
+  :global(.group):hover .tap {
+    animation: tap 8s ease-out infinite;
+  }
+  :global(.group):hover .window {
+    animation: window 8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  }
+  :global(.group):hover .sent {
+    animation: sent 8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  }
+  :global(.group):hover .unread {
+    animation: unread 8s steps(1) infinite;
+  }
+  :global(.group):hover .read {
+    animation: read 8s steps(1) infinite;
+  }
+  :global(.group):hover .typing {
+    animation: typing 8s ease-out infinite;
+  }
+  :global(.group):hover .reply {
+    animation: reply 8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  }
+  :global(.group):hover .dot {
+    animation: dot 1s ease-in-out infinite;
+  }
+  :global(.group):hover .dot:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  :global(.group):hover .dot:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  :global(.group):hover .ink {
+    animation: ink 8s ease-in-out infinite;
+  }
+  :global(.group):hover .swatch {
+    animation: swatch 8s ease-in-out infinite;
+  }
+  :global(.group):hover .scanFrame {
+    animation: frame 4s ease-in-out infinite;
+  }
+  :global(.group):hover .scanLine {
+    animation: scan 4s ease-in-out infinite;
+  }
+}
+
+/* --------------------------------------------------------------- keyframes */
 
 @keyframes wipe {
-  0%,
-  18% {
-    clip-path: inset(0 0 0 62%);
+  0% {
+    clip-path: inset(0 0 0 52%);
   }
-  45%,
-  68% {
-    clip-path: inset(0 0 0 22%);
+  35%,
+  60% {
+    clip-path: inset(0 0 0 18%);
   }
-  95%,
   100% {
-    clip-path: inset(0 0 0 62%);
+    clip-path: inset(0 0 0 52%);
   }
 }
 
 @keyframes divider {
-  0%,
-  18% {
-    left: 62%;
+  0% {
+    left: 52%;
   }
-  45%,
-  68% {
-    left: 22%;
+  35%,
+  60% {
+    left: 18%;
   }
-  95%,
   100% {
-    left: 62%;
+    left: 52%;
   }
 }
 
@@ -73,67 +139,6 @@
   to {
     stroke-dashoffset: -9;
   }
-}
-
-@keyframes steam {
-  0%,
-  100% {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-3px);
-  }
-}
-
-/* --------------------------------------------------------------------- chat */
-
-/* One trip on an eight second loop: tap the link, the chat opens with the
-   message sent, it is read, the shop types and answers. */
-.link {
-  animation: link 8s ease-out infinite;
-}
-
-.tap {
-  opacity: 0;
-  animation: tap 8s ease-out infinite;
-}
-
-.window {
-  animation: window 8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
-}
-
-.sent {
-  animation: sent 8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
-}
-
-.unread {
-  animation: unread 8s steps(1) infinite;
-}
-
-.read {
-  animation: read 8s steps(1) infinite;
-}
-
-.typing {
-  animation: typing 8s ease-out infinite;
-}
-
-.reply {
-  animation: reply 8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
-}
-
-.dot {
-  animation: dot 1s ease-in-out infinite;
-}
-
-.dot:nth-child(2) {
-  animation-delay: 0.15s;
-}
-
-.dot:nth-child(3) {
-  animation-delay: 0.3s;
 }
 
 @keyframes link {
@@ -153,7 +158,7 @@
     transform: none;
   }
   100% {
-    opacity: 0;
+    opacity: 1;
   }
 }
 
@@ -180,12 +185,9 @@
     transform: translateY(10px) scale(0.96);
   }
   22%,
-  92% {
+  100% {
     opacity: 1;
     transform: none;
-  }
-  100% {
-    opacity: 0;
   }
 }
 
@@ -196,12 +198,9 @@
     transform: translateY(8px) scale(0.95);
   }
   30%,
-  92% {
+  100% {
     opacity: 1;
     transform: none;
-  }
-  100% {
-    opacity: 0;
   }
 }
 
@@ -252,12 +251,9 @@
     transform: translateY(8px) scale(0.95);
   }
   68%,
-  92% {
+  100% {
     opacity: 1;
     transform: none;
-  }
-  100% {
-    opacity: 0;
   }
 }
 
@@ -271,30 +267,6 @@
     opacity: 1;
     transform: translateY(-2px);
   }
-}
-
-/* ----------------------------------------------------------------------- qr */
-
-/* The ink moves through the four swatches; the ring follows it. */
-.ink {
-  color: #111111;
-  animation: ink 10s ease-in-out infinite;
-}
-
-.swatch {
-  left: -3px;
-  top: -3px;
-  animation: swatch 10s ease-in-out infinite;
-}
-
-.scanFrame {
-  animation: frame 5s ease-in-out infinite;
-}
-
-.scanLine {
-  top: 10%;
-  opacity: 0;
-  animation: scan 5s ease-in-out infinite;
 }
 
 @keyframes ink {
@@ -342,17 +314,16 @@
 }
 
 @keyframes frame {
-  0%,
-  15% {
+  0% {
     opacity: 0;
     transform: scale(1.12);
   }
-  25%,
+  15%,
   70% {
     opacity: 1;
     transform: none;
   }
-  85%,
+  90%,
   100% {
     opacity: 0;
     transform: scale(1.04);
@@ -361,11 +332,11 @@
 
 @keyframes scan {
   0%,
-  25% {
+  15% {
     top: 10%;
     opacity: 0;
   }
-  30% {
+  20% {
     opacity: 1;
   }
   55% {
@@ -375,73 +346,6 @@
   60%,
   100% {
     top: 88%;
-    opacity: 0;
-  }
-}
-
-/* ------------------------------------------------------------------- mockup */
-
-/* A slow turntable: the phone swings from one three-quarter view to the other. */
-.turntable {
-  transform: translateX(-50%) rotateY(-30deg) rotateX(8deg);
-  animation: turn 9s ease-in-out infinite alternate;
-}
-
-.glare {
-  background-position: 90% 0;
-  animation: glare 9s ease-in-out infinite alternate;
-}
-
-.floor {
-  animation: floor 9s ease-in-out infinite alternate;
-}
-
-@keyframes turn {
-  to {
-    transform: translateX(-50%) rotateY(24deg) rotateX(6deg);
-  }
-}
-
-@keyframes glare {
-  to {
-    background-position: 10% 0;
-  }
-}
-
-@keyframes floor {
-  50% {
-    width: 26%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cutout,
-  .divider,
-  .ants,
-  .steam path,
-  .link,
-  .window,
-  .sent,
-  .read,
-  .reply,
-  .ink,
-  .swatch,
-  .glare,
-  .floor {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-  .turntable {
-    animation: none;
-  }
-  .tap,
-  .typing,
-  .unread,
-  .scanFrame,
-  .scanLine,
-  .dot {
-    animation: none;
     opacity: 0;
   }
 }

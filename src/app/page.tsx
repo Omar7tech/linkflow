@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { FavoritesSection } from "@/components/home/favorites-section";
 import { FeaturedPair } from "@/components/home/featured-pair";
+import { MockupShowcase } from "@/components/home/mockup-showcase";
 import { FreeReceipt } from "@/components/home/free-receipt";
 import { CategoryWheel } from "@/components/home/category-wheel";
 import { Hero } from "@/components/home/hero";
@@ -69,6 +70,8 @@ export default function HomePage() {
       <JsonLd data={faqJsonLd(HOME_FAQ)} />
 
       <Hero />
+
+      <MockupShowcase />
 
       <FeaturedPair />
 
