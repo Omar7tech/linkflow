@@ -1748,6 +1748,8 @@ export const SCENES: Record<string, () => ReactNode> = {
     </Fill>
   ),
 
+  /* ========================================================= utilities */
+
   password: () => (
     // A generated password, the rules it follows and how strong it is.
     <Fill className="flex flex-col justify-center gap-2 px-[9%]">
@@ -1968,6 +1970,8 @@ export const SCENES: Record<string, () => ReactNode> = {
       </div>
     </Fill>
   ),
+
+  /* ======================================================== playground */
 
   editor: () => (
     <Fill className="flex items-stretch gap-2 p-[6%]">
