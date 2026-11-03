@@ -236,24 +236,116 @@ export const SCENES: Record<string, () => ReactNode> = {
   /* ============================================================ studio */
 
   mockup: () => (
-    <Fill className="[perspective:900px]">
-      {/* Laptop */}
-      <div className="absolute top-[14%] left-[24%] w-[58%] transition-transform duration-700 ease-out [transform:rotateY(-14deg)] group-hover:[transform:rotateY(-4deg)]">
-        <div className="rounded-t-[10px] border-[3px] border-b-0 border-neutral-700 bg-neutral-900 p-[3px]">
-          <div className="aspect-[16/10] overflow-hidden rounded-[5px]">
-            <AppScreen compact />
-          </div>
-        </div>
-        <div className="mx-[-7%] h-[7px] rounded-b-[6px] bg-gradient-to-b from-neutral-500 to-neutral-700" />
-      </div>
-      {/* Phone */}
-      <div className="absolute top-[26%] left-[14%] w-[19%] transition-transform duration-700 ease-out [transform:rotateY(18deg)_rotateZ(-3deg)] group-hover:[transform:rotateY(4deg)_rotateZ(0deg)_translateY(-4px)]">
-        <div className="relative aspect-[9/19] rounded-[14px] bg-gradient-to-br from-neutral-500 via-neutral-800 to-neutral-600 p-[2.5px] shadow-[0_20px_40px_-12px_rgb(0_0_0/0.7)]">
-          <span className="absolute top-[22%] -right-[2px] h-[12%] w-[2px] rounded-full bg-neutral-500" />
-          <div className="relative h-full overflow-hidden rounded-[12px] bg-black">
-            <AppScreen />
-            <span className="absolute top-[3%] left-1/2 h-[4%] w-[34%] -translate-x-1/2 rounded-full bg-black" />
-            <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgb(255_255_255/0.18),transparent_40%)]" />
+    <Fill className="overflow-hidden [perspective:1100px]">
+      {/* Studio: a soft key light behind the device and a floor it stands on. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(ellipse 45% 70% at 50% 40%, ${soft(22)}, transparent 70%)`,
+        }}
+      />
+      <span className="absolute bottom-[8%] left-1/2 h-[6%] w-[30%] -translate-x-1/2 rounded-[50%] bg-black/55 blur-md transition-all duration-700 group-hover:w-[24%] group-hover:bg-black/40" />
+
+      <div className="absolute top-1/2 left-1/2 h-[80%] -translate-x-1/2 -translate-y-[54%] transition-transform duration-[900ms] ease-out [transform-style:preserve-3d] [transform:rotateY(-32deg)_rotateX(10deg)_rotateZ(-2deg)] group-hover:[transform:rotateY(-6deg)_rotateX(4deg)_rotateZ(0deg)]">
+        {/* The frame's thickness: stacked titanium edges behind the front. */}
+        {Array.from({ length: 7 }, (_, index) => (
+          <span
+            key={index}
+            className="absolute inset-0 rounded-[22px]"
+            style={{
+              transform: `translateZ(${-(index + 1)}px)`,
+              background: `linear-gradient(90deg, #6b6b70, #c9c9ce ${30 + index * 4}%, #77777c)`,
+            }}
+          />
+        ))}
+
+        <div className="relative aspect-[9/19.5] h-full rounded-[22px] bg-[linear-gradient(135deg,#e7e7ea,#8c8c92_35%,#d5d5d9_60%,#7a7a80)] p-[2.5px] shadow-[0_30px_60px_-20px_rgb(0_0_0/0.8)]">
+          {/* Side buttons. */}
+          <span className="absolute top-[17%] -left-[2px] h-[5%] w-[2.5px] rounded-l-full bg-[#9a9aa0]" />
+          <span className="absolute top-[25%] -left-[2px] h-[9%] w-[2.5px] rounded-l-full bg-[#9a9aa0]" />
+          <span className="absolute top-[36%] -left-[2px] h-[9%] w-[2.5px] rounded-l-full bg-[#9a9aa0]" />
+          <span className="absolute top-[28%] -right-[2px] h-[13%] w-[2.5px] rounded-r-full bg-[#9a9aa0]" />
+
+          {/* Black bezel, then the display. */}
+          <div className="h-full rounded-[20px] bg-black p-[3px]">
+            <div
+              className="relative h-full overflow-hidden rounded-[17px]"
+              style={{
+                background: `radial-gradient(120% 70% at 20% 10%, ${soft(90, "#fff")}, transparent 55%), radial-gradient(100% 80% at 90% 100%, ${soft(85, "#000")}, transparent 60%), linear-gradient(170deg, ${soft(70, "#111")}, ${soft(40, "#050505")})`,
+              }}
+            >
+              {/* Status bar and Dynamic Island. */}
+              <div className="flex items-center justify-between px-[11%] pt-[6%] text-[6px] font-semibold text-white">
+                <span>9:41</span>
+                <span className="flex items-center gap-[2px]">
+                  <span className="flex items-end gap-[1px]">
+                    {[3, 4, 5, 6].map((h) => (
+                      <span
+                        key={h}
+                        className="w-[1.5px] rounded-full bg-white"
+                        style={{ height: h }}
+                      />
+                    ))}
+                  </span>
+                  <span className="ml-[2px] h-[5px] w-[9px] rounded-[2px] border border-white/80 p-[1px]">
+                    <span className="block h-full w-3/4 rounded-[1px] bg-white" />
+                  </span>
+                </span>
+              </div>
+              <span className="absolute top-[2.4%] left-1/2 h-[4.2%] w-[30%] -translate-x-1/2 rounded-full bg-black" />
+
+              {/* Lock screen. */}
+              <div className="mt-[9%] text-center text-white">
+                <p className="text-[7px] font-medium opacity-85">
+                  Tuesday, June 9
+                </p>
+                <p className="font-heading text-[30px] leading-none font-semibold tracking-tight">
+                  9:41
+                </p>
+              </div>
+
+              <div className="absolute inset-x-[7%] bottom-[18%] space-y-[4px]">
+                {[
+                  ["Your app", "New build is live"],
+                  ["Studio", "Render finished · 4×"],
+                ].map(([title, body], index) => (
+                  <div
+                    key={title}
+                    className={`flex items-center gap-[5px] rounded-[7px] bg-white/18 px-[5px] py-[4px] ring-1 ring-white/15 ${move} group-hover:translate-y-0`}
+                    style={{
+                      transform: `translateY(${index * 2}px)`,
+                      ...delay(index * 80),
+                    }}
+                  >
+                    <span
+                      className="size-[11px] shrink-0 rounded-[3px]"
+                      style={{ background: index ? "#fff" : A }}
+                    />
+                    <span className="min-w-0 leading-tight">
+                      <span className="block truncate text-[5.5px] font-semibold text-white">
+                        {title}
+                      </span>
+                      <span className="block truncate text-[5px] text-white/75">
+                        {body}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="absolute inset-x-[12%] bottom-[6%] flex items-center justify-between">
+                <span className="grid size-[14px] place-items-center rounded-full bg-black/35 ring-1 ring-white/10">
+                  <span className="h-[5px] w-[3px] rounded-[1px] bg-white/80" />
+                </span>
+                <span className="grid size-[14px] place-items-center rounded-full bg-black/35 ring-1 ring-white/10">
+                  <span className="size-[5px] rounded-full border border-white/80" />
+                </span>
+              </div>
+              <span className="absolute bottom-[2%] left-1/2 h-[1.5px] w-[34%] -translate-x-1/2 rounded-full bg-white/85" />
+
+              {/* Glass: a studio softbox sliding across the screen as it turns. */}
+              <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_35%,rgb(255_255_255/0.28)_45%,rgb(255_255_255/0.06)_55%,transparent_62%)] [background-size:250%_100%] transition-[background-position] duration-[900ms] ease-out [background-position:90%_0] group-hover:[background-position:10%_0]" />
+            </div>
           </div>
         </div>
       </div>
