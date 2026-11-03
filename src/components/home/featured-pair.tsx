@@ -45,9 +45,15 @@ export function FeaturedPair() {
                 aria-labelledby={headingId}
                 className="group border-border/60 bg-card/60 hover:border-primary/40 relative flex flex-col overflow-hidden rounded-[1.75rem] border transition-colors duration-300"
               >
-                <div className="relative m-2 aspect-[16/10] overflow-hidden rounded-[1.35rem] lg:aspect-[2/1]">
+                {/* Above the card's link overlay so the pointer can play with it; still a way in. */}
+                <Link
+                  href={tool.slug}
+                  tabIndex={-1}
+                  aria-hidden
+                  className="relative z-10 m-2 block aspect-[16/10] overflow-hidden rounded-[1.35rem] lg:aspect-[2/1]"
+                >
                   <Visual />
-                </div>
+                </Link>
 
                 <div className="flex flex-1 flex-col px-6 pt-4 pb-6 sm:px-7">
                   <p className="text-muted-foreground flex items-center gap-2 text-sm">
