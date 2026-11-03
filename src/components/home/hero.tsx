@@ -10,6 +10,7 @@ import { useTheme } from "next-themes";
 import { CATALOG } from "@/constants/tools";
 import { cn } from "@/lib/utils";
 import { TM_GLYPHS, TM_VIEWBOX } from "@/components/shared/logo";
+import { TwoMindsLogo } from "@/components/shared/two-minds-logo";
 import GradientASCII from "./gradient-ascii";
 
 gsap.registerPlugin(useGSAP);
@@ -35,11 +36,20 @@ const byId = new Map(CATALOG.map((tool) => [tool.id as string, tool]));
 
 /** Name first, then the short name, then keywords and description: what a person means by a word. */
 function findTools(query: string): Tool[] {
-  const words = query.toLowerCase().split(/\s+/).filter((word) => word.length > 1 && !["a", "an", "the", "my", "for", "with", "from", "of"].includes(word));
+  const words = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(
+      (word) =>
+        word.length > 1 &&
+        !["a", "an", "the", "my", "for", "with", "from", "of"].includes(word),
+    );
   if (!words.length) return [];
   return CATALOG.map((tool) => {
     const name = `${tool.name} ${tool.shortName}`.toLowerCase();
-    const keywords = (tool.keywords as readonly string[]).join(" ").toLowerCase();
+    const keywords = (tool.keywords as readonly string[])
+      .join(" ")
+      .toLowerCase();
     const description = tool.description.toLowerCase();
     let score = 0;
     for (const word of words) {
@@ -58,7 +68,11 @@ function findTools(query: string): Tool[] {
 
 export function Hero() {
   const sectionRef = React.useRef<HTMLElement>(null);
-  const hydrated = React.useSyncExternalStore(subscribeNever, () => true, () => false);
+  const hydrated = React.useSyncExternalStore(
+    subscribeNever,
+    () => true,
+    () => false,
+  );
   const { resolvedTheme } = useTheme();
   const theme = hydrated ? resolvedTheme : undefined;
 
@@ -67,10 +81,27 @@ export function Hero() {
       gsap.matchMedia().add("(prefers-reduced-motion: no-preference)", () => {
         gsap
           .timeline({ defaults: { ease: "power4.out" } })
-          .from("[data-hero-char]", { yPercent: 115, duration: 1.15, stagger: 0.05 }, 0.15)
-          .from("[data-hero-line]", { y: 18, autoAlpha: 0, filter: "blur(8px)", duration: 1 }, 0.6)
+          .from(
+            "[data-hero-char]",
+            { yPercent: 115, duration: 1.15, stagger: 0.05 },
+            0.15,
+          )
+          .from(
+            "[data-hero-byline]",
+            { y: 8, autoAlpha: 0, duration: 0.7 },
+            0.55,
+          )
+          .from(
+            "[data-hero-line]",
+            { y: 18, autoAlpha: 0, filter: "blur(8px)", duration: 1 },
+            0.6,
+          )
           .from("[data-hero-sub]", { y: 12, autoAlpha: 0, duration: 0.9 }, 0.75)
-          .from("[data-hero-finder]", { y: 16, autoAlpha: 0, duration: 0.9 }, 0.9);
+          .from(
+            "[data-hero-finder]",
+            { y: 16, autoAlpha: 0, duration: 0.9 },
+            0.9,
+          );
       });
     },
     { scope: sectionRef },
@@ -80,32 +111,63 @@ export function Hero() {
     <section
       ref={sectionRef}
       aria-labelledby="hero-title"
-      className="relative isolate flex min-h-[calc(100svh-3.5rem)] flex-col items-center justify-center overflow-hidden px-6 pt-10 pb-20"
+      className="relative isolate flex min-h-[calc(100svh-3.5rem)] flex-col overflow-hidden"
     >
       <Field theme={theme} />
 
-      <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">
-        <h1 id="hero-title" aria-label="TM TOOLS" className="w-[min(100%,46rem)]">
-          <svg viewBox={TM_VIEWBOX} aria-hidden className="text-foreground tm-gears-spin block h-auto w-full overflow-hidden fill-current">
-            {TM_GLYPHS.map((glyph) => (
-              <g key={glyph.key} data-hero-char>
-                {glyph}
-              </g>
-            ))}
-          </svg>
-        </h1>
+      {/* Words on the left; the light comes in from the right. */}
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-6 py-16">
+        <div className="max-w-2xl">
+          <div className="w-[min(100%,40rem)]">
+            <h1 id="hero-title" aria-label="TM TOOLS">
+              <svg
+                viewBox={TM_VIEWBOX}
+                aria-hidden
+                className="text-foreground tm-gears-spin block h-auto w-full overflow-hidden fill-current"
+              >
+                {TM_GLYPHS.map((glyph) => (
+                  <g key={glyph.key} data-hero-char>
+                    {glyph}
+                  </g>
+                ))}
+              </svg>
+            </h1>
+            <p
+              data-hero-byline
+              className="text-muted-foreground mt-3 flex items-center justify-end gap-2.5 text-[11px] leading-none font-semibold tracking-[0.18em] sm:gap-3 sm:text-xs"
+            >
+              BY
+              <a
+                href="https://twomindsengine.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Two Minds Engine (opens in a new tab)"
+                className="hover:text-foreground focus-visible:ring-ring rounded-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              >
+                <TwoMindsLogo className="block h-4 sm:h-5" />
+              </a>
+            </p>
+          </div>
 
-        <p data-hero-line className="font-heading mt-10 text-[clamp(1.6rem,3.6vw,2.75rem)] leading-tight font-semibold tracking-[-0.03em] text-balance">
-          Every tool you need to make the thing<span className="text-primary">.</span>
-        </p>
+          <p
+            data-hero-line
+            className="font-heading mt-12 max-w-2xl text-[clamp(1.75rem,3.4vw,3rem)] leading-[1.05] font-semibold tracking-[-0.035em] text-balance"
+          >
+            The free toolbox for designers and developers
+            <span className="text-primary">.</span>
+          </p>
 
-        <p data-hero-sub className="text-muted-foreground mt-4 max-w-xl text-base leading-relaxed text-pretty sm:text-lg">
-          Free design and developer tools. QR codes, favicons, mockups, gradients, share images and more, ready in
-          a click.
-        </p>
+          <p
+            data-hero-sub
+            className="text-muted-foreground mt-5 max-w-lg text-base leading-relaxed text-pretty sm:text-lg"
+          >
+            QR codes, favicons, device mockups, gradients and share images, made
+            in seconds. No account, no watermark, nothing to install.
+          </p>
 
-        <div data-hero-finder className="mt-10 w-full max-w-xl">
-          <ToolFinder />
+          <div data-hero-finder className="mt-9 w-full max-w-xl">
+            <ToolFinder />
+          </div>
         </div>
       </div>
     </section>
@@ -115,7 +177,7 @@ export function Hero() {
 /* --------------------------------------------------------------- backdrop */
 
 /**
- * Light falling from the top edge, drawn in characters a developer would type.
+ * Light coming in from the right edge, drawn in characters a developer would type.
  * The cursor scrambles them and a click sends a ring through. Tuned to stay
  * cheap: no glow pass, one pixel per pixel, and it stops drawing off screen.
  * Emerald on dark pages, graphite ink on light ones.
@@ -124,19 +186,33 @@ function Field({ theme }: { theme: string | undefined }) {
   const [mono, setMono] = React.useState<string>();
   React.useEffect(() => {
     const frame = requestAnimationFrame(() => {
-      const family = getComputedStyle(document.documentElement).getPropertyValue("--font-geist-mono").trim();
-      setMono(family ? `${family}, ui-monospace, monospace` : "ui-monospace, monospace");
+      const family = getComputedStyle(document.documentElement)
+        .getPropertyValue("--font-geist-mono")
+        .trim();
+      setMono(
+        family
+          ? `${family}, ui-monospace, monospace`
+          : "ui-monospace, monospace",
+      );
     });
     return () => cancelAnimationFrame(frame);
   }, []);
 
   const dark = theme === "dark";
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 -z-10 [mask-image:linear-gradient(to_left,black_10%,rgb(0_0_0/0.55)_45%,transparent_80%)]"
+    >
       {theme && mono && (
         <GradientASCII
           shape="horizon"
-          colors={dark ? ["#064e3b", "#10b981", "#34d399", "#a7f3d0"] : ["#f4f4f5", "#d4d4d8", "#71717a", "#27272a"]}
+          scale={2.1}
+          colors={
+            dark
+              ? ["#064e3b", "#10b981", "#34d399", "#a7f3d0"]
+              : ["#f4f4f5", "#d4d4d8", "#71717a", "#27272a"]
+          }
           lightMode={!dark}
           characters=" .:-=+*<>{}/#%"
           cellSize={18}
@@ -154,8 +230,7 @@ function Field({ theme }: { theme: string | undefined }) {
           fontFamily={mono}
         />
       )}
-      {/* A pool of calm behind the words, and a clean floor for the next section. */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_40%_34%_at_50%_50%,var(--background)_35%,transparent_100%)]" />
+      {/* A clean floor for the next section. */}
       <div className="from-background absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t to-transparent" />
     </div>
   );
@@ -193,7 +268,9 @@ function ToolFinder() {
         shown += 1;
         if (shown >= EXAMPLES[example].length + 18) deleting = true;
       }
-      setHint((deleting ? target : EXAMPLES[example]).slice(0, Math.max(0, shown)));
+      setHint(
+        (deleting ? target : EXAMPLES[example]).slice(0, Math.max(0, shown)),
+      );
     }, 55);
     return () => window.clearInterval(timer);
   }, [focused, query]);
@@ -217,15 +294,24 @@ function ToolFinder() {
           open && results.length > 0 && "rounded-b-none",
         )}
       >
-        <SearchIcon className="text-muted-foreground size-5 shrink-0" aria-hidden />
-        <label htmlFor="hero-finder" className="sr-only">What are you making?</label>
+        <SearchIcon
+          className="text-muted-foreground size-5 shrink-0"
+          aria-hidden
+        />
+        <label htmlFor="hero-finder" className="sr-only">
+          What are you making?
+        </label>
         <input
           id="hero-finder"
           role="combobox"
           aria-expanded={open && results.length > 0}
           aria-controls={listId}
           aria-autocomplete="list"
-          aria-activedescendant={open && results[active] ? `${listId}-${results[active].id}` : undefined}
+          aria-activedescendant={
+            open && results[active]
+              ? `${listId}-${results[active].id}`
+              : undefined
+          }
           autoComplete="off"
           spellCheck={false}
           value={query}
@@ -239,7 +325,9 @@ function ToolFinder() {
           onKeyDown={(event) => {
             if (event.key === "ArrowDown") {
               event.preventDefault();
-              setActive((index) => Math.min(index + 1, Math.max(results.length - 1, 0)));
+              setActive((index) =>
+                Math.min(index + 1, Math.max(results.length - 1, 0)),
+              );
             } else if (event.key === "ArrowUp") {
               event.preventDefault();
               setActive((index) => Math.max(index - 1, 0));
@@ -251,8 +339,14 @@ function ToolFinder() {
           type="submit"
           className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-12 shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition-colors sm:px-5"
         >
-          <span className="hidden sm:inline">{query.trim() ? "Open" : "Browse tools"}</span>
-          {query.trim() ? <CornerDownLeftIcon className="size-4" aria-hidden /> : <ArrowRightIcon className="size-4" aria-hidden />}
+          <span className="hidden sm:inline">
+            {query.trim() ? "Open" : "Browse tools"}
+          </span>
+          {query.trim() ? (
+            <CornerDownLeftIcon className="size-4" aria-hidden />
+          ) : (
+            <ArrowRightIcon className="size-4" aria-hidden />
+          )}
         </button>
       </form>
 
@@ -274,38 +368,57 @@ function ToolFinder() {
                   event.preventDefault();
                   go(tool);
                 }}
-                className={cn("flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5", index === active && "bg-muted")}
+                className={cn(
+                  "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5",
+                  index === active && "bg-muted",
+                )}
               >
                 <span className="border-border bg-card grid size-9 shrink-0 place-items-center rounded-lg border">
                   <tool.icon className="size-4" aria-hidden />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">{tool.name}</span>
-                  <span className="text-muted-foreground block truncate text-xs">{tool.description}</span>
+                  <span className="block truncate text-sm font-medium">
+                    {tool.name}
+                  </span>
+                  <span className="text-muted-foreground block truncate text-xs">
+                    {tool.description}
+                  </span>
                 </span>
-                {index === active && <CornerDownLeftIcon className="text-muted-foreground size-3.5 shrink-0" aria-hidden />}
+                {index === active && (
+                  <CornerDownLeftIcon
+                    className="text-muted-foreground size-3.5 shrink-0"
+                    aria-hidden
+                  />
+                )}
               </li>
             ))
           ) : (
             <li className="text-muted-foreground px-3 py-4 text-sm">
               Nothing by that name yet.{" "}
-              <Link href="/tools" className="text-foreground underline underline-offset-4">See every tool</Link>
+              <Link
+                href="/tools"
+                className="text-foreground underline underline-offset-4"
+              >
+                See every tool
+              </Link>
             </li>
           )}
         </ul>
       )}
 
-      <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-sm">
-        {POPULAR.map((id) => byId.get(id)).filter((tool): tool is Tool => !!tool).map((tool) => (
-          <Link
-            key={tool.id}
-            href={tool.slug}
-            className="border-border bg-background/60 hover:border-primary/50 hover:text-foreground text-muted-foreground inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs backdrop-blur transition-colors"
-          >
-            <tool.icon className="size-3.5" aria-hidden />
-            {tool.shortName}
-          </Link>
-        ))}
+      <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
+        {POPULAR.map((id) => byId.get(id))
+          .filter((tool): tool is Tool => !!tool)
+          .map((tool) => (
+            <Link
+              key={tool.id}
+              href={tool.slug}
+              className="border-border bg-background/60 hover:border-primary/50 hover:text-foreground text-muted-foreground inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs backdrop-blur transition-colors"
+            >
+              <tool.icon className="size-3.5" aria-hidden />
+              {tool.shortName}
+            </Link>
+          ))}
       </div>
     </div>
   );
