@@ -37,13 +37,13 @@ function Emblem({ tool }: { tool: ToolMeta }) {
 
   return (
     <div aria-hidden className="relative aspect-[16/10] overflow-hidden">
-      {/* Light in the category's colour, placed differently on every card. */}
+      {/* Light in the category's colour, placed differently on every card. A
+          gradient rather than a blur filter: dozens of blurred layers make a
+          long page stutter while it scrolls on modest hardware. */}
       <div
-        className="absolute size-[75%] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-[0.18] blur-3xl transition-opacity duration-500 group-hover:opacity-30"
+        className="absolute inset-0 opacity-25 transition-opacity duration-500 group-hover:opacity-40"
         style={{
-          left: `${glowX}%`,
-          top: `${glowY}%`,
-          background: "var(--card-accent)",
+          background: `radial-gradient(circle at ${glowX}% ${glowY}%, var(--card-accent), transparent 55%)`,
         }}
       />
       {/* Dot grid, fading out from the middle. */}
