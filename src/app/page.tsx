@@ -8,7 +8,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { TM_GLYPHS } from "@/components/shared/logo";
 import { FavoritesSection } from "@/components/home/favorites-section";
 import { FeaturedPair } from "@/components/home/featured-pair";
 import { MockupShowcase } from "@/components/home/mockup-showcase";
@@ -21,10 +20,13 @@ import { Reveal } from "@/components/home/reveal";
 import { JsonLd, faqJsonLd, webAppJsonLd } from "@/components/shared/json-ld";
 import { FAQ_ITEMS } from "@/constants/faq";
 import { SITE } from "@/constants/site";
-import { TOOLS, TOOL_CATEGORIES } from "@/constants/tools";
+import { TOOLS, TOOL_BY_ID, TOOL_CATEGORIES } from "@/constants/tools";
+import type { ToolId } from "@/constants/tools";
 import { accentFor } from "@/lib/tool-accent";
 
 const HOME_FAQ = FAQ_ITEMS.slice(0, 5);
+
+const POPULAR: ToolId[] = ["qr", "mockup", "favicon", "bgremover", "whatsapp"];
 
 const PRINCIPLES = [
   {
@@ -295,45 +297,40 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Closing call to action: one panel, all of it a way in. The logo's two
-          gears sit oversized in the back and turn when the pointer arrives. */}
+      {/* Closing line: type and one button, no panel. A row of popular tools
+          underneath gives somewhere specific to go. */}
       <section className="border-border/70 border-t">
-        <Reveal className="mx-auto max-w-7xl px-6 py-16 sm:py-24">
-          <Link
-            href="/tools"
-            className="group border-border/60 relative block overflow-hidden rounded-[2rem] border bg-[radial-gradient(ellipse_70%_80%_at_50%_0%,#ffffff,transparent),linear-gradient(#f4f4f5,#e9e9ec)] px-8 py-14 sm:px-14 sm:py-20 dark:bg-[radial-gradient(ellipse_70%_80%_at_50%_0%,#1f1f22,transparent),linear-gradient(#111113,#09090b)]"
-          >
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(ellipse_50%_80%_at_80%_100%,color-mix(in_oklab,var(--primary)_16%,transparent),transparent)]"
-            />
-            <svg
-              viewBox="430 26 264 143"
-              aria-hidden
-              className="text-foreground/[0.06] pointer-events-none absolute top-1/2 -right-[3%] hidden h-[120%] w-auto -translate-y-1/2 fill-current sm:block"
-            >
-              {TM_GLYPHS[3]}
-            </svg>
-
-            <div className="relative max-w-2xl">
-              <h2 className="font-heading text-5xl leading-[1.02] font-bold tracking-tight sm:text-7xl">
-                Pick a tool<span className="text-primary">.</span>
-                <br />
-                Get to work<span className="text-primary">.</span>
+        <div className="mx-auto max-w-7xl px-6 py-14 sm:py-20">
+          <Reveal>
+            <Link href="/tools" className="group flex items-end justify-between gap-6">
+              <h2 className="font-heading text-4xl leading-[1.05] font-bold tracking-tight sm:text-6xl">
+                Pick a tool.{" "}
+                <span className="text-muted-foreground/60 group-hover:text-foreground transition-colors duration-500">
+                  Get to work.
+                </span>
               </h2>
-              <p className="text-muted-foreground mt-6 max-w-md text-lg leading-relaxed">
-                Every tool is free, needs no account and is ready the moment it opens.
-              </p>
-              <span className="bg-primary text-primary-foreground mt-9 inline-flex h-12 items-center gap-2 rounded-full px-7 text-base font-semibold">
-                Browse all tools
+              <span className="bg-primary text-primary-foreground grid size-12 shrink-0 place-items-center rounded-full transition-transform duration-300 group-hover:scale-110 sm:size-16">
                 <ArrowRightIcon
-                  className="size-4 transition-transform duration-300 group-hover:translate-x-1"
-                  aria-hidden
+                  className="size-5 transition-transform duration-300 group-hover:-rotate-45 sm:size-6"
+                  aria-label="Browse all tools"
                 />
               </span>
+            </Link>
+
+            <div className="border-border/60 mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t pt-5 text-sm">
+              <span className="text-muted-foreground/60">Popular</span>
+              {POPULAR.map((id) => (
+                <Link
+                  key={id}
+                  href={TOOL_BY_ID[id].slug}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {TOOL_BY_ID[id].shortName}
+                </Link>
+              ))}
             </div>
-          </Link>
-        </Reveal>
+          </Reveal>
+        </div>
       </section>
     </>
   );
