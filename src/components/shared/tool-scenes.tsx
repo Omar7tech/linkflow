@@ -7,6 +7,7 @@
  * act out the job a little: dozens of cards on a page never animate at once.
  */
 import type { CSSProperties, ReactNode } from "react";
+import { WhatsAppIcon } from "./brand-icons";
 
 const A = "var(--card-accent)";
 const soft = (amount: number, base = "transparent") =>
@@ -353,79 +354,167 @@ export const SCENES: Record<string, () => ReactNode> = {
   ),
 
   favicon: () => (
-    <Fill className="flex flex-col justify-center gap-4 px-[8%]">
-      <div className="bg-foreground/[0.06] flex items-end gap-1 rounded-t-xl px-2 pt-2">
+    // Your logo in, every icon a site needs out.
+    <Center className="gap-3 px-[6%]">
+      <div className="flex flex-col items-center gap-1.5">
+        <span
+          className="grid size-12 place-items-center rounded-[28%] text-xl font-bold text-white shadow-lg"
+          style={{
+            background: `linear-gradient(160deg, ${soft(100, "white")} -40%, ${A} 45%, ${soft(80, "#000")})`,
+          }}
+        >
+          M
+        </span>
+        <span className="text-muted-foreground text-[8px]">Your logo</span>
+      </div>
+
+      <span
+        className={`text-sm ${move} group-hover:translate-x-1`}
+        style={{ color: A }}
+      >
+        →
+      </span>
+
+      <div className="flex w-[52%] flex-col gap-1.5">
+        {/* In a browser tab. */}
         <div
-          className={`bg-card border-border flex min-w-0 flex-1 items-center gap-2 rounded-t-lg border border-b-0 px-3 py-2 ${move} group-hover:-translate-y-0.5`}
+          className={`bg-card border-border flex items-center gap-1.5 rounded-lg border px-2 py-1.5 ${move} group-hover:-translate-y-0.5`}
         >
           <span
-            className="grid size-4 shrink-0 place-items-center rounded-[5px] text-[9px] font-bold text-white"
+            className="grid size-3.5 shrink-0 place-items-center rounded-[4px] text-[7px] font-bold text-white"
             style={{ background: A }}
           >
             M
           </span>
-          <span className="truncate text-[10px] font-medium">My App</span>
-          <span className="text-muted-foreground ml-auto text-[10px]">×</span>
+          <span className="truncate text-[9px] font-medium">My App</span>
+          <span className="text-muted-foreground ml-auto text-[8px]">Tab</span>
         </div>
-        <div className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2">
-          <span className="size-3.5 rounded-full bg-foreground/20" />
-          <Bar w="50%" />
+        {/* On a phone home screen. */}
+        <div
+          className={`bg-card border-border flex items-center gap-1.5 rounded-lg border px-2 py-1.5 ${move} group-hover:-translate-y-0.5`}
+          style={delay(70)}
+        >
+          <span
+            className="grid size-5 shrink-0 place-items-center rounded-[28%] text-[9px] font-bold text-white"
+            style={{ background: A }}
+          >
+            M
+          </span>
+          <span className="truncate text-[9px] font-medium">Home screen</span>
+          <span className="text-muted-foreground ml-auto text-[8px]">App</span>
+        </div>
+        {/* The files it downloads. */}
+        <div
+          className={`flex flex-wrap gap-1 ${move} group-hover:-translate-y-0.5`}
+          style={delay(140)}
+        >
+          {["favicon.ico", "apple-touch-icon.png", "site.webmanifest"].map(
+            (file) => (
+              <span
+                key={file}
+                className="rounded-md px-1.5 py-0.5 font-mono text-[7.5px]"
+                style={{ background: soft(14), color: A }}
+              >
+                {file}
+              </span>
+            ),
+          )}
         </div>
       </div>
-      <div className="flex items-end justify-center gap-3">
-        {[16, 24, 36, 48].map((size, index) => (
-          <div key={size} className="flex flex-col items-center gap-1">
-            <span
-              className={`grid place-items-center rounded-[28%] font-bold text-white ${move} group-hover:-translate-y-1`}
-              style={{
-                width: size,
-                height: size,
-                fontSize: size * 0.5,
-                background: A,
-                ...delay(index * 60),
-              }}
+    </Center>
+  ),
+
+  logo: () => (
+    // The same logo checked on every kind of background, with a verdict on each.
+    <Fill className="flex flex-col gap-2 p-[6%]">
+      <div className="grid flex-1 grid-cols-4 gap-1.5">
+        {[
+          { bg: "#ffffff", mark: A, label: "Light", ok: true },
+          { bg: "#0a0a0a", mark: "#ffffff", label: "Dark", ok: true },
+          {
+            bg: soft(70, "#0a0a0a"),
+            mark: "#ffffff",
+            label: "Brand",
+            ok: true,
+          },
+          { bg: "photo", mark: "#ffffff", label: "Busy", ok: false },
+        ].map((tile, index) => (
+          <div
+            key={tile.label}
+            className={`border-border/60 relative flex items-center justify-center overflow-hidden rounded-lg border ${move} group-hover:-translate-y-0.5`}
+            style={{
+              background: tile.bg === "photo" ? undefined : tile.bg,
+              ...delay(index * 60),
+            }}
+          >
+            {tile.bg === "photo" && <Photo className="absolute inset-0" />}
+            <svg
+              viewBox="0 0 24 24"
+              className="relative size-[44%]"
+              aria-hidden
             >
-              M
+              <circle
+                cx="12"
+                cy="12"
+                r="8"
+                fill="none"
+                stroke={tile.mark}
+                strokeWidth="3"
+              />
+              <path
+                d="M6.5 17.5 17.5 6.5"
+                stroke={tile.mark}
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            </svg>
+            <span
+              className={`absolute top-1 right-1 grid size-3 place-items-center rounded-full text-[6.5px] font-bold text-white ${tile.ok ? "" : "bg-amber-500"}`}
+              style={tile.ok ? { background: A } : undefined}
+            >
+              {tile.ok ? "✓" : "!"}
             </span>
-            <span className="text-muted-foreground font-mono text-[8px]">
-              {[16, 32, 180, 512][index]}
+            <span
+              className={`absolute bottom-0.5 text-[6.5px] font-medium ${index === 0 ? "text-neutral-500" : "text-white/75"}`}
+            >
+              {tile.label}
             </span>
           </div>
         ))}
       </div>
-    </Fill>
-  ),
 
-  logo: () => (
-    <Fill className="grid grid-cols-4 gap-2 p-[7%]">
-      {[
-        { bg: "#ffffff", mark: A },
-        { bg: "#0a0a0a", mark: "#ffffff" },
-        { bg: soft(60), mark: "#ffffff" },
-        { bg: "#a3a3a3", mark: "#0a0a0a" },
-      ].map((tile, index) => (
-        <div
-          key={index}
-          className={`border-border/60 flex flex-col items-center justify-center gap-1.5 rounded-xl border ${move} group-hover:-translate-y-1`}
-          style={{ background: tile.bg, ...delay(index * 60) }}
+      {/* The report: a score and what it measured. */}
+      <div className="bg-card border-border flex items-center gap-3 rounded-lg border px-2.5 py-1.5">
+        <span
+          className="font-heading text-[15px] leading-none font-bold"
+          style={{ color: A }}
         >
-          <svg viewBox="0 0 24 24" className="size-[40%]" aria-hidden>
-            <circle
-              cx="9"
-              cy="12"
-              r="6"
-              fill="none"
-              stroke={tile.mark}
-              strokeWidth="3"
-            />
-            <rect x="15" y="6" width="4" height="12" rx="2" fill={tile.mark} />
-          </svg>
-          <span
-            className="h-[3px] w-[45%] rounded-full opacity-50"
-            style={{ background: tile.mark }}
-          />
+          94
+        </span>
+        <div className="grid flex-1 grid-cols-3 gap-2">
+          {[
+            ["Contrast", 92],
+            ["At 16px", 80],
+            ["Shape", 96],
+          ].map(([label, value], index) => (
+            <div key={label as string} className="space-y-0.5">
+              <span className="text-muted-foreground block text-[7px]">
+                {label}
+              </span>
+              <span className="bg-foreground/10 block h-1 overflow-hidden rounded-full">
+                <span
+                  className="block h-full origin-left rounded-full transition-transform duration-700 ease-out [transform:scaleX(0.35)] group-hover:[transform:scaleX(1)]"
+                  style={{
+                    width: `${value}%`,
+                    background: A,
+                    ...delay(index * 80),
+                  }}
+                />
+              </span>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </Fill>
   ),
 
@@ -512,36 +601,54 @@ export const SCENES: Record<string, () => ReactNode> = {
   ),
 
   ogstudio: () => (
-    <Center>
-      <div
-        className={`border-border bg-card w-[74%] rounded-2xl border p-3 shadow-lg ${move} group-hover:-translate-y-1`}
+    // Design the share image, then see it as the preview a link gets in a chat.
+    <Center className="gap-3 px-[6%]">
+      <div className="flex w-[44%] flex-col gap-1">
+        <div
+          className="relative flex aspect-[1.91/1] flex-col justify-end gap-1 overflow-hidden rounded-lg p-2 ring-1 ring-white/10"
+          style={{
+            background: `radial-gradient(circle at 85% 15%, ${soft(70)}, transparent 55%), linear-gradient(135deg, ${soft(60, "#0b0b0b")}, #0b0b0b)`,
+          }}
+        >
+          <span className="font-heading text-[10px] leading-tight font-bold text-white">
+            Launch day is here
+          </span>
+          <span className="h-[3px] w-1/2 rounded-full bg-white/45" />
+          {/* Selection handles: this is the editor. */}
+          <span className="absolute inset-1 rounded-md border border-dashed border-white/40" />
+        </div>
+        <span className="text-muted-foreground text-center font-mono text-[7.5px]">
+          1200 × 630
+        </span>
+      </div>
+
+      <span
+        className={`text-sm ${move} group-hover:translate-x-1`}
+        style={{ color: A }}
       >
-        <div className="mb-2 flex items-center gap-2">
-          <span
-            className="size-5 rounded-full"
-            style={{ background: soft(50) }}
-          />
-          <Bar w="28%" strong />
-          <Bar w="16%" />
+        →
+      </span>
+
+      {/* How the link looks once it is shared. */}
+      <div
+        className={`bg-card border-border w-[42%] rounded-xl rounded-br-sm border p-1.5 shadow-md ${move} group-hover:-translate-y-1`}
+      >
+        <div
+          className="flex aspect-[1.91/1] flex-col justify-end rounded-md p-1.5"
+          style={{
+            background: `radial-gradient(circle at 85% 15%, ${soft(70)}, transparent 55%), linear-gradient(135deg, ${soft(60, "#0b0b0b")}, #0b0b0b)`,
+          }}
+        >
+          <span className="font-heading text-[7px] leading-tight font-bold text-white">
+            Launch day is here
+          </span>
         </div>
-        <div className="border-border overflow-hidden rounded-xl border">
-          <div
-            className="relative flex aspect-[1.91/1] flex-col justify-end gap-1 p-2.5"
-            style={{
-              background: `linear-gradient(135deg, ${soft(85, "#0b0b0b")}, #0b0b0b)`,
-            }}
-          >
-            <span className="font-heading text-[11px] leading-tight font-bold text-white">
-              Launch day is here
-            </span>
-            <span className="h-1 w-1/2 rounded-full bg-white/40" />
-          </div>
-          <div className="space-y-1 px-2.5 py-1.5">
-            <span className="text-muted-foreground block font-mono text-[8px]">
-              yoursite.com
-            </span>
-          </div>
-        </div>
+        <p className="mt-1 truncate px-0.5 text-[8px] font-semibold">
+          Launch day is here
+        </p>
+        <p className="text-muted-foreground truncate px-0.5 font-mono text-[7px]">
+          yoursite.com
+        </p>
       </div>
     </Center>
   ),
@@ -721,15 +828,17 @@ export const SCENES: Record<string, () => ReactNode> = {
   whatsapp: () => (
     <Fill className="flex flex-col items-center justify-center gap-2.5 px-[10%]">
       <span className="bg-card border-border flex max-w-full items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-[9px]">
-        <span style={{ color: A }}>↗</span>
+        <WhatsAppIcon className="size-3 shrink-0 text-[#25D366]" />
         <span className="truncate">wa.me/351912…?text=Hi!</span>
       </span>
       <Win bar={false} className="w-full max-w-[15rem]">
         <div className="border-border/70 flex items-center gap-2 border-b px-2.5 py-1.5">
           <span
-            className="size-4 rounded-full"
+            className="relative size-4 rounded-full"
             style={{ background: soft(45) }}
-          />
+          >
+            <WhatsAppIcon className="absolute -right-1 -bottom-1 size-2.5 rounded-full bg-card text-[#25D366]" />
+          </span>
           <span className="text-[9px] font-medium">Casa Verde</span>
           <span className="ml-auto text-[8px]" style={{ color: A }}>
             online
@@ -1575,86 +1684,145 @@ export const SCENES: Record<string, () => ReactNode> = {
   ),
 
   dna: () => (
-    <Center className="gap-3">
-      <Win className="w-[44%]">
-        <div className="space-y-1.5 p-2">
-          <Bar w="50%" strong />
-          <span
-            className="block aspect-[16/7] rounded-md"
-            style={{ background: soft(35) }}
-          />
-          <Bar w="80%" />
-          <span
-            className="block h-3 w-1/2 rounded-full"
-            style={{ background: A }}
-          />
-        </div>
-      </Win>
-      <span
-        className={`text-sm ${move} group-hover:translate-x-1`}
-        style={{ color: A }}
-      >
-        →
-      </span>
-      <div className="space-y-1.5">
-        <div className="flex gap-1">
-          {[95, 60, 25].map((amount) => (
-            <span
-              key={amount}
-              className="size-5 rounded-md"
-              style={{ background: soft(amount, "#0b0b0b") }}
-            />
-          ))}
-        </div>
-        <p className="font-heading text-[11px] font-bold">Aa Inter</p>
-        <p className="text-muted-foreground font-mono text-[8px]">
-          radius 12 · 4/8 grid
-        </p>
+    // Paste a site's address, get its design system back as tokens.
+    <Fill className="flex flex-col justify-center gap-2 px-[7%]">
+      <div className="bg-card border-border flex items-center gap-2 rounded-full border py-1 pr-1 pl-3">
+        <span className="text-muted-foreground font-mono text-[9px]">
+          https://
+        </span>
+        <span className="font-mono text-[9px]">stripe.com</span>
+        <span
+          className="ml-auto rounded-full px-2.5 py-1 text-[8px] font-semibold text-white"
+          style={{ background: A }}
+        >
+          Extract
+        </span>
       </div>
-    </Center>
+      <div className="bg-card border-border grid grid-cols-[1.4fr_1fr_1fr] gap-2 rounded-xl border p-2.5">
+        <div className="space-y-1">
+          <span className="text-muted-foreground block text-[7px]">Colors</span>
+          <div className="flex gap-1">
+            {["#635bff", "#0a2540", "#00d4ff", "#f6f9fc"].map((hex, index) => (
+              <span
+                key={hex}
+                className={`border-border/60 size-5 rounded-md border ${move} group-hover:-translate-y-0.5`}
+                style={{ background: hex, ...delay(index * 50) }}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-1">
+          <span className="text-muted-foreground block text-[7px]">Type</span>
+          <span className="font-heading block text-[15px] leading-none font-semibold">
+            Aa
+          </span>
+          <span className="text-muted-foreground block font-mono text-[7px]">
+            Sohne · 600
+          </span>
+        </div>
+        <div className="space-y-1">
+          <span className="text-muted-foreground block text-[7px]">
+            Radius · Space
+          </span>
+          <span
+            className="block h-4 w-8 rounded-md border-2"
+            style={{ borderColor: A }}
+          />
+          <span className="flex items-end gap-0.5">
+            {[3, 5, 8, 12].map((h) => (
+              <span
+                key={h}
+                className="w-1 rounded-sm"
+                style={{ height: h, background: soft(60) }}
+              />
+            ))}
+          </span>
+        </div>
+      </div>
+      <span
+        className="self-start rounded-md px-1.5 py-0.5 font-mono text-[7.5px]"
+        style={{ background: soft(14), color: A }}
+      >
+        --brand: #635bff;
+      </span>
+    </Fill>
   ),
 
-  /* ========================================================= utilities */
-
   password: () => (
-    <Fill className="flex flex-col justify-center gap-2.5 px-[12%]">
-      <div className="bg-card border-border flex items-center justify-between rounded-xl border px-3 py-2.5 font-mono text-[12px] tracking-wider">
-        <span>
+    // A generated password, the rules it follows and how strong it is.
+    <Fill className="flex flex-col justify-center gap-2 px-[9%]">
+      <div className="bg-card border-border flex items-center gap-2 rounded-xl border px-3 py-2.5">
+        <span className="font-mono text-[12px] tracking-wider">
           x7<span style={{ color: A }}>#</span>Qp
           <span style={{ color: A }}>!</span>m2Rw
-          <span style={{ color: A }}>$</span>9
+          <span style={{ color: A }}>$</span>9Lk
         </span>
-        <span className="text-muted-foreground text-[9px]">copy</span>
+        <span
+          className={`text-muted-foreground ml-auto text-[11px] transition-transform duration-500 group-hover:rotate-180`}
+        >
+          ↻
+        </span>
       </div>
       <div className="flex items-center gap-1.5">
         {[0, 1, 2, 3].map((index) => (
           <span
             key={index}
-            className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${index === 3 ? "bg-foreground/10 group-hover:bg-[var(--card-accent)]" : ""}`}
-            style={index < 3 ? { background: A } : delay(200)}
+            className="h-1.5 flex-1 rounded-full"
+            style={{ background: A, opacity: 0.45 + index * 0.18 }}
           />
         ))}
         <span className="ml-1 text-[9px] font-semibold" style={{ color: A }}>
-          Strong
+          Strong · 98 bits
+        </span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        {["A–Z", "a–z", "0–9", "#$%"].map((rule) => (
+          <span
+            key={rule}
+            className="flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[8px]"
+            style={{ borderColor: soft(45), color: A, background: soft(8) }}
+          >
+            <span className="size-1.5 rounded-full" style={{ background: A }} />
+            {rule}
+          </span>
+        ))}
+        <span className="text-muted-foreground ml-auto font-mono text-[8px]">
+          length 16
         </span>
       </div>
     </Fill>
   ),
 
   hash: () => (
-    <Fill className="flex flex-col items-center justify-center gap-2 px-[8%] font-mono text-[9px]">
-      <span className="bg-card border-border rounded-lg border px-3 py-1.5">
+    // Text in, a fingerprint out, with the algorithm picked in between.
+    <Fill className="flex flex-col justify-center gap-2 px-[8%]">
+      <div className="bg-card border-border rounded-lg border px-3 py-1.5 font-mono text-[9.5px]">
         hello world
-      </span>
-      <span className="text-[8px] tracking-widest" style={{ color: A }}>
-        ↓ SHA-256
-      </span>
-      <span
-        className="w-full rounded-lg px-3 py-1.5 text-center leading-relaxed break-all"
+      </div>
+      <div className="flex gap-1">
+        {["MD5", "SHA-1", "SHA-256", "SHA-512"].map((name) => (
+          <span
+            key={name}
+            className="rounded-md px-2 py-0.5 font-mono text-[8px] font-semibold"
+            style={
+              name === "SHA-256"
+                ? { background: A, color: "white" }
+                : { background: soft(10), color: soft(80, "#888") }
+            }
+          >
+            {name}
+          </span>
+        ))}
+      </div>
+      <div
+        className="relative rounded-lg px-3 py-1.5 font-mono text-[8.5px] leading-relaxed break-all"
         style={{ background: soft(12), color: A }}
       >
         b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9
-      </span>
+        <span className="bg-card border-border text-foreground absolute -top-2 right-2 rounded-full border px-1.5 py-0.5 text-[7px] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          ✓ Copied
+        </span>
+      </div>
     </Fill>
   ),
 
@@ -1729,55 +1897,77 @@ export const SCENES: Record<string, () => ReactNode> = {
   ),
 
   launchready: () => (
-    <Center className="gap-4">
-      <div className="relative size-20">
-        <svg viewBox="0 0 80 80" className="size-full -rotate-90" aria-hidden>
-          <circle
-            cx="40"
-            cy="40"
-            r="32"
-            fill="none"
-            className="stroke-foreground"
-            opacity="0.12"
-            strokeWidth="7"
-          />
-          <circle
-            cx="40"
-            cy="40"
-            r="32"
-            fill="none"
-            stroke={A}
-            strokeWidth="7"
-            strokeLinecap="round"
-            strokeDasharray="201"
-            className="transition-[stroke-dashoffset] duration-1000 ease-out [stroke-dashoffset:80] group-hover:[stroke-dashoffset:16]"
-          />
-        </svg>
-        <span className="font-heading absolute inset-0 grid place-items-center text-lg font-bold">
-          92
+    // Scan a live page, get a score and the fixes that matter.
+    <Fill className="flex flex-col justify-center gap-2 px-[7%]">
+      <div className="bg-card border-border relative flex items-center gap-2 overflow-hidden rounded-full border py-1 pr-1 pl-3">
+        <span className="font-mono text-[9px]">yoursite.com</span>
+        <span
+          className="ml-auto rounded-full px-2.5 py-1 text-[8px] font-semibold text-white"
+          style={{ background: A }}
+        >
+          Scan
         </span>
+        <span
+          className="absolute bottom-0 left-0 h-[2px] w-0 transition-[width] duration-[1200ms] ease-out group-hover:w-full"
+          style={{ background: A }}
+        />
       </div>
-      <div className="space-y-2">
-        {["Search", "Speed", "Security"].map((label, index) => (
-          <div
-            key={label}
-            className={`flex items-center gap-1.5 ${move} group-hover:translate-x-1`}
-            style={delay(index * 70)}
-          >
+      <div className="flex items-center gap-3">
+        <div className="relative size-16 shrink-0">
+          <svg viewBox="0 0 80 80" className="size-full -rotate-90" aria-hidden>
+            <circle
+              cx="40"
+              cy="40"
+              r="32"
+              fill="none"
+              className="stroke-foreground"
+              opacity="0.12"
+              strokeWidth="7"
+            />
+            <circle
+              cx="40"
+              cy="40"
+              r="32"
+              fill="none"
+              stroke={A}
+              strokeWidth="7"
+              strokeLinecap="round"
+              strokeDasharray="201"
+              className="transition-[stroke-dashoffset] duration-1000 ease-out [stroke-dashoffset:60] group-hover:[stroke-dashoffset:16]"
+            />
+          </svg>
+          <span className="font-heading absolute inset-0 grid place-items-center text-base font-bold">
+            92
+          </span>
+        </div>
+        <div className="grid flex-1 grid-cols-2 gap-x-2 gap-y-1">
+          {[
+            ["Search", true],
+            ["Accessibility", true],
+            ["Security", false],
+            ["Speed", true],
+          ].map(([label, ok]) => (
             <span
-              className="grid size-3.5 place-items-center rounded-full text-[8px] text-white"
-              style={{ background: A }}
+              key={label as string}
+              className="flex items-center gap-1 text-[8.5px]"
             >
-              ✓
+              <span
+                className={`grid size-3 shrink-0 place-items-center rounded-full text-[7px] font-bold text-white ${ok ? "" : "bg-amber-500"}`}
+                style={ok ? { background: A } : undefined}
+              >
+                {ok ? "✓" : "!"}
+              </span>
+              {label}
             </span>
-            <span className="text-[10px]">{label}</span>
-          </div>
-        ))}
+          ))}
+          <span className="col-span-2 mt-0.5 truncate rounded-md bg-neutral-950 px-1.5 py-0.5 font-mono text-[7.5px] text-white/80">
+            <span className="text-amber-400">fix</span> add
+            Content-Security-Policy
+          </span>
+        </div>
       </div>
-    </Center>
+    </Fill>
   ),
-
-  /* ======================================================== playground */
 
   editor: () => (
     <Fill className="flex items-stretch gap-2 p-[6%]">
