@@ -237,6 +237,30 @@ function AppScreen({ compact = false }: { compact?: boolean }) {
 export const SCENES: Record<string, () => ReactNode> = {
   /* ============================================================ studio */
 
+  poster: () => (
+    // A Swiss poster on the wall; on hover the grid shows and the shapes reshuffle.
+    <Center>
+      <div className="relative aspect-[1/1.414] h-[82%] overflow-hidden bg-[#f1ede4] shadow-[0_18px_30px_-14px_rgb(0_0_0/0.55)] transition-transform duration-500 group-hover:-rotate-1">
+        <span className="absolute inset-y-[6%] left-[6%] right-[6%] flex gap-[3%] opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <span key={i} className="flex-1 bg-sky-400/15" />
+          ))}
+        </span>
+        <span
+          className="absolute size-[62%] rounded-full transition-all duration-700 ease-out group-hover:size-[44%] group-hover:translate-x-[30%] group-hover:translate-y-[18%]"
+          style={{ background: A, left: "26%", top: "8%" }}
+        />
+        <span className="absolute bottom-[22%] left-[6%] h-[3%] w-[30%] bg-[#141414] transition-all duration-700 group-hover:w-[60%]" />
+        <span className="absolute bottom-[7%] left-[6%] font-[Helvetica,Arial,sans-serif] text-[15px] leading-none font-bold tracking-tight text-[#141414]">
+          Neue
+          <br />
+          Form
+        </span>
+        <span className="absolute top-[6%] left-[6%] font-mono text-[5px] text-[#141414]">N° 27</span>
+      </div>
+    </Center>
+  ),
+
   mockup: () => (
     // Real renders from the tool: the phone's back tucked behind its front.
     // On hover the pair parts, like a product shot being set up.

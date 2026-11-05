@@ -82,5 +82,6 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   ),
   sorting: dynamic(() => import("./sorting/sorting-tool").then((m) => m.SortingTool)),
   fontmaker: dynamic(() => import("./font-maker/font-maker-tool").then((m) => m.FontMakerTool)),
+  poster: dynamic(() => import("./swiss-poster/swiss-poster-tool").then((m) => m.SwissPosterTool)),
   markdown: dynamic(() => import("./markdown/markdown-tool").then((m) => m.MarkdownTool)),
 };

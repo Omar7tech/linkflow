@@ -59,6 +59,7 @@ import {
   FlaskConicalIcon,
   type LucideIcon,
   SignatureIcon,
+  LayoutTemplateIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolCategory, ToolMeta } from "@/types";
@@ -217,6 +218,25 @@ export const TOOLS = [
     ],
     icon: TypeIcon,
     category: "type",
+  },
+  {
+    id: "poster",
+    slug: "/tools/swiss-poster",
+    name: "Swiss Poster Generator",
+    shortName: "Swiss Poster",
+    description:
+      "Design posters in the Swiss International Style. Type your words and shuffle through 15 compositions on a real modular grid, from orbiting type and echoing outlines to Bauhaus modules, op-art waves and sliced photo strips, set in 15 hand-picked typefaces. Drop in a photo for duotone or halftone print looks, explore nine directions at once, bring any poster to life as a looping motion video, preview it framed or pasted on a street wall, and download print-ready PDF, PNG, SVG or MP4.",
+    keywords: [
+      "swiss poster generator",
+      "poster maker",
+      "swiss style poster",
+      "bauhaus poster generator",
+      "typographic poster maker",
+      "print ready poster pdf",
+      "grid poster design",
+    ],
+    icon: LayoutTemplateIcon,
+    category: "studio",
   },
   {
     id: "mockup",
