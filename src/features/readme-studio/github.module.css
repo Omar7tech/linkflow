@@ -1,0 +1,490 @@
+/* GitHub's repository page and markdown body, light and dark (Primer colours). */
+
+.frame {
+  --fg: #1f2328;
+  --muted: #59636e;
+  --border: #d1d9e0;
+  --border-soft: #d1d9e0b3;
+  --canvas: #ffffff;
+  --subtle: #f6f8fa;
+  --link: #0969da;
+  --code-bg: #818b981f;
+  --pre-bg: #f6f8fa;
+  --tab-line: #fd8c73;
+  --pick: #10b981;
+  --note: #0969da;
+  --tip: #1a7f37;
+  --important: #8250df;
+  --warning: #9a6700;
+  --caution: #d1242f;
+  background: var(--canvas);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-size: 14px;
+  line-height: 1.5;
+  color-scheme: light;
+}
+
+.frame[data-theme="dark"] {
+  --fg: #f0f6fc;
+  --muted: #9198a1;
+  --border: #3d444d;
+  --border-soft: #3d444db3;
+  --canvas: #0d1117;
+  --subtle: #151b23;
+  --link: #4493f8;
+  --code-bg: #656c7633;
+  --pre-bg: #151b23;
+  --tab-line: #f78166;
+  --pick: #34d399;
+  --note: #4493f8;
+  --tip: #3fb950;
+  --important: #ab7df8;
+  --warning: #d29922;
+  --caution: #f85149;
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------ repo chrome */
+
+.repoHead {
+  border-bottom: 1px solid var(--border);
+  background: var(--subtle);
+  padding: 14px 20px 0;
+}
+.repoTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  min-width: 0;
+}
+.repoTitle a {
+  color: var(--link);
+  text-decoration: none;
+}
+.repoTitle strong a {
+  font-weight: 600;
+}
+.repoTitle .sep {
+  color: var(--muted);
+}
+.pill {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 7px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--muted);
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  color: var(--fg);
+  font-size: 14px;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+.tab svg {
+  color: var(--muted);
+}
+.tabActive {
+  border-bottom-color: var(--tab-line);
+  font-weight: 600;
+}
+
+.body {
+  padding: 20px;
+}
+
+.box {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--canvas);
+}
+.boxHead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border);
+  border-radius: 6px 6px 0 0;
+  background: var(--canvas);
+}
+.boxTab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 8px 9px;
+  font-size: 14px;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+}
+.boxTab svg {
+  color: var(--muted);
+}
+.boxTabActive {
+  color: var(--fg);
+  border-bottom-color: var(--tab-line);
+}
+
+/* --------------------------------------------------------- markdown body */
+
+.md {
+  padding: 32px;
+  word-wrap: break-word;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.narrow .md {
+  padding: 16px;
+}
+.md > :global(*:first-child) {
+  margin-top: 0 !important;
+}
+.md :global(a) {
+  color: var(--link);
+  text-decoration: none;
+}
+.md :global(a:hover) {
+  text-decoration: underline;
+}
+.md :global(p),
+.md :global(blockquote),
+.md :global(ul),
+.md :global(ol),
+.md :global(table),
+.md :global(pre),
+.md :global(details),
+.md :global(.highlight),
+.md :global(.markdown-alert) {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+.md :global(h1),
+.md :global(h2),
+.md :global(h3),
+.md :global(h4) {
+  position: relative;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.md :global(h1) {
+  font-size: 2em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-soft);
+}
+.md :global(h2) {
+  font-size: 1.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-soft);
+}
+.md :global(h3) {
+  font-size: 1.25em;
+}
+/* Headings inside HTML tables (feature grids) carry no rule. */
+.md :global(td h3),
+.md :global(p[align] h1),
+.md :global(h1[align]) {
+  border-bottom: 0;
+}
+.md :global(td h3) {
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+.md :global(.anchor) {
+  position: absolute;
+  left: -22px;
+  padding-right: 6px;
+  color: var(--fg);
+  opacity: 0;
+  font-size: 0.8em;
+  line-height: 1.6;
+}
+.md :global(h1:hover .anchor),
+.md :global(h2:hover .anchor),
+.md :global(h3:hover .anchor) {
+  opacity: 0.55;
+  text-decoration: none;
+}
+.md :global([align="center"]) {
+  text-align: center;
+}
+.md :global([align="right"]) {
+  text-align: right;
+}
+.md :global(img) {
+  max-width: 100%;
+  box-sizing: content-box;
+  vertical-align: middle;
+  border-style: none;
+}
+.md :global(p a img) {
+  display: inline-block;
+}
+.md :global(hr) {
+  height: 0.25em;
+  padding: 0;
+  margin: 24px 0;
+  background: var(--border);
+  border: 0;
+}
+.md :global(ul),
+.md :global(ol) {
+  padding-left: 2em;
+}
+.md :global(ul) {
+  list-style: disc;
+}
+.md :global(ol) {
+  list-style: decimal;
+}
+.md :global(li + li) {
+  margin-top: 0.25em;
+}
+.md :global(.contains-task-list) {
+  list-style: none;
+  padding-left: 0.6em;
+}
+.md :global(.task-list-item input) {
+  margin: 0 0.35em 0.25em -1.4em;
+  vertical-align: middle;
+}
+.md :global(.contains-task-list .task-list-item) {
+  padding-left: 1.4em;
+}
+.md :global(blockquote) {
+  padding: 0 1em;
+  color: var(--muted);
+  border-left: 0.25em solid var(--border);
+}
+.md :global(code) {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  white-space: break-spaces;
+  background: var(--code-bg);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+.md :global(table) {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow: auto;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+.md :global(table th),
+.md :global(table td) {
+  padding: 6px 13px;
+  border: 1px solid var(--border);
+}
+.md :global(table th) {
+  font-weight: 600;
+}
+.md :global(table tr) {
+  background: var(--canvas);
+  border-top: 1px solid var(--border-soft);
+}
+.md :global(table tr:nth-child(2n)) {
+  background: var(--subtle);
+}
+.md :global(td[width]) {
+  vertical-align: top;
+}
+.md :global(details summary) {
+  cursor: pointer;
+  display: list-item;
+}
+.md :global(details[open] > summary) {
+  margin-bottom: 8px;
+}
+.md :global(sub) {
+  font-size: 75%;
+}
+
+/* Code blocks, with GitHub's copy button. */
+.md :global(.highlight) {
+  position: relative;
+}
+.md :global(.highlight pre) {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  color: var(--fg);
+  background: var(--pre-bg);
+  border-radius: 6px;
+  margin: 0;
+}
+.md :global(.highlight pre code) {
+  padding: 0;
+  background: transparent;
+  font-size: 100%;
+  white-space: pre;
+  border-radius: 0;
+}
+.md :global(.rs-copy) {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--subtle);
+  color: var(--muted);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.md :global(.highlight:hover .rs-copy),
+.md :global(.rs-copy:focus-visible) {
+  opacity: 1;
+}
+.md :global(.rs-copy:hover) {
+  color: var(--fg);
+}
+
+/* Alerts. */
+.md :global(.markdown-alert) {
+  padding: 8px 16px;
+  border-left: 0.25em solid var(--alert);
+}
+.md :global(.markdown-alert > :last-child) {
+  margin-bottom: 0;
+}
+.md :global(.markdown-alert-title) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--alert);
+  margin-bottom: 4px !important;
+}
+.md :global(.markdown-alert-title::before) {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  -webkit-mask: var(--alert-icon) center / contain no-repeat;
+  mask: var(--alert-icon) center / contain no-repeat;
+}
+.md :global(.markdown-alert-note) {
+  --alert: var(--note);
+  --alert-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z'/%3E%3C/svg%3E");
+}
+.md :global(.markdown-alert-tip) {
+  --alert: var(--tip);
+  --alert-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z'/%3E%3C/svg%3E");
+}
+.md :global(.markdown-alert-important) {
+  --alert: var(--important);
+  --alert-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z'/%3E%3C/svg%3E");
+}
+.md :global(.markdown-alert-warning) {
+  --alert: var(--warning);
+  --alert-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z'/%3E%3C/svg%3E");
+}
+.md :global(.markdown-alert-caution) {
+  --alert: var(--caution);
+  --alert-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z'/%3E%3C/svg%3E");
+}
+
+/* ------------------------------------------------- pick a section to edit */
+
+.md :global([data-block]) {
+  position: relative;
+  border-radius: 8px;
+  outline: 1.5px dashed transparent;
+  outline-offset: 6px;
+  transition: outline-color 0.15s;
+  cursor: pointer;
+}
+.md :global([data-block]::after) {
+  content: attr(data-label);
+  position: absolute;
+  top: -18px;
+  right: -6px;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  color: #fff;
+  background: var(--pick);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+.md :global([data-block]:hover) {
+  outline-color: var(--pick);
+}
+.md :global([data-block]:hover::after) {
+  opacity: 1;
+}
+.md :global([data-block][data-active="true"]) {
+  outline-style: solid;
+  outline-color: var(--pick);
+}
+/* Each section's own top margin collapses inside its wrapper. */
+.md :global([data-block] > :first-child) {
+  margin-top: 0;
+}
+.md :global([data-block] + [data-block]) {
+  margin-top: 16px;
+}
+.md :global([data-block] > :last-child) {
+  margin-bottom: 0;
+}
+.md :global([data-block]:has(> h2:first-child)) {
+  margin-top: 24px;
+}
+
+/* ------------------------------------------------------- raw markdown */
+
+.source {
+  margin: 0;
+  padding: 16px 0;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 20px;
+  counter-reset: line;
+}
+.source > span {
+  display: block;
+  padding-right: 16px;
+  white-space: pre;
+}
+.source > span::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 52px;
+  padding-right: 16px;
+  margin-right: 8px;
+  text-align: right;
+  color: var(--muted);
+  opacity: 0.6;
+  user-select: none;
+}

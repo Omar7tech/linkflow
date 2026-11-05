@@ -258,6 +258,25 @@ export const TOOLS = [
     category: "studio",
   },
   {
+    id: "readme",
+    slug: "/tools/readme-studio",
+    name: "README Studio",
+    shortName: "README Studio",
+    description:
+      "Build a beautiful GitHub README visually. Import any public repo to draft one from its real package.json, license and CI, then shape it with animated light and dark banners, badges, feature grids, install tabs, screenshots, a tech stack wall and a contributors section, all in a live GitHub-style preview. Copy the markdown or download it with its assets as a ZIP.",
+    keywords: [
+      "github readme generator",
+      "readme maker",
+      "readme template",
+      "github profile readme",
+      "readme badges generator",
+      "animated readme banner",
+      "markdown readme editor",
+    ],
+    icon: BookMarkedIcon,
+    category: "studio",
+  },
+  {
     id: "favicon",
     slug: "/tools/favicon",
     name: "Favicon Generator",
