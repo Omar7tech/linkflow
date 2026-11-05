@@ -1,16 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { MessageSquareTextIcon, ZoomInIcon } from "lucide-react";
+import { FastForwardIcon, MessageSquareTextIcon, ZoomInIcon } from "lucide-react";
 import { uid, type Edit } from "@/lib/screen-studio/types";
 import { cn } from "@/lib/utils";
 
-export type Selection = { kind: "zoom" | "caption"; id: string } | null;
+export type Selection = { kind: "zoom" | "caption" | "speed"; id: string } | null;
 
 type Drag =
   | { kind: "seek" }
   | { kind: "trim"; edge: "start" | "end" }
-  | { kind: "zoom" | "caption"; id: string; mode: "move" | "start" | "end"; t0: number; start: number; end: number };
+  | { kind: "zoom" | "caption" | "speed"; id: string; mode: "move" | "start" | "end"; t0: number; start: number; end: number };
 
 const fmt = (t: number) => `${Math.floor(t / 60)}:${Math.floor(t % 60).toString().padStart(2, "0")}`;
 
@@ -78,6 +78,7 @@ export function Timeline({
       } else if (d.mode === "start") start = Math.min(d.end - 0.3, Math.max(0, d.start + dt));
       else end = Math.max(d.start + 0.3, Math.min(duration, d.end + dt));
       if (d.kind === "zoom") onChange({ ...cur, zooms: cur.zooms.map((z) => (z.id === d.id ? { ...z, start, end, path: d.mode === "move" ? z.path?.map((p) => ({ ...p, t: p.t + (start - z.start) })) : z.path } : z)) });
+      else if (d.kind === "speed") onChange({ ...cur, speeds: cur.speeds.map((c) => (c.id === d.id ? { ...c, start, end } : c)) });
       else onChange({ ...cur, captions: cur.captions.map((c) => (c.id === d.id ? { ...c, start, end } : c)) });
     }
   };
@@ -96,6 +97,13 @@ export function Timeline({
     const c = { id: uid(), start: t, end: Math.min(duration, t + 2.5), text: "New caption" };
     onChange({ ...edit, captions: [...edit.captions, c] });
     onSelect({ kind: "caption", id: c.id });
+  };
+
+  const addSpeedAt = (clientX: number) => {
+    const t = timeAt(clientX);
+    const sp = { id: uid(), start: t, end: Math.min(duration, t + 2), rate: 3 };
+    onChange({ ...edit, speeds: [...edit.speeds, sp] });
+    onSelect({ kind: "speed", id: sp.id });
   };
 
   const ticks = Math.min(12, Math.max(4, Math.floor(duration / 5)));
@@ -155,6 +163,23 @@ export function Timeline({
             >
               {z.auto ? "Auto " : ""}
               {z.scale.toFixed(1)}×
+            </Block>
+          ))}
+        </Track>
+
+        {/* Speed-ups. */}
+        <Track label="Speed" icon={<FastForwardIcon className="size-3" />} hint="Double-click to speed up a stretch" onDoubleClick={(e) => addSpeedAt(e.clientX)}>
+          {edit.speeds.map((sp) => (
+            <Block
+              key={sp.id}
+              left={pct(sp.start)}
+              width={pct(sp.end - sp.start)}
+              active={selected?.kind === "speed" && selected.id === sp.id}
+              tone="speed"
+              onPick={() => onSelect({ kind: "speed", id: sp.id })}
+              onDrag={(e, mode) => begin(e, { kind: "speed", id: sp.id, mode, t0: timeAt(e.clientX), start: sp.start, end: sp.end })}
+            >
+              {sp.rate}×
             </Block>
           ))}
         </Track>
@@ -228,7 +253,7 @@ function Block({
   left: string;
   width: string;
   active: boolean;
-  tone: "zoom" | "caption";
+  tone: "zoom" | "caption" | "speed";
   children: React.ReactNode;
   onPick: () => void;
   onDrag: (e: React.PointerEvent, mode: "move" | "start" | "end") => void;
@@ -237,8 +262,12 @@ function Block({
     <div
       className={cn(
         "absolute inset-y-0.5 flex min-w-3 items-center overflow-hidden rounded-[5px] border text-[10.5px] font-medium whitespace-nowrap",
-        tone === "zoom" ? "border-primary/50 bg-primary/20 text-primary" : "border-sky-400/40 bg-sky-400/15 text-sky-600 dark:text-sky-300",
-        active && (tone === "zoom" ? "border-primary bg-primary/35 ring-primary/30 ring-2" : "border-sky-400 bg-sky-400/30 ring-2 ring-sky-400/30")
+        tone === "zoom" && "border-primary/50 bg-primary/20 text-primary",
+        tone === "caption" && "border-sky-400/40 bg-sky-400/15 text-sky-600 dark:text-sky-300",
+        tone === "speed" && "border-foreground/20 text-foreground/70 bg-[repeating-linear-gradient(135deg,transparent_0_5px,color-mix(in_oklab,currentColor_10%,transparent)_5px_10px)]",
+        active && tone === "zoom" && "border-primary bg-primary/35 ring-primary/30 ring-2",
+        active && tone === "caption" && "border-sky-400 bg-sky-400/30 ring-2 ring-sky-400/30",
+        active && tone === "speed" && "border-foreground/60 ring-foreground/20 ring-2"
       )}
       style={{ left, width }}
       onPointerDown={(e) => {

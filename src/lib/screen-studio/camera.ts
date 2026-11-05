@@ -40,7 +40,9 @@ function targetAt(zooms: Zoom[], t: number) {
   const z = zooms.find((s) => t + LEAD >= s.start && t + LEAD * 0.4 < s.end);
   if (!z) return { scale: 1, x: 0.5, y: 0.5 };
   const f = focusAt(z, t);
-  return { scale: z.scale, x: f.x, y: f.y };
+  // A slow push-in while a shot holds keeps it alive, like a dolly.
+  const held = Math.min(1, Math.max(0, (t - z.start) / Math.max(1, z.end - z.start)));
+  return { scale: z.scale * (1 + 0.04 * held), x: f.x, y: f.y };
 }
 
 /** Keeps the visible window inside the recording. */
@@ -51,11 +53,20 @@ export function clampCam(c: { scale: number; x: number; y: number }) {
 }
 
 export interface CameraPath {
+  /** Camera at a source time. */
   at: (t: number) => Cam;
 }
 
-export function buildCameraPath(zooms: Zoom[], duration: number, snap: number): CameraPath {
-  const count = Math.max(2, Math.ceil(duration * HZ) + 2);
+/**
+ * Simulates the camera in output time, so moves feel the same next to
+ * sped-up stretches. `toOut`/`toSrc` map between source and output time.
+ */
+export function buildCameraPath(
+  zooms: Zoom[],
+  map: { duration: number; toOut: (t: number) => number; toSrc: (o: number) => number },
+  snap: number
+): CameraPath {
+  const count = Math.max(2, Math.ceil(map.duration * HZ) + 2);
   const scale = new Float32Array(count);
   const xs = new Float32Array(count);
   const ys = new Float32Array(count);
@@ -63,15 +74,16 @@ export function buildCameraPath(zooms: Zoom[], duration: number, snap: number): 
   // Natural frequency: gentle (≈1 s moves) to snappy (≈0.45 s).
   const w = 4.5 + snap * 7;
   const dt = 1 / HZ;
+  const sorted = [...zooms].sort((a, b) => a.start - b.start);
+  // Every video opens on the wide shot.
   let s = 1;
   let x = 0.5;
   let y = 0.5;
   let vs = 0;
   let vx = 0;
   let vy = 0;
-  const sorted = [...zooms].sort((a, b) => a.start - b.start);
   for (let i = 0; i < count; i++) {
-    const g = targetAt(sorted, i * dt);
+    const g = targetAt(sorted, map.toSrc(i * dt));
     // Critically damped spring: a = w²(target − x) − 2w·v.
     vs += (w * w * (g.scale - s) - 2 * w * vs) * dt;
     vx += (w * w * (g.x - x) - 2 * w * vx) * dt;
@@ -87,7 +99,7 @@ export function buildCameraPath(zooms: Zoom[], duration: number, snap: number): 
   }
   return {
     at(t: number) {
-      const f = Math.min(count - 1.001, Math.max(0, t * HZ));
+      const f = Math.min(count - 1.001, Math.max(0, map.toOut(t) * HZ));
       const i = Math.floor(f);
       const k = f - i;
       const l = (a: Float32Array) => a[i] + (a[i + 1] - a[i]) * k;

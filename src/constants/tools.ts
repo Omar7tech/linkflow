@@ -264,14 +264,14 @@ export const TOOLS = [
     name: "Screen Studio",
     shortName: "Screen Studio",
     description:
-      "Turn a screen recording into a polished product video. Record a tab, window or your screen with your voice and camera, or drop in any recording, and it zooms in where the action is with smooth camera moves, frames it on a wallpaper inside a window or browser, adds a camera bubble and writes captions as you talk. Fine-tune zooms on a timeline, then export MP4 or GIF in any format from 16:9 to vertical.",
+      "Turn a screen recording into a product video that looks professionally edited. Record a tab, window or your screen with your voice and camera, or drop in any recording, and it edits it for you: trims the dead ends, speeds through silent waits, follows your typing and clicks with smooth, steady camera moves, highlights clicks and evens out your voice. Frame it on a wallpaper in a window or browser, add a camera bubble and captions written as you talk, fine-tune everything on a timeline, then export an MP4 in any format from 16:9 to vertical.",
     keywords: [
       "screen studio alternative",
       "screen recorder with zoom",
       "auto zoom screen recording",
       "product demo video maker",
       "screen recording editor",
-      "screen recording to gif",
+      "screen recording to mp4",
       "browser screen recorder",
     ],
     icon: ClapperboardIcon,

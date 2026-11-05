@@ -326,6 +326,87 @@ export const SCENES: Record<string, () => ReactNode> = {
     </Center>
   ),
 
+  screenstudio: () => (
+    // A recording framed on its wallpaper, with the edit's timeline below. On
+    // hover the camera pushes in on the button being clicked, the click
+    // ripples, and the playhead runs into the zoom.
+    <Fill className="overflow-hidden">
+      <div
+        className="absolute inset-0"
+        style={{ background: `radial-gradient(ellipse 55% 60% at 50% 40%, ${soft(16)}, transparent 70%)` }}
+      />
+      <svg
+        viewBox="0 0 160 100"
+        aria-hidden
+        className="absolute top-[8%] left-1/2 h-[100%] w-auto -translate-x-1/2"
+        fontFamily={`-apple-system, "Segoe UI", Helvetica, Arial, sans-serif`}
+      >
+        <defs>
+          <linearGradient id="scene-ss-wall" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor={A} stopOpacity="0.9" />
+            <stop offset="1" stopColor="#0b0f14" />
+          </linearGradient>
+          <clipPath id="scene-ss-frame">
+            <rect x="22" y="6" width="116" height="65" rx="4" />
+          </clipPath>
+        </defs>
+
+        {/* The finished shot. */}
+        <g clipPath="url(#scene-ss-frame)">
+          <rect x="22" y="6" width="116" height="65" fill="url(#scene-ss-wall)" />
+          <g
+            className="transition-transform duration-700 ease-out group-hover:scale-[1.9]"
+            style={{ transformOrigin: "110px 46px" }}
+          >
+            <rect x="33" y="14" width="94" height="50" rx="2.2" fill="#0b0f14" opacity="0.35" transform="translate(0 2)" />
+            <rect x="33" y="14" width="94" height="50" rx="2.2" fill="#f7f8fa" />
+            <rect x="33" y="14" width="94" height="5" rx="2.2" fill="#e6e8ec" />
+            <rect x="33" y="17" width="94" height="2" fill="#e6e8ec" />
+            {["#ff5f57", "#febc2e", "#28c840"].map((c, i) => (
+              <circle key={c} cx={36.5 + i * 3} cy="16.5" r="0.9" fill={c} />
+            ))}
+            <rect x="33" y="19" width="17" height="45" fill="#eceef2" />
+            {[0, 1, 2, 3].map((i) => (
+              <rect key={i} x="36" y={24 + i * 5} width="11" height="1.6" rx="0.8" fill="#c9cdd4" />
+            ))}
+            <rect x="55" y="24" width="30" height="2.6" rx="1" fill="#1f2328" />
+            <rect x="55" y="30" width="52" height="1.4" rx="0.7" fill="#c9cdd4" />
+            <rect x="55" y="33.5" width="40" height="1.4" rx="0.7" fill="#c9cdd4" />
+            <rect x="55" y="41" width="40" height="7" rx="1.2" fill="#ffffff" stroke="#dfe2e7" strokeWidth="0.4" />
+            <rect x="101" y="42.5" width="18" height="6.5" rx="1.4" fill={A} />
+            <rect x="105" y="45.2" width="10" height="1.2" rx="0.6" fill="#ffffff" />
+            <rect x="55" y="53" width="20" height="7" rx="1" fill="#e9ebef" />
+            <rect x="78" y="53" width="20" height="7" rx="1" fill="#e9ebef" />
+            <rect x="101" y="53" width="20" height="7" rx="1" fill="#e9ebef" />
+            {/* The click. */}
+            <circle
+              cx="110"
+              cy="46"
+              r="4"
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="0.6"
+              className="opacity-0 transition-[opacity,transform] delay-500 duration-500 group-hover:scale-150 group-hover:opacity-90"
+              style={{ transformOrigin: "110px 46px" }}
+            />
+            <path d="M111 46.5 v5.4 l1.4 -1.3 l1.2 2.4 l0.9 -0.45 l-1.2 -2.35 h1.9 z" fill="#111" stroke="#fff" strokeWidth="0.3" />
+          </g>
+        </g>
+
+        {/* The edit's timeline. */}
+        <g transform="translate(22 80)">
+          <rect width="116" height="7" rx="1.6" fill="currentColor" className="text-foreground/10" />
+          <rect x="58" y="1" width="34" height="5" rx="1.1" fill={A} opacity="0.3" stroke={A} strokeWidth="0.4" />
+          <rect x="24" y="1" width="14" height="5" rx="1.1" fill="currentColor" className="text-foreground/15" />
+          <g className="transition-transform duration-700 ease-out group-hover:translate-x-[44px]">
+            <rect x="26" y="-2.5" width="0.8" height="12" rx="0.4" fill="currentColor" className="text-foreground" />
+            <circle cx="26.4" cy="-2.5" r="1.4" fill="currentColor" className="text-foreground" />
+          </g>
+        </g>
+      </svg>
+    </Fill>
+  ),
+
   readme: () => (
     // A README, nothing else: banner, badges, a feature row. On hover the
     // page scrolls to the install line and the markdown is copied.

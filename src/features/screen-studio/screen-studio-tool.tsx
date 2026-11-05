@@ -5,7 +5,6 @@ import {
   CameraIcon,
   CircleIcon,
   DownloadIcon,
-  FilmIcon,
   ImagePlusIcon,
   LoaderCircleIcon,
   MicIcon,
@@ -17,6 +16,7 @@ import {
   SquareIcon,
   Trash2Icon,
   UploadIcon,
+  WandSparklesIcon,
   XIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -28,11 +28,14 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { TOOL_BY_ID } from "@/constants/tools";
 import { SOLIDS, WALLPAPERS, wallpaperCss } from "@/lib/screen-studio/backgrounds";
+import { analyze, type Analysis } from "@/lib/screen-studio/analyze";
 import { buildCameraPath } from "@/lib/screen-studio/camera";
-import { GIF_MAX_SECONDS, exportGif, exportVideo, outputSize } from "@/lib/screen-studio/export";
-import { autoZooms, filmstrip, loadVideo, seek } from "@/lib/screen-studio/media";
+import { direct, type Plan } from "@/lib/screen-studio/director";
+import { exportVideo, outputSize } from "@/lib/screen-studio/export";
+import { filmstrip, loadVideo, seek } from "@/lib/screen-studio/media";
+import { buildTimeMap } from "@/lib/screen-studio/timemap";
 import { pickScreen, speechSupported, startRecording, type Session } from "@/lib/screen-studio/record";
-import { drawFrame, layout } from "@/lib/screen-studio/render";
+import { drawFrame, pickPoint } from "@/lib/screen-studio/render";
 import { DEFAULT_STYLE, uid, type Aspect, type BubbleCorner, type Edit, type FrameStyle, type Style } from "@/lib/screen-studio/types";
 import { cn } from "@/lib/utils";
 import { Timeline, type Selection } from "./timeline";
@@ -124,6 +127,7 @@ const subscribeNever = () => () => {};
 type Phase = { kind: "start" } | { kind: "countdown"; n: number } | { kind: "recording" } | { kind: "loading"; label: string; p?: number } | { kind: "edit" };
 
 interface Media {
+  screen: Blob;
   screenUrl: string;
   cameraUrl: string | null;
   duration: number;
@@ -131,16 +135,28 @@ interface Media {
   height: number;
 }
 
+const secs = (s: number) => (s >= 10 ? `${Math.round(s)}s` : `${s.toFixed(1)}s`);
+
+function describe(p: Plan) {
+  const parts: string[] = [];
+  if (p.summary.zooms) parts.push(`${p.summary.zooms} camera move${p.summary.zooms > 1 ? "s" : ""}`);
+  if (p.summary.spedUp) parts.push(`sped through ${p.summary.spedUp} pause${p.summary.spedUp > 1 ? "s" : ""} (${secs(p.summary.saved)} saved)`);
+  if (p.summary.trimmed > 0.5) parts.push(`trimmed ${secs(p.summary.trimmed)} of dead ends`);
+  if (p.summary.clicks) parts.push(`${p.summary.clicks} click${p.summary.clicks > 1 ? "s" : ""} highlighted`);
+  return parts.length ? parts.join(", ") : "Nothing needed cutting. Add zooms by clicking the preview.";
+}
+
 export function ScreenStudioTool() {
   const [phase, setPhase] = React.useState<Phase>({ kind: "start" });
   const [opts, setOpts] = React.useState({ mic: true, camera: false, captions: true });
   const [media, setMedia] = React.useState<Media | null>(null);
+  const [analysis, setAnalysis] = React.useState<Analysis | null>(null);
   const [edit, setEdit] = React.useState<Edit | null>(null);
   const [thumbs, setThumbs] = React.useState<string[]>([]);
   const [selected, setSelected] = React.useState<Selection>(null);
   const [playing, setPlaying] = React.useState(false);
   const [short, setShort] = React.useState(1080);
-  const [exporting, setExporting] = React.useState<{ kind: "video" | "gif"; p: number } | null>(null);
+  const [exporting, setExporting] = React.useState<{ p: number; started: number } | null>(null);
   const [elapsed, setElapsed] = React.useState(0);
 
   const session = React.useRef<Session | null>(null);
@@ -156,10 +172,8 @@ export function ScreenStudioTool() {
 
   const canSpeak = React.useSyncExternalStore(subscribeNever, speechSupported, () => false);
 
-  const path = React.useMemo(
-    () => (edit && media ? buildCameraPath(edit.zooms, media.duration, edit.style.snap) : null),
-    [edit, media]
-  );
+  const map = React.useMemo(() => (edit ? buildTimeMap(edit) : null), [edit]);
+  const path = React.useMemo(() => (edit && map ? buildCameraPath(edit.zooms, map, edit.style.snap) : null), [edit, map]);
   const setStyle = <K extends keyof Style>(key: K, value: Style[K]) => setEdit((e) => (e ? { ...e, style: { ...e.style, [key]: value } } : e));
 
   /* --------------------------------------------------------- loading */
@@ -173,21 +187,27 @@ export function ScreenStudioTool() {
       const c = cameraUrl ? await loadVideo(cameraUrl) : null;
       video.current = v;
       cam.current = c;
-      const m = { screenUrl, cameraUrl, duration: v.duration, width: v.videoWidth, height: v.videoHeight };
-      setPhase({ kind: "loading", label: "Finding the action", p: 0 });
-      const zooms = await autoZooms(screenUrl, m.width / m.height, (p) => setPhase({ kind: "loading", label: "Finding the action", p }));
-      setThumbs(await filmstrip(screenUrl, 14));
+      const m = { screen, screenUrl, cameraUrl, duration: v.duration, width: v.videoWidth, height: v.videoHeight };
+      const progress = (p: number) => setPhase({ kind: "loading", label: p < 0.9 ? "Watching your recording" : "Listening for your voice", p });
+      const a = await analyze(screen, screenUrl, progress);
+      setPhase({ kind: "loading", label: "Editing", p: 1 });
+      const plan = direct(a);
+      setThumbs(await filmstrip(screenUrl, 16));
+      setAnalysis(a);
       setMedia(m);
       setEdit({
-        trimStart: 0,
-        trimEnd: m.duration,
-        zooms,
+        trimStart: plan.trimStart,
+        trimEnd: plan.trimEnd,
+        zooms: plan.zooms,
+        speeds: plan.speeds,
+        clicks: plan.clicks,
         captions,
         style: { ...DEFAULT_STYLE, bubble: { ...DEFAULT_STYLE.bubble, show: !!c }, aspect: m.width / m.height < 1 ? "9:16" : "16:9" },
       });
+      await seek(v, plan.trimStart);
       setSelected(null);
       setPhase({ kind: "edit" });
-      if (zooms.length) toast(`${zooms.length} zoom${zooms.length > 1 ? "s" : ""} added where the action is`, { description: "Drag them on the timeline, or click the preview to aim one." });
+      toast("Edited for you", { description: describe(plan) });
     } catch {
       toast.error("That video couldn't be opened. Try an MP4 or WebM.");
       setPhase({ kind: "start" });
@@ -249,24 +269,25 @@ export function ScreenStudioTool() {
 
   const size = edit ? outputSize(edit.style.aspect, 720) : { width: 1280, height: 720 };
 
-  const paint = React.useCallback(() => {
+  const paint = React.useCallback((still = true) => {
     const ctx = canvas.current?.getContext("2d");
     const v = video.current;
-    if (!ctx || !v || !edit || !path || !media) return;
+    if (!ctx || !v || !edit || !path || !media || !map) return;
     const t = v.currentTime;
-    drawFrame(ctx, size.width, size.height, { video: v, cam: cam.current, wallpaper: wallpaper.current }, t, path.at(t), edit.style, edit.captions);
+    drawFrame(ctx, size.width, size.height, { video: v, cam: cam.current, wallpaper: wallpaper.current }, { t, out: map.toOut(t), outDuration: map.duration, still }, path.at(t), edit.style, edit.captions, edit.clicks);
     if (playhead.current) playhead.current.style.left = `${(t / media.duration) * 100}%`;
-    if (clock.current) clock.current.textContent = fmt(Math.max(0, t - edit.trimStart));
-  }, [edit, path, media, size.width, size.height]);
+    if (clock.current) clock.current.textContent = fmt(map.toOut(t));
+  }, [edit, path, media, map, size.width, size.height]);
 
-  // Redraw on any change while paused.
+  // Redraw on any change while paused, and once the editor appears.
+  const editing = phase.kind === "edit";
   React.useEffect(() => {
-    if (!playing) paint();
-  }, [paint, playing]);
+    if (!playing && editing) paint();
+  }, [paint, playing, editing]);
 
-  // Playback loop.
+  // Playback loop, honouring the speed-ups.
   React.useEffect(() => {
-    if (!playing || !edit) return;
+    if (!playing || !edit || !map) return;
     const v = video.current!;
     const c = cam.current;
     let raf = 0;
@@ -274,16 +295,24 @@ export function ScreenStudioTool() {
       if (v.currentTime >= edit.trimEnd || v.ended) {
         v.pause();
         c?.pause();
+        v.playbackRate = 1;
+        v.muted = false;
         setPlaying(false);
         return;
       }
+      const rate = map.rateAt(v.currentTime);
+      if (v.playbackRate !== rate) {
+        v.playbackRate = rate;
+        v.muted = rate > 1;
+        if (c) c.playbackRate = rate;
+      }
       if (c && Math.abs(c.currentTime - v.currentTime) > 0.15 && v.currentTime < c.duration) c.currentTime = v.currentTime;
-      paint();
+      paint(false);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [playing, edit, paint]);
+  }, [playing, edit, map, paint]);
 
   const toggle = async () => {
     const v = video.current;
@@ -316,18 +345,13 @@ export function ScreenStudioTool() {
 
   // Clicking the preview aims the selected zoom there, or adds one.
   const aim = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!edit || !media || !video.current) return;
+    if (!edit || !media || !video.current || !path) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const px = ((e.clientX - rect.left) / rect.width) * size.width;
     const py = ((e.clientY - rect.top) / rect.height) * size.height;
-    const L = layout(edit.style, size.width, size.height, media.width, media.height);
-    const c = L.content;
-    if (px < c.x || px > c.x + c.w || py < c.y || py > c.y + c.h) return;
-    const cur = path!.at(video.current.currentTime);
-    // Undo the current zoom to find the point in the recording.
-    const x = cur.x + ((px - c.x) / c.w - 0.5) / cur.scale;
-    const y = cur.y + ((py - c.y) / c.h - 0.5) / cur.scale;
     const t = video.current.currentTime;
+    const { x, y } = pickPoint(edit.style, size.width, size.height, media.width, media.height, path.at(t), px, py);
+    if (x < 0 || x > 1 || y < 0 || y > 1) return;
     const hit = selected?.kind === "zoom" ? edit.zooms.find((z) => z.id === selected.id) : edit.zooms.find((z) => t >= z.start && t <= z.end);
     if (hit) {
       setEdit({ ...edit, zooms: edit.zooms.map((z) => (z.id === hit.id ? { ...z, x, y, path: undefined, auto: false } : z)) });
@@ -341,7 +365,8 @@ export function ScreenStudioTool() {
 
   const removeSelected = () => {
     if (!selected || !edit) return;
-    setEdit(selected.kind === "zoom" ? { ...edit, zooms: edit.zooms.filter((z) => z.id !== selected.id) } : { ...edit, captions: edit.captions.filter((c) => c.id !== selected.id) });
+    const keep = <T extends { id: string }>(list: T[]) => list.filter((x) => x.id !== selected.id);
+    setEdit(selected.kind === "zoom" ? { ...edit, zooms: keep(edit.zooms) } : selected.kind === "speed" ? { ...edit, speeds: keep(edit.speeds) } : { ...edit, captions: keep(edit.captions) });
     setSelected(null);
   };
 
@@ -362,32 +387,46 @@ export function ScreenStudioTool() {
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  const rerunAuto = async () => {
-    if (!media || !edit) return;
-    setPhase({ kind: "loading", label: "Finding the action", p: 0 });
-    const zooms = await autoZooms(media.screenUrl, media.width / media.height, (p) => setPhase({ kind: "loading", label: "Finding the action", p }));
-    setEdit({ ...edit, zooms: [...edit.zooms.filter((z) => !z.auto), ...zooms] });
-    setPhase({ kind: "edit" });
-    toast(zooms.length ? `${zooms.length} auto zooms` : "No clear focus points found", { description: zooms.length ? undefined : "Add zooms by clicking the preview." });
+  // Re-run the editor; your own zooms and speed changes stay.
+  const editForMe = () => {
+    if (!analysis || !edit) return;
+    const plan = direct(analysis);
+    setEdit({
+      ...edit,
+      trimStart: plan.trimStart,
+      trimEnd: plan.trimEnd,
+      zooms: [...edit.zooms.filter((z) => !z.auto), ...plan.zooms],
+      speeds: [...edit.speeds.filter((s) => !s.auto), ...plan.speeds],
+      clicks: plan.clicks,
+    });
+    setSelected(null);
+    toast("Edited for you", { description: describe(plan) });
   };
 
   /* ---------------------------------------------------------- export */
 
-  const runExport = async (kind: "video" | "gif") => {
-    if (!edit || !media || !path) return;
+  const runExport = async () => {
+    if (!edit || !media || !path || !map) return;
     if (playing) await toggle();
     const ctrl = new AbortController();
     abort.current = ctrl;
-    setExporting({ kind, p: 0 });
-    const job = { screenUrl: media.screenUrl, cameraUrl: media.cameraUrl, wallpaper: wallpaper.current, edit, path, short, signal: ctrl.signal, onProgress: (p: number) => setExporting({ kind, p }) };
+    const started = performance.now();
+    setExporting({ p: 0, started });
     try {
-      if (kind === "video") {
-        const out = await exportVideo(job);
-        download(out.blob, `screen-studio.${out.ext}`);
-      } else {
-        download(await exportGif(job), "screen-studio.gif");
-      }
-      toast("Exported");
+      const out = await exportVideo({
+        screen: media.screen,
+        screenUrl: media.screenUrl,
+        cameraUrl: media.cameraUrl,
+        wallpaper: wallpaper.current,
+        edit,
+        path,
+        map,
+        short,
+        signal: ctrl.signal,
+        onProgress: (p: number) => setExporting({ p, started }),
+      });
+      download(out.blob, "screen-studio.mp4");
+      toast("Video ready", { description: `${fmt(map.duration)} of video in ${secs((performance.now() - started) / 1000)}.` });
     } catch (err) {
       if ((err as Error).name !== "AbortError") toast.error((err as Error).message || "Export failed.");
     } finally {
@@ -404,6 +443,7 @@ export function ScreenStudioTool() {
       if (media.cameraUrl) URL.revokeObjectURL(media.cameraUrl);
     }
     setMedia(null);
+    setAnalysis(null);
     setEdit(null);
     setThumbs([]);
     setPhase({ kind: "start" });
@@ -413,6 +453,7 @@ export function ScreenStudioTool() {
 
   const zoom = selected?.kind === "zoom" ? edit?.zooms.find((z) => z.id === selected.id) : undefined;
   const caption = selected?.kind === "caption" ? edit?.captions.find((c) => c.id === selected.id) : undefined;
+  const speed = selected?.kind === "speed" ? edit?.speeds.find((c) => c.id === selected.id) : undefined;
 
   if (phase.kind !== "edit" || !edit || !media) {
     return (
@@ -435,7 +476,7 @@ export function ScreenStudioTool() {
   }
 
   const st = edit.style;
-  const length = edit.trimEnd - edit.trimStart;
+  const length = map?.duration ?? edit.trimEnd - edit.trimStart;
 
   return (
     <GeneratorLayout
@@ -506,6 +547,21 @@ export function ScreenStudioTool() {
             </p>
           </Panel>
         )}
+        {speed && (
+          <Panel
+            title="Speed-up"
+            action={
+              <button type="button" aria-label="Close" onClick={() => setSelected(null)} className="text-muted-foreground hover:text-foreground">
+                <XIcon className="size-4" />
+              </button>
+            }
+          >
+            <Row label="Speed" value={`${speed.rate}×`}>
+              <Slider min={1.5} max={10} step={0.5} value={[speed.rate]} onValueChange={([v]) => setEdit({ ...edit, speeds: edit.speeds.map((x) => (x.id === speed.id ? { ...x, rate: v, auto: false } : x)) })} />
+            </Row>
+            <p className="text-muted-foreground text-xs">Sound is muted while sped up.</p>
+          </Panel>
+        )}
         {caption && (
           <Panel
             title="Caption"
@@ -569,29 +625,54 @@ export function ScreenStudioTool() {
         </Panel>
 
         <Panel
-          title="Zoom"
+          title="Editing"
           action={
-            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={rerunAuto}>
-              <SparklesIcon /> Auto zoom
+            <Button size="sm" className="h-7 text-xs" onClick={editForMe}>
+              <WandSparklesIcon /> Edit for me
             </Button>
           }
         >
+          <p className="text-muted-foreground -mt-1 text-xs leading-relaxed">
+            Trims dead ends, speeds through silent waits, frames typing and clicks with steady camera moves, and pans between nearby actions. Your own changes stay.
+          </p>
+          <Row label="Camera">
+            <Segmented label="Camera" value={st.zoomMode} options={[["scene", "Cinematic"], ["window", "Inside window"]] as const} onChange={(v) => setStyle("zoomMode", v)} />
+          </Row>
           <Row label="Motion" value={st.snap < 0.34 ? "Gentle" : st.snap < 0.67 ? "Smooth" : "Snappy"}>
             <Slider min={0} max={1} step={0.05} value={[st.snap]} onValueChange={([v]) => setStyle("snap", v)} />
           </Row>
-          <Toggle label="Motion blur" checked={st.motionBlur} onChange={(v) => setStyle("motionBlur", v)} />
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-muted-foreground h-7 w-full text-xs"
-            onClick={() => {
-              setEdit({ ...edit, zooms: [] });
-              setSelected(null);
-            }}
-            disabled={!edit.zooms.length}
-          >
-            <RotateCcwIcon /> Clear all zooms
-          </Button>
+          <div className="space-y-2.5">
+            <Toggle label="Motion blur" checked={st.motionBlur} onChange={(v) => setStyle("motionBlur", v)} />
+            <Toggle label={`Click ripples${edit.clicks.length ? ` (${edit.clicks.length})` : ""}`} checked={st.ripples} onChange={(v) => setStyle("ripples", v)} />
+            <Toggle label="Intro and outro" checked={st.intro} onChange={(v) => setStyle("intro", v)} />
+            <Toggle label="Clean up audio" checked={st.cleanAudio} onChange={(v) => setStyle("cleanAudio", v)} />
+          </div>
+          <div className="grid grid-cols-2 gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground h-7 text-xs"
+              onClick={() => {
+                setEdit({ ...edit, zooms: [] });
+                setSelected(null);
+              }}
+              disabled={!edit.zooms.length}
+            >
+              <RotateCcwIcon /> Clear zooms
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground h-7 text-xs"
+              onClick={() => {
+                setEdit({ ...edit, speeds: [] });
+                setSelected(null);
+              }}
+              disabled={!edit.speeds.length}
+            >
+              <RotateCcwIcon /> Normal speed
+            </Button>
+          </div>
         </Panel>
 
         <Panel title="Camera">
@@ -656,7 +737,7 @@ export function ScreenStudioTool() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="flex items-center gap-1.5">
-                  <LoaderCircleIcon className="size-3.5 animate-spin" /> {exporting.kind === "video" ? "Rendering video" : "Encoding GIF"}
+                  <LoaderCircleIcon className="size-3.5 animate-spin" /> Rendering MP4
                 </span>
                 <span className="font-mono">{Math.round(exporting.p * 100)}%</span>
               </div>
@@ -664,22 +745,16 @@ export function ScreenStudioTool() {
                 <div className="bg-primary h-full transition-[width]" style={{ width: `${exporting.p * 100}%` }} />
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-muted-foreground text-[11px]">{exporting.kind === "video" ? "Plays through once. Keep this tab open." : "One frame at a time."}</p>
+                <p className="text-muted-foreground text-[11px]">Keep this tab in front while it renders.</p>
                 <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => abort.current?.abort()}>
                   Cancel
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2">
-              <Button onClick={() => runExport("video")}>
-                <DownloadIcon /> Video
-              </Button>
-              <Button variant="outline" onClick={() => runExport("gif")}>
-                <FilmIcon /> GIF
-              </Button>
-              {length > GIF_MAX_SECONDS && <p className="text-muted-foreground col-span-2 text-[11px]">GIFs keep the first {GIF_MAX_SECONDS} seconds.</p>}
-            </div>
+            <Button className="w-full" onClick={runExport}>
+              <DownloadIcon /> Export MP4
+            </Button>
           )}
           <Button variant="ghost" size="sm" className="text-muted-foreground w-full" onClick={reset}>
             <CircleIcon /> New recording
