@@ -200,49 +200,148 @@ const CHECKER =
   "bg-[#ececec] bg-[length:12px_12px] [background-image:linear-gradient(45deg,#d9d9d9_25%,transparent_25%,transparent_75%,#d9d9d9_75%),linear-gradient(45deg,#d9d9d9_25%,transparent_25%,transparent_75%,#d9d9d9_75%)] [background-position:0_0,6px_6px] dark:bg-[#1b1b1b] dark:[background-image:linear-gradient(45deg,#262626_25%,transparent_25%,transparent_75%,#262626_75%),linear-gradient(45deg,#262626_25%,transparent_25%,transparent_75%,#262626_75%)]";
 
 /** A tiny app screen: header, a hero card and a list, for device mockups. */
-function AppScreen({ compact = false }: { compact?: boolean }) {
+/** A geometric N, for the 3D logo scene. */
+const MONOGRAM = "M20 84V16h17l26 42V16h17v68H63L37 42v42Z";
+
+/** A small calendar app, for the store screenshots. */
+function PhoneScreen() {
+  const rows: [string, string, string][] = [
+    ["Design review", "10:00", A],
+    ["Ship v2.4", "14:30", "#a1a1aa"],
+    ["Call with Ana", "16:00", "#a1a1aa"],
+    ["Write changelog", "17:15", "#a1a1aa"],
+  ];
   return (
-    <div
-      className="flex h-full flex-col gap-[6%] p-[8%]"
-      style={{
-        background: `linear-gradient(170deg, ${soft(28, "#0b0b0b")}, #0b0b0b 70%)`,
-      }}
-    >
-      <div className="flex items-center justify-between">
-        <span className="h-[5px] w-[40%] rounded-full bg-white/70" />
-        <span className="size-[8px] rounded-full" style={{ background: A }} />
+    <div className="h-full rounded-t-[9px] bg-white px-[9%] pt-[12%] text-neutral-900">
+      <p className="text-[7px] font-semibold tracking-tight">This week</p>
+      <div className="mt-[8%] flex justify-between">
+        {["M", "T", "W", "T", "F"].map((d, i) => (
+          <span
+            key={i}
+            className={`grid size-[13px] place-items-center rounded-full text-[5px] font-medium ${i === 2 ? "text-white" : "text-neutral-500"}`}
+            style={i === 2 ? { background: A } : undefined}
+          >
+            {d}
+          </span>
+        ))}
       </div>
-      <div
-        className="aspect-[16/10] rounded-[6px]"
-        style={{
-          background: `linear-gradient(135deg, ${A}, ${soft(40, "#111")})`,
-        }}
-      />
-      {!compact &&
-        [70, 55, 62].map((width) => (
-          <div key={width} className="flex items-center gap-[6%]">
-            <span className="size-[10px] shrink-0 rounded-[3px] bg-white/15" />
-            <span
-              className="h-[4px] rounded-full bg-white/25"
-              style={{ width: `${width}%` }}
-            />
+      <div className="mt-[10%] space-y-[7%]">
+        {rows.map(([title, time, dot]) => (
+          <div key={title} className="flex items-center gap-[6%] border-b border-neutral-100 pb-[5%]">
+            <span className="size-[4px] shrink-0 rounded-full" style={{ background: dot }} />
+            <span className="flex-1 truncate text-[5.5px] font-medium">{title}</span>
+            <span className="font-mono text-[5px] text-neutral-400">{time}</span>
           </div>
         ))}
+      </div>
+      <div className="mt-[10%] rounded-[5px] bg-neutral-100 p-[7%]">
+        <div className="flex justify-between text-[5px]">
+          <span className="font-medium">Focus time</span>
+          <span className="font-mono text-neutral-500">2h 30m</span>
+        </div>
+        <div className="mt-[6%] h-[3px] overflow-hidden rounded-full bg-neutral-200">
+          <div className="h-full w-[62%] rounded-full" style={{ background: A }} />
+        </div>
+      </div>
     </div>
   );
 }
 
+interface Person {
+  name: string;
+  bg: string;
+  skin: string;
+  hair: string;
+  shirt: string;
+  style: "short" | "bob" | "bun" | "curly" | "long";
+}
+
+/** Calm, desaturated portraits: no cartoon smiles, just shape and colour. */
+const PEOPLE: Person[] = [
+  { name: "Theo", bg: "#dfe5ec", skin: "#e8c4a2", hair: "#2b2421", shirt: "#3f4a5a", style: "short" },
+  { name: "Mira", bg: "#e6e0d8", skin: "#c99a74", hair: "#1f1a17", shirt: "#7a5c46", style: "bob" },
+  { name: "Lena", bg: "#dbe6df", skin: "#8d5a3c", hair: "#18120f", shirt: "#2f4a3d", style: "curly" },
+  { name: "Sam", bg: "#e5e1ea", skin: "#f1d3b8", hair: "#b0743f", shirt: "#4b4560", style: "bun" },
+  { name: "Ivy", bg: "#e9e4dc", skin: "#d8ab86", hair: "#4a2f24", shirt: "#5d5048", style: "long" },
+];
+
+const HAIR: Record<Person["style"], (c: string) => ReactNode> = {
+  short: (c) => <path d="M20 30c-1-10 5-16 12-16s13 5 12 16c-2-5-6-8-12-8s-10 3-12 8Z" fill={c} />,
+  bob: (c) => <path d="M18 38c-2-14 4-23 14-23s16 9 14 23c-2 0-3-2-3-4v-6c-2-4-6-6-11-6s-9 2-11 6v6c0 2-1 4-3 4Z" fill={c} />,
+  bun: (c) => (
+    <>
+      <circle cx="32" cy="12" r="5.5" fill={c} />
+      <path d="M20 30c-1-10 5-16 12-16s13 6 12 16c-2-5-6-8-12-8s-10 3-12 8Z" fill={c} />
+    </>
+  ),
+  curly: (c) => (
+    <g fill={c}>
+      {[
+        [21, 25, 6],
+        [26, 19, 6.5],
+        [32, 17, 7],
+        [38, 19, 6.5],
+        [43, 25, 6],
+      ].map(([x, y, r]) => (
+        <circle key={x} cx={x} cy={y} r={r} />
+      ))}
+    </g>
+  ),
+  long: (c) => <path d="M18 50c-3-20 2-35 14-35s17 15 14 35h-4V30c-2-4-6-7-10-7s-8 3-10 7v20Z" fill={c} />,
+};
+
+function Face({ person, className = "", style }: { person: Person; className?: string; style?: CSSProperties }) {
+  return (
+    <svg viewBox="0 0 64 64" className={`shrink-0 rounded-full ${className}`} style={{ background: person.bg, ...style }} aria-hidden>
+      {person.style === "long" && HAIR.long(person.hair)}
+      <path d="M12 64c2-11 10-16 20-16s18 5 20 16Z" fill={person.shirt} />
+      <rect x="28" y="40" width="8" height="9" rx="3" fill={person.skin} />
+      <ellipse cx="32" cy="30" rx="11" ry="12.5" fill={person.skin} />
+      {person.style !== "long" && HAIR[person.style](person.hair)}
+      {person.style === "long" && <path d="M21 29c1-6 5-9 11-9s10 3 11 9c-3-3-7-4-11-4s-8 1-11 4Z" fill={person.hair} />}
+      <circle cx="27.5" cy="31.5" r="1.3" fill="#1c1917" />
+      <circle cx="36.5" cy="31.5" r="1.3" fill="#1c1917" />
+    </svg>
+  );
+}
+
+/** Fan-out offsets for the avatar row (static strings for Tailwind). */
+const FAN = ["", "group-hover:translate-x-[4px]", "group-hover:translate-x-[8px]", "group-hover:translate-x-[12px]", "group-hover:translate-x-[16px]", "group-hover:translate-x-[20px]"];
+
 /* ------------------------------------------------------------------ scenes */
 
-/** One brand mark, drawn at any size for the favicon scene. */
-function Mark({ className = "", style }: { className?: string; style?: CSSProperties }) {
+/**
+ * A 16 × 16 favicon drawn pixel for pixel: a rounded tile with an N, so the
+ * magnified view shows real pixels, not a smooth vector pretending.
+ */
+const MARK_ROWS = Array.from({ length: 16 }, (_, y) =>
+  Array.from({ length: 16 }, (_, x) => {
+    const corner = (x < 2 || x > 13) && (y < 2 || y > 13) && Math.min(x, 15 - x) + Math.min(y, 15 - y) < 2;
+    if (corner) return ".";
+    const n = y >= 4 && y <= 11 && (x === 4 || x === 5 || x === 10 || x === 11 || (x >= 6 && x <= 9 && y >= 5 && y <= 10 && (x - y === 0 || x - y === 1)));
+    return n ? "w" : "a";
+  }).join("")
+);
+
+function PixelMark({ size }: { size: number }) {
+  const p = size / 16;
+  const runs: { x: number; y: number; w: number; c: string }[] = [];
+  MARK_ROWS.forEach((row, y) => {
+    let x = 0;
+    while (x < 16) {
+      const c = row[x];
+      let w = 1;
+      while (x + w < 16 && row[x + w] === c) w++;
+      if (c !== ".") runs.push({ x, y, w, c });
+      x += w;
+    }
+  });
   return (
-    <span
-      className={`grid shrink-0 place-items-center font-bold tracking-tight text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_1px_2px_rgb(0_0_0/0.3)] ${className}`}
-      style={{ background: `linear-gradient(180deg, ${A}, ${soft(72, "#000")})`, ...style }}
-    >
-      T
-    </span>
+    <g shapeRendering="crispEdges">
+      {runs.map((r, i) => (
+        <rect key={i} x={r.x * p} y={r.y * p} width={r.w * p} height={p} fill={r.c === "w" ? "#ffffff" : A} />
+      ))}
+    </g>
   );
 }
 
@@ -327,80 +426,76 @@ export const SCENES: Record<string, () => ReactNode> = {
   ),
 
   screenstudio: () => (
-    // A recording framed on its wallpaper, with the edit's timeline below. On
-    // hover the camera pushes in on the button being clicked, the click
-    // ripples, and the playhead runs into the zoom.
+    // A real screen, framed, with the edit's timecode. On hover the camera
+    // eases in on the invite field the way the editor would cut it, and the
+    // playhead runs into the zoom on the timeline.
     <Fill className="overflow-hidden">
-      <div
-        className="absolute inset-0"
-        style={{ background: `radial-gradient(ellipse 55% 60% at 50% 40%, ${soft(16)}, transparent 70%)` }}
-      />
-      <svg
-        viewBox="0 0 160 100"
-        aria-hidden
-        className="absolute top-[8%] left-1/2 h-[100%] w-auto -translate-x-1/2"
-        fontFamily={`-apple-system, "Segoe UI", Helvetica, Arial, sans-serif`}
-      >
+      <svg viewBox="0 0 160 100" aria-hidden className="absolute inset-0 h-full w-full" fontFamily={`-apple-system, "Segoe UI", Helvetica, Arial, sans-serif`}>
         <defs>
-          <linearGradient id="scene-ss-wall" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor={A} stopOpacity="0.9" />
-            <stop offset="1" stopColor="#0b0f14" />
-          </linearGradient>
           <clipPath id="scene-ss-frame">
-            <rect x="22" y="6" width="116" height="65" rx="4" />
+            <rect x="20" y="10" width="120" height="66" rx="3" />
           </clipPath>
         </defs>
-
-        {/* The finished shot. */}
+        {/* Frame. */}
+        <rect x="20" y="10" width="120" height="66" rx="3" fill="var(--muted)" stroke="var(--border)" strokeWidth="0.4" />
         <g clipPath="url(#scene-ss-frame)">
-          <rect x="22" y="6" width="116" height="65" fill="url(#scene-ss-wall)" />
-          <g
-            className="transition-transform duration-700 ease-out group-hover:scale-[1.9]"
-            style={{ transformOrigin: "110px 46px" }}
-          >
-            <rect x="33" y="14" width="94" height="50" rx="2.2" fill="#0b0f14" opacity="0.35" transform="translate(0 2)" />
-            <rect x="33" y="14" width="94" height="50" rx="2.2" fill="#f7f8fa" />
-            <rect x="33" y="14" width="94" height="5" rx="2.2" fill="#e6e8ec" />
-            <rect x="33" y="17" width="94" height="2" fill="#e6e8ec" />
-            {["#ff5f57", "#febc2e", "#28c840"].map((c, i) => (
-              <circle key={c} cx={36.5 + i * 3} cy="16.5" r="0.9" fill={c} />
+          <g className="transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.75]" style={{ transformOrigin: "86px 44px" }}>
+            {/* The recorded app. */}
+            <rect x="32" y="18" width="96" height="58" rx="2" fill="#fafafa" stroke="#e4e4e7" strokeWidth="0.3" />
+            <text x="40" y="29" fontSize="4.6" fontWeight="600" fill="#18181b" letterSpacing="-0.1">
+              Invite your team
+            </text>
+            <text x="40" y="34.2" fontSize="2.5" fill="#71717a">
+              Collaborators can view and edit every project.
+            </text>
+            <rect x="40" y="39" width="56" height="8" rx="1.2" fill="#ffffff" stroke="#d4d4d8" strokeWidth="0.35" />
+            <text x="43" y="44.2" fontSize="2.7" fill="#18181b">
+              maya@northfold.co
+            </text>
+            <rect x="57.6" y="41" width="0.3" height="4" fill="#18181b" />
+            <rect x="99" y="39" width="22" height="8" rx="1.2" fill={A} />
+            <text x="110" y="44.2" fontSize="2.6" fontWeight="600" fill="#ffffff" textAnchor="middle">
+              Send invite
+            </text>
+            <line x1="40" y1="53" x2="121" y2="53" stroke="#e4e4e7" strokeWidth="0.3" />
+            {[
+              ["MC", "Maya Chen", "Editor"],
+              ["JB", "Jonas Berg", "Viewer"],
+            ].map(([i, name, role], k) => (
+              <g key={name} transform={`translate(40 ${57 + k * 8})`}>
+                <circle cx="2.6" cy="2.6" r="2.6" fill="#e4e4e7" />
+                <text x="2.6" y="3.5" fontSize="2" fontWeight="600" fill="#52525b" textAnchor="middle">
+                  {i}
+                </text>
+                <text x="8" y="3.4" fontSize="2.6" fill="#27272a">
+                  {name}
+                </text>
+                <text x="81" y="3.4" fontSize="2.4" fill="#a1a1aa" textAnchor="end">
+                  {role}
+                </text>
+              </g>
             ))}
-            <rect x="33" y="19" width="17" height="45" fill="#eceef2" />
-            {[0, 1, 2, 3].map((i) => (
-              <rect key={i} x="36" y={24 + i * 5} width="11" height="1.6" rx="0.8" fill="#c9cdd4" />
-            ))}
-            <rect x="55" y="24" width="30" height="2.6" rx="1" fill="#1f2328" />
-            <rect x="55" y="30" width="52" height="1.4" rx="0.7" fill="#c9cdd4" />
-            <rect x="55" y="33.5" width="40" height="1.4" rx="0.7" fill="#c9cdd4" />
-            <rect x="55" y="41" width="40" height="7" rx="1.2" fill="#ffffff" stroke="#dfe2e7" strokeWidth="0.4" />
-            <rect x="101" y="42.5" width="18" height="6.5" rx="1.4" fill={A} />
-            <rect x="105" y="45.2" width="10" height="1.2" rx="0.6" fill="#ffffff" />
-            <rect x="55" y="53" width="20" height="7" rx="1" fill="#e9ebef" />
-            <rect x="78" y="53" width="20" height="7" rx="1" fill="#e9ebef" />
-            <rect x="101" y="53" width="20" height="7" rx="1" fill="#e9ebef" />
-            {/* The click. */}
-            <circle
-              cx="110"
-              cy="46"
-              r="4"
-              fill="none"
-              stroke="#ffffff"
-              strokeWidth="0.6"
-              className="opacity-0 transition-[opacity,transform] delay-500 duration-500 group-hover:scale-150 group-hover:opacity-90"
-              style={{ transformOrigin: "110px 46px" }}
-            />
-            <path d="M111 46.5 v5.4 l1.4 -1.3 l1.2 2.4 l0.9 -0.45 l-1.2 -2.35 h1.9 z" fill="#111" stroke="#fff" strokeWidth="0.3" />
+            <path d="M104 42.5 v5.2 l1.3 -1.2 l1.1 2.3 l0.85 -0.4 l-1.1 -2.25 h1.8 z" fill="#18181b" stroke="#ffffff" strokeWidth="0.3" />
           </g>
+          {/* Timecode. */}
+          <rect x="23" y="68.4" width="17" height="4.6" rx="0.8" fill="#18181b" opacity="0.85" />
+          <text x="31.5" y="71.7" fontSize="2.5" fill="#fafafa" textAnchor="middle" fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">
+            00:04:12
+          </text>
         </g>
 
-        {/* The edit's timeline. */}
-        <g transform="translate(22 80)">
-          <rect width="116" height="7" rx="1.6" fill="currentColor" className="text-foreground/10" />
-          <rect x="58" y="1" width="34" height="5" rx="1.1" fill={A} opacity="0.3" stroke={A} strokeWidth="0.4" />
-          <rect x="24" y="1" width="14" height="5" rx="1.1" fill="currentColor" className="text-foreground/15" />
-          <g className="transition-transform duration-700 ease-out group-hover:translate-x-[44px]">
-            <rect x="26" y="-2.5" width="0.8" height="12" rx="0.4" fill="currentColor" className="text-foreground" />
-            <circle cx="26.4" cy="-2.5" r="1.4" fill="currentColor" className="text-foreground" />
+        {/* Timeline. */}
+        <g transform="translate(20 84)">
+          <line x1="0" y1="3" x2="120" y2="3" stroke="var(--border)" strokeWidth="0.5" />
+          {Array.from({ length: 13 }, (_, i) => (
+            <line key={i} x1={i * 10} y1="1.6" x2={i * 10} y2="3" stroke="var(--border)" strokeWidth="0.4" />
+          ))}
+          <rect x="52" y="4.6" width="34" height="3.6" rx="0.8" fill="none" stroke={A} strokeWidth="0.45" />
+          <text x="54" y="7.3" fontSize="2.3" fill={A} fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">
+            zoom 1.8×
+          </text>
+          <g className="transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[34px]">
+            <line x1="30" y1="-0.5" x2="30" y2="9" stroke="var(--foreground)" strokeWidth="0.5" />
           </g>
         </g>
       </svg>
@@ -511,44 +606,65 @@ export const SCENES: Record<string, () => ReactNode> = {
   ),
 
   favicon: () => (
-    // A spec sheet for one mark: the browser tab it lives in, then the
-    // sizes it ships at, on a shared baseline. Hover lifts each size in turn.
+    // A favicon spec sheet: the mark living in a real tab, the same mark
+    // magnified to its 16 px grid, and the files it ships as. On hover the
+    // pixel grid comes up, the way you'd check it in a design tool.
     <Fill className="overflow-hidden">
-      <div
-        className="absolute inset-0"
-        style={{ background: `radial-gradient(ellipse 50% 60% at 50% 70%, ${soft(14)}, transparent 70%)` }}
-      />
+      <svg viewBox="0 0 160 100" aria-hidden className="absolute inset-0 h-full w-full" fontFamily={`-apple-system, "Segoe UI", Helvetica, Arial, sans-serif`}>
+        {/* Tab strip. */}
+        <rect x="20" y="10" width="120" height="13" rx="2.5" fill="var(--muted)" />
+        <path d="M24 23 v-7.5 a2 2 0 0 1 2 -2 h40 a2 2 0 0 1 2 2 v7.5 z" fill="var(--card)" stroke="var(--border)" strokeWidth="0.35" />
+        <g transform="translate(28 16.2)">
+          <PixelMark size={4.4} />
+        </g>
+        <text x="35" y="19.6" fontSize="3" fontWeight="500" fill="var(--foreground)">
+          Northfold
+        </text>
+        <text x="63.5" y="19.7" fontSize="3" fill="var(--muted-foreground)">
+          ×
+        </text>
+        <rect x="72" y="16.8" width="3.6" height="3.6" rx="0.8" fill="var(--muted-foreground)" opacity="0.35" />
+        <rect x="78" y="17.9" width="18" height="1.4" rx="0.7" fill="var(--muted-foreground)" opacity="0.3" />
 
-      {/* Browser tab strip. */}
-      <div className="border-border absolute top-[13%] left-1/2 flex w-[78%] -translate-x-1/2 items-end gap-1 border-b px-2">
-        <div className="bg-card border-border relative -mb-px flex h-7 w-[46%] items-center gap-1.5 rounded-t-lg border border-b-transparent px-2.5">
-          <Mark className="size-3 rounded-[3px] text-[6.5px]" />
-          <span className="truncate text-[9px] font-medium">TM Tools</span>
-          <span className="text-muted-foreground/60 ml-auto text-[9px] leading-none">×</span>
-        </div>
-        {[0, 1].map((i) => (
-          <div key={i} className="flex h-6 w-[22%] items-center gap-1.5 px-2 opacity-50">
-            <span className="bg-muted-foreground/40 size-2.5 rounded-full" />
-            <span className="bg-muted-foreground/30 h-1 flex-1 rounded-full" />
-          </div>
-        ))}
-      </div>
+        {/* The mark at 16 × 16, magnified. */}
+        <g transform="translate(24 32)">
+          <PixelMark size={48} />
+          <g className="opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+            {Array.from({ length: 17 }, (_, i) => (
+              <g key={i}>
+                <line x1={i * 3} y1="0" x2={i * 3} y2="48" stroke="var(--card)" strokeWidth="0.25" />
+                <line x1="0" y1={i * 3} x2="48" y2={i * 3} stroke="var(--card)" strokeWidth="0.25" />
+              </g>
+            ))}
+          </g>
+          <text x="0" y="54" fontSize="2.6" fill="var(--muted-foreground)" fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">
+            16 × 16 · 4× view
+          </text>
+        </g>
 
-      {/* The sizes it ships at. */}
-      <div className="absolute bottom-[14%] left-1/2 flex w-[78%] -translate-x-1/2 items-end justify-between px-[4%]">
-        {[
-          { px: 16, size: "size-3.5 rounded-[3px] text-[7px]" },
-          { px: 32, size: "size-6 rounded-[6px] text-[11px]" },
-          { px: 48, size: "size-9 rounded-[9px] text-base" },
-          { px: 180, size: "size-16 rounded-[16px] text-[28px]" },
-        ].map((s, i) => (
-          <div key={s.px} className="flex flex-col items-center gap-2">
-            <Mark className={`${s.size} ${move} group-hover:-translate-y-1.5`} style={delay(i * 70)} />
-            <span className="text-muted-foreground font-mono text-[8px] tracking-wide">{s.px}</span>
-          </div>
-        ))}
-        <span className="bg-border absolute right-0 bottom-[18px] left-0 h-px" />
-      </div>
+        {/* What ships. */}
+        <g transform="translate(84 34)" fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">
+          {[
+            ["favicon.ico", "16 32 48"],
+            ["icon.svg", "any"],
+            ["apple-touch-icon.png", "180"],
+            ["icon-512.png", "512"],
+            ["site.webmanifest", "—"],
+          ].map(([file, size], i) => (
+            <g key={file} transform={`translate(0 ${i * 9})`}>
+              <g className={`${move} group-hover:translate-x-[1.5px]`} style={delay(i * 40)}>
+              <text x="0" y="3" fontSize="2.7" fill="var(--foreground)">
+                {file}
+              </text>
+              <text x="52" y="3" fontSize="2.5" fill="var(--muted-foreground)" textAnchor="end">
+                {size}
+              </text>
+              <line x1="0" y1="5.8" x2="52" y2="5.8" stroke="var(--border)" strokeWidth="0.3" />
+              </g>
+            </g>
+          ))}
+        </g>
+      </svg>
     </Fill>
   ),
 
@@ -690,42 +806,34 @@ export const SCENES: Record<string, () => ReactNode> = {
   ),
 
   logo3d: () => (
-    <Center className="[perspective:600px]">
-      <div className="relative transition-transform duration-700 ease-out [transform:rotateY(-28deg)_rotateX(12deg)] [transform-style:preserve-3d] group-hover:[transform:rotateY(18deg)_rotateX(8deg)]">
-        {Array.from({ length: 10 }, (_, index) => (
-          <svg
-            key={index}
-            viewBox="0 0 100 100"
-            className="absolute inset-0 size-28"
-            style={{ transform: `translateZ(${-index * 2}px)` }}
-            aria-hidden
-          >
-            <path
-              d="M50 8 88 30v40L50 92 12 70V30Z"
-              fill={
-                index === 0 ? "url(#logo3d-face)" : soft(70 - index * 4, "#111")
-              }
-            />
+    // A monogram extruded for real: a stack of flat layers in 3D space, lit
+    // flat like a matte render, on a soft contact shadow. On hover it turns
+    // on the turntable.
+    <Fill className="overflow-hidden">
+      <span className="absolute bottom-[17%] left-1/2 h-[7%] w-[34%] -translate-x-1/2 rounded-[50%] bg-black/35 blur-md transition-transform duration-700 group-hover:scale-x-90" />
+      <div className="absolute inset-0 flex items-center justify-center [perspective:700px]">
+        <div className="relative size-[38%] max-w-32 transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] [transform-style:preserve-3d] [transform:rotateY(-32deg)_rotateX(14deg)] group-hover:[transform:rotateY(22deg)_rotateX(10deg)]">
+          {Array.from({ length: 16 }, (_, i) => (
+            <svg
+              key={i}
+              viewBox="0 0 100 100"
+              className="absolute inset-0 size-full"
+              style={{ transform: `translateZ(${-i * 1.4}px)` }}
+              aria-hidden
+            >
+              <path d={MONOGRAM} fill={soft(i === 15 ? 30 : 46 - i, "#0a0a0b")} />
+            </svg>
+          ))}
+          <svg viewBox="0 0 100 100" className="relative size-full" aria-hidden>
+            <path d={MONOGRAM} fill={A} />
+            <path d={MONOGRAM} fill="none" stroke="#ffffff" strokeOpacity="0.28" strokeWidth="0.8" />
           </svg>
-        ))}
-        <svg viewBox="0 0 100 100" className="relative size-28" aria-hidden>
-          <defs>
-            <linearGradient id="logo3d-face" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#ffffff" />
-              <stop offset="0.45" stopColor={A} />
-              <stop offset="1" stopColor="#111" />
-            </linearGradient>
-          </defs>
-          <path d="M50 8 88 30v40L50 92 12 70V30Z" fill="url(#logo3d-face)" />
-          <path
-            d="M38 34h24M50 34v34"
-            stroke="white"
-            strokeWidth="7"
-            strokeLinecap="round"
-          />
-        </svg>
+        </div>
       </div>
-    </Center>
+      <span className="text-muted-foreground absolute bottom-[7%] left-[7%] font-mono text-[9px] tracking-wide">
+        extrude 24 · bevel 2 · matte
+      </span>
+    </Fill>
   ),
 
   ogstudio: () => (
@@ -808,47 +916,25 @@ export const SCENES: Record<string, () => ReactNode> = {
   ),
 
   avatar: () => (
-    <Center className="gap-3">
-      {[
-        {
-          skin: "#f5d0a9",
-          hair: "#3f2a1d",
-          bg: soft(55),
-          shape: "rounded-full",
-        },
-        { skin: "#c68b59", hair: "#111", bg: soft(85), shape: "rounded-[30%]" },
-        {
-          skin: "#ffe0bd",
-          hair: "#d97706",
-          bg: soft(35),
-          shape: "rounded-full",
-        },
-      ].map((face, index) => (
-        <svg
-          key={index}
-          viewBox="0 0 64 64"
-          className={`${index === 1 ? "size-[30%] max-w-24" : "size-[22%] max-w-16"} ${face.shape} ${move} group-hover:-translate-y-1.5`}
-          style={{ background: face.bg, ...delay(index * 70) }}
-          aria-hidden
-        >
-          <path d="M14 64c2-14 9-20 18-20s16 6 18 20Z" fill={face.skin} />
-          <circle cx="32" cy="30" r="13" fill={face.skin} />
-          <path
-            d="M19 28c0-10 6-15 13-15s13 5 13 15c-3-5-8-7-13-7s-10 2-13 7Z"
-            fill={face.hair}
-          />
-          <circle cx="27" cy="31" r="1.6" fill="#1f1f1f" />
-          <circle cx="37" cy="31" r="1.6" fill="#1f1f1f" />
-          <path
-            d="M28 37q4 3 8 0"
-            stroke="#1f1f1f"
-            strokeWidth="1.6"
-            fill="none"
-            strokeLinecap="round"
-          />
-        </svg>
-      ))}
-    </Center>
+    // Avatars where they live: one picked out at full size with its file, and
+    // the team row it belongs to. On hover the row fans out.
+    <Fill className="overflow-hidden">
+      <div className="absolute top-[18%] left-[9%] flex items-center gap-3">
+        <Face person={PEOPLE[2]} className="size-16 ring-1 ring-[var(--border)]" />
+        <div className="space-y-1.5">
+          <p className="text-[12px] leading-none font-semibold">Lena Okafor</p>
+          <p className="text-muted-foreground font-mono text-[9px] leading-none">lena.svg · 512 px</p>
+        </div>
+      </div>
+      <div className="absolute top-[52%] left-[9%] flex items-center">
+        {PEOPLE.map((p, i) => (
+          <Face key={p.name} person={p} className={`size-10 ring-2 ring-[var(--card)] ${i ? "-ml-2.5" : ""} ${move} ${FAN[i]}`} style={delay(i * 40)} />
+        ))}
+        <span className={`bg-muted text-muted-foreground -ml-2.5 grid size-10 place-items-center rounded-full font-mono text-[10px] ring-2 ring-[var(--card)] ${move} ${FAN[5]}`} style={delay(200)}>
+          +8
+        </span>
+      </div>
+    </Fill>
   ),
 
   vectorforge: () => (
@@ -908,22 +994,29 @@ export const SCENES: Record<string, () => ReactNode> = {
   ),
 
   appshots: () => (
-    <Center className="gap-3">
-      {["Plan your week", "Share with friends"].map((caption, index) => (
-        <div
-          key={caption}
-          className={`flex aspect-[9/16] w-[26%] flex-col items-center gap-1.5 rounded-xl p-2 ${move} ${index ? "group-hover:translate-x-1.5" : "group-hover:-translate-x-1.5"}`}
-          style={{ background: index ? soft(35) : soft(70) }}
-        >
-          <span className="font-heading text-center text-[9px] leading-tight font-bold text-white">
-            {caption}
-          </span>
-          <div className="w-[82%] flex-1 overflow-hidden rounded-[8px] border-[2px] border-neutral-900 bg-black">
-            <AppScreen />
+    // A store listing: captioned screenshots with the phone bleeding off the
+    // bottom, the set running off the edge like the real carousel. On hover
+    // it scrolls along.
+    <Fill className="overflow-hidden">
+      <div className={`absolute top-[10%] bottom-0 left-[8%] flex gap-[3%] ${move} duration-700 group-hover:-translate-x-[14%]`} style={{ width: "120%" }}>
+        {[
+          { title: "Your week,\nat a glance", hero: true },
+          { title: "Share a plan\nin one tap", hero: false },
+          { title: "Never miss\nwhat matters", hero: false },
+        ].map((panel) => (
+          <div
+            key={panel.title}
+            className={`relative flex w-[27%] shrink-0 flex-col overflow-hidden rounded-t-xl px-[4%] pt-[5%] ${panel.hero ? "text-white" : "bg-muted text-foreground"}`}
+            style={panel.hero ? { background: A } : undefined}
+          >
+            <p className="font-heading text-[10px] leading-[1.15] font-semibold tracking-tight whitespace-pre-line">{panel.title}</p>
+            <div className="mt-[10%] flex-1 rounded-t-[12px] border-[3px] border-b-0 border-neutral-900 bg-neutral-900">
+              <PhoneScreen />
+            </div>
           </div>
-        </div>
-      ))}
-    </Center>
+        ))}
+      </div>
+    </Fill>
   ),
 
   loop: () => (
