@@ -315,94 +315,76 @@ export const SCENES: Record<string, () => ReactNode> = {
   ),
 
   readme: () => (
-    // A README on its repo page: banner, badges, a feature grid. On hover the
-    // page scrolls on to the contributors wall and the markdown is copied.
+    // A README, nothing else: banner, badges, a feature row. On hover the
+    // page scrolls to the install line and the markdown is copied.
     <Fill className="overflow-hidden">
       <div
         className="absolute inset-0"
-        style={{ background: `radial-gradient(ellipse 60% 70% at 50% 30%, ${soft(22)}, transparent 70%)` }}
+        style={{ background: `radial-gradient(ellipse 55% 65% at 50% 35%, ${soft(18)}, transparent 70%)` }}
       />
       <svg
         viewBox="0 0 160 100"
         aria-hidden
-        className="absolute top-[9%] left-1/2 h-[100%] w-auto -translate-x-1/2 drop-shadow-[0_12px_24px_rgb(0_0_0/0.45)]"
+        className="absolute top-[12%] left-1/2 h-[100%] w-auto -translate-x-1/2 drop-shadow-[0_14px_28px_rgb(0_0_0/0.5)]"
         fontFamily={`-apple-system, "Segoe UI", Helvetica, Arial, sans-serif`}
       >
         <defs>
-          <linearGradient id="scene-readme-banner" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#0d1117" />
-            <stop offset="0.55" stopColor={A} stopOpacity="0.55" />
-            <stop offset="1" stopColor="#0d1117" />
+          <linearGradient id="scene-readme-banner" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor={A} stopOpacity="0.08" />
+            <stop offset="0.5" stopColor={A} stopOpacity="0.32" />
+            <stop offset="1" stopColor={A} stopOpacity="0.08" />
           </linearGradient>
           <clipPath id="scene-readme-page">
-            <rect x="20" y="10" width="120" height="90" rx="5" />
+            <rect x="24" y="9" width="112" height="91" />
           </clipPath>
         </defs>
-        <rect x="20" y="0" width="120" height="100" rx="5" fill="#0d1117" stroke="#30363d" strokeWidth="0.5" />
-        {/* File tab. */}
-        <rect x="20" y="0" width="120" height="10" rx="5" fill="#151b23" />
-        <rect x="20" y="5" width="120" height="5" fill="#151b23" />
-        <rect x="27" y="8.6" width="17" height="0.8" fill="#f78166" />
-        <text x="27" y="6.8" fontSize="3.4" fontWeight="600" fill="#f0f6fc">README</text>
-        <line x1="20" y1="10" x2="140" y2="10" stroke="#30363d" strokeWidth="0.4" />
+        <rect x="24" y="0" width="112" height="100" rx="4" fill="#0d1117" stroke="#ffffff" strokeOpacity="0.08" strokeWidth="0.5" />
+        <text x="31" y="6" fontSize="3" fontWeight="600" fill="#f0f6fc" fillOpacity="0.85">
+          README.md
+        </text>
+        <line x1="24" y1="9" x2="136" y2="9" stroke="#ffffff" strokeOpacity="0.08" strokeWidth="0.4" />
 
         <g clipPath="url(#scene-readme-page)">
-          <g className="transition-transform duration-700 ease-out group-hover:-translate-y-[34px]">
-            {/* Banner. */}
-            <rect x="26" y="15" width="108" height="30" rx="3" fill="url(#scene-readme-banner)" />
-            <circle cx="112" cy="22" r="12" fill={A} opacity="0.25" />
-            <text x="80" y="31.5" fontSize="10" fontWeight="800" fill="#f0f6fc" textAnchor="middle" letterSpacing="-0.4">
-              nova
+          <g className="transition-transform duration-700 ease-out group-hover:-translate-y-[22px]">
+            <rect x="30" y="15" width="100" height="28" rx="2.5" fill="url(#scene-readme-banner)" />
+            <text x="80" y="31" fontSize="8.5" fontWeight="800" fill="#f0f6fc" textAnchor="middle" letterSpacing="-0.3">
+              TM Tools
             </text>
-            <text x="80" y="38" fontSize="3" fill="#9198a1" textAnchor="middle">
-              a tiny, typed toolkit
-            </text>
-            {/* Badges. */}
-            {[0, 1, 2, 3].map((i) => (
-              <g key={i} transform={`translate(${47 + i * 17} 49)`}>
-                <rect width="15" height="4" rx="0.6" fill="#3d444d" />
-                <rect x="7" width="8" height="4" rx="0.6" fill={A} />
-                <rect x="7" width="1" height="4" fill={A} />
-              </g>
-            ))}
-            {/* Heading + text. */}
-            <text x="28" y="62" fontSize="4.6" fontWeight="600" fill="#f0f6fc">
-              ✨ Features
-            </text>
-            <line x1="28" y1="64.5" x2="132" y2="64.5" stroke="#30363d" strokeWidth="0.4" />
+            <rect x="62" y="35" width="36" height="1.4" rx="0.7" fill="#f0f6fc" opacity="0.3" />
+
             {[0, 1, 2].map((i) => (
-              <g key={i} transform={`translate(${28 + i * 35} 68)`}>
-                <rect width="33" height="20" rx="1" fill="none" stroke="#30363d" strokeWidth="0.4" />
-                <rect x="3" y="3.5" width="4" height="4" rx="1" fill={A} opacity={0.9 - i * 0.2} />
-                <rect x="9" y="4.5" width={14 - i * 2} height="2" rx="0.6" fill="#f0f6fc" opacity="0.85" />
-                <rect x="3" y="11" width="26" height="1.4" rx="0.5" fill="#9198a1" opacity="0.6" />
-                <rect x="3" y="14.5" width={18 + i * 3} height="1.4" rx="0.5" fill="#9198a1" opacity="0.6" />
+              <g key={i} transform={`translate(${57 + i * 16} 48)`}>
+                <rect width="14" height="3.6" rx="0.6" fill="#ffffff" fillOpacity="0.12" />
+                <rect x="7" width="7" height="3.6" rx="0.6" fill={A} opacity={1 - i * 0.2} />
               </g>
             ))}
-            {/* Install block. */}
-            <rect x="28" y="93" width="104" height="10" rx="1.5" fill="#151b23" />
-            <text x="32" y="99.2" fontSize="3.2" fill="#9198a1" fontFamily="ui-monospace, monospace">
-              $ <tspan fill="#f0f6fc">npm install</tspan> <tspan fill={A}>nova</tspan>
-            </text>
-            {/* Contributors. */}
-            <text x="28" y="113" fontSize="4.6" fontWeight="600" fill="#f0f6fc">
-              🤝 Contributors
-            </text>
-            {[0, 1, 2, 3, 4, 5].map((i) => (
-              <circle key={i} cx={32 + i * 9} cy="121" r="3.6" fill={i % 2 ? "#3d444d" : A} opacity={1 - i * 0.1} stroke="#0d1117" strokeWidth="0.6" />
+
+            <rect x="34" y="60" width="22" height="2.4" rx="1" fill="#f0f6fc" opacity="0.85" />
+            <line x1="34" y1="65" x2="126" y2="65" stroke="#ffffff" strokeOpacity="0.08" strokeWidth="0.4" />
+            {[0, 1, 2].map((i) => (
+              <g key={i} transform={`translate(${34 + i * 31.3} 69)`}>
+                <rect width="4" height="4" rx="1" fill={A} opacity={0.9 - i * 0.2} />
+                <rect y="7" width={20 - i * 3} height="1.6" rx="0.8" fill="#f0f6fc" opacity="0.7" />
+                <rect y="10.5" width="26" height="1.2" rx="0.6" fill="#f0f6fc" opacity="0.25" />
+                <rect y="13.5" width={18 + i * 3} height="1.2" rx="0.6" fill="#f0f6fc" opacity="0.25" />
+              </g>
             ))}
+
+            <rect x="34" y="94" width="92" height="9" rx="1.5" fill="#ffffff" fillOpacity="0.05" />
+            <text x="38" y="99.6" fontSize="3" fill="#9198a1" fontFamily="ui-monospace, monospace">
+              npm install <tspan fill={A}>tm-tools</tspan>
+            </text>
           </g>
         </g>
       </svg>
-      {/* The copy confirmation. */}
       <span
-        className={`absolute right-[14%] bottom-[10%] flex translate-y-2 items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-neutral-900 opacity-0 shadow-lg group-hover:translate-y-0 group-hover:opacity-100 ${move}`}
-        style={{ ...delay(250), transitionProperty: "transform, opacity" }}
+        className={`absolute right-[16%] bottom-[9%] flex translate-y-2 items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-neutral-900 opacity-0 shadow-lg group-hover:translate-y-0 group-hover:opacity-100 ${move}`}
+        style={{ ...delay(300), transitionProperty: "transform, opacity" }}
       >
         <svg viewBox="0 0 16 16" className="size-3" fill="none" stroke={A} strokeWidth="2.4" aria-hidden>
           <path d="m3 8.5 3.2 3L13 4.5" />
         </svg>
-        README.md copied
+        Copied
       </span>
     </Fill>
   ),

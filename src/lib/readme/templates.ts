@@ -179,6 +179,6 @@ export function fromTemplate(template: TemplateId, base: Pick<Project, "name" | 
 }
 
 export function starterProject(): Project {
-  const base = { name: "Nova", owner: "your-name", repo: "nova", description: "A tiny, typed toolkit for building delightful interfaces." };
+  const base = { name: "TM Tools", owner: "your-name", repo: "tm-tools", description: "Free design and developer tools that feel like magic." };
   return { ...base, accent: "#10b981", animated: true, dividers: false, emoji: true, blocks: fromTemplate("library", base) };
 }

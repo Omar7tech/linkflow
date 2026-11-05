@@ -53,7 +53,7 @@ import { GithubPreview } from "./github-preview";
 
 /* ------------------------------------------------------------------ state */
 
-const STORE = "readme-studio:v1";
+const STORE = "readme-studio:v2";
 const subscribeNever = () => () => {};
 
 function load(): Project | null {

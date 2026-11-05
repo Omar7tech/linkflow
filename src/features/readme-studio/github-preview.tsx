@@ -76,6 +76,9 @@ const DEMO: Record<string, [string, string]> = {
   forks: ["forks", "86"],
   issues: ["issues", "3 open"],
   "last-commit": ["last commit", "today"],
+  "npm/v": ["npm", "v1.0.0"],
+  "npm/dm": ["downloads", "48k/month"],
+  "bundlephobia/minzip": ["minzipped size", "4.2 kB"],
 };
 
 const svgUrl = (svg: string) =>
@@ -137,6 +140,12 @@ export function GithubPreview({
         (_, kind: string, q: string) => {
           const [label, message] = DEMO[kind];
           return `https://img.shields.io/static/v1?label=${label}&message=${encodeURIComponent(message)}&${q}`;
+        },
+      ).replace(
+        /https:\/\/img\.shields\.io\/(npm\/v|npm\/dm|bundlephobia\/minzip)\/[^?"]+\?([^"]*)/g,
+        (_, kind: string, q: string) => {
+          const [label, message] = DEMO[kind];
+          return `https://img.shields.io/static/v1?label=${encodeURIComponent(label)}&message=${encodeURIComponent(message)}&${q}`;
         },
       );
     return renderMarkdown(md);
