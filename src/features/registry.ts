@@ -84,5 +84,6 @@ export const TOOL_COMPONENTS: Record<ToolId, ComponentType> = {
   fontmaker: dynamic(() => import("./font-maker/font-maker-tool").then((m) => m.FontMakerTool)),
   poster: dynamic(() => import("./swiss-poster/swiss-poster-tool").then((m) => m.SwissPosterTool)),
   readme: dynamic(() => import("./readme-studio/readme-studio-tool").then((m) => m.ReadmeStudioTool)),
+  screenstudio: dynamic(() => import("./screen-studio/screen-studio-tool").then((m) => m.ScreenStudioTool)),
   markdown: dynamic(() => import("./markdown/markdown-tool").then((m) => m.MarkdownTool)),
 };

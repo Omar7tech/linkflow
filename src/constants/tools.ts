@@ -60,6 +60,7 @@ import {
   type LucideIcon,
   SignatureIcon,
   LayoutTemplateIcon,
+  ClapperboardIcon,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/shared/brand-icons";
 import type { ToolCategory, ToolMeta } from "@/types";
@@ -255,6 +256,25 @@ export const TOOLS = [
       "grid poster design",
     ],
     icon: LayoutTemplateIcon,
+    category: "studio",
+  },
+  {
+    id: "screenstudio",
+    slug: "/tools/screen-studio",
+    name: "Screen Studio",
+    shortName: "Screen Studio",
+    description:
+      "Turn a screen recording into a polished product video. Record a tab, window or your screen with your voice and camera, or drop in any recording, and it zooms in where the action is with smooth camera moves, frames it on a wallpaper inside a window or browser, adds a camera bubble and writes captions as you talk. Fine-tune zooms on a timeline, then export MP4 or GIF in any format from 16:9 to vertical.",
+    keywords: [
+      "screen studio alternative",
+      "screen recorder with zoom",
+      "auto zoom screen recording",
+      "product demo video maker",
+      "screen recording editor",
+      "screen recording to gif",
+      "browser screen recorder",
+    ],
+    icon: ClapperboardIcon,
     category: "studio",
   },
   {
