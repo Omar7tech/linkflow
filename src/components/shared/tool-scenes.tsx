@@ -234,6 +234,18 @@ function AppScreen({ compact = false }: { compact?: boolean }) {
 
 /* ------------------------------------------------------------------ scenes */
 
+/** One brand mark, drawn at any size for the favicon scene. */
+function Mark({ className = "", style }: { className?: string; style?: CSSProperties }) {
+  return (
+    <span
+      className={`grid shrink-0 place-items-center font-bold tracking-tight text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_1px_2px_rgb(0_0_0/0.3)] ${className}`}
+      style={{ background: `linear-gradient(180deg, ${A}, ${soft(72, "#000")})`, ...style }}
+    >
+      T
+    </span>
+  );
+}
+
 export const SCENES: Record<string, () => ReactNode> = {
   /* ============================================================ studio */
 
@@ -418,74 +430,45 @@ export const SCENES: Record<string, () => ReactNode> = {
   ),
 
   favicon: () => (
-    // Your logo in, every icon a site needs out.
-    <Center className="gap-3 px-[6%]">
-      <div className="flex flex-col items-center gap-1.5">
-        <span
-          className="grid size-12 place-items-center rounded-[28%] text-xl font-bold text-white shadow-lg"
-          style={{
-            background: `linear-gradient(160deg, ${soft(100, "white")} -40%, ${A} 45%, ${soft(80, "#000")})`,
-          }}
-        >
-          M
-        </span>
-        <span className="text-muted-foreground text-[8px]">Your logo</span>
+    // A spec sheet for one mark: the browser tab it lives in, then the
+    // sizes it ships at, on a shared baseline. Hover lifts each size in turn.
+    <Fill className="overflow-hidden">
+      <div
+        className="absolute inset-0"
+        style={{ background: `radial-gradient(ellipse 50% 60% at 50% 70%, ${soft(14)}, transparent 70%)` }}
+      />
+
+      {/* Browser tab strip. */}
+      <div className="border-border absolute top-[13%] left-1/2 flex w-[78%] -translate-x-1/2 items-end gap-1 border-b px-2">
+        <div className="bg-card border-border relative -mb-px flex h-7 w-[46%] items-center gap-1.5 rounded-t-lg border border-b-transparent px-2.5">
+          <Mark className="size-3 rounded-[3px] text-[6.5px]" />
+          <span className="truncate text-[9px] font-medium">TM Tools</span>
+          <span className="text-muted-foreground/60 ml-auto text-[9px] leading-none">×</span>
+        </div>
+        {[0, 1].map((i) => (
+          <div key={i} className="flex h-6 w-[22%] items-center gap-1.5 px-2 opacity-50">
+            <span className="bg-muted-foreground/40 size-2.5 rounded-full" />
+            <span className="bg-muted-foreground/30 h-1 flex-1 rounded-full" />
+          </div>
+        ))}
       </div>
 
-      <span
-        className={`text-sm ${move} group-hover:translate-x-1`}
-        style={{ color: A }}
-      >
-        →
-      </span>
-
-      <div className="flex w-[52%] flex-col gap-1.5">
-        {/* In a browser tab. */}
-        <div
-          className={`bg-card border-border flex items-center gap-1.5 rounded-lg border px-2 py-1.5 ${move} group-hover:-translate-y-0.5`}
-        >
-          <span
-            className="grid size-3.5 shrink-0 place-items-center rounded-[4px] text-[7px] font-bold text-white"
-            style={{ background: A }}
-          >
-            M
-          </span>
-          <span className="truncate text-[9px] font-medium">My App</span>
-          <span className="text-muted-foreground ml-auto text-[8px]">Tab</span>
-        </div>
-        {/* On a phone home screen. */}
-        <div
-          className={`bg-card border-border flex items-center gap-1.5 rounded-lg border px-2 py-1.5 ${move} group-hover:-translate-y-0.5`}
-          style={delay(70)}
-        >
-          <span
-            className="grid size-5 shrink-0 place-items-center rounded-[28%] text-[9px] font-bold text-white"
-            style={{ background: A }}
-          >
-            M
-          </span>
-          <span className="truncate text-[9px] font-medium">Home screen</span>
-          <span className="text-muted-foreground ml-auto text-[8px]">App</span>
-        </div>
-        {/* The files it downloads. */}
-        <div
-          className={`flex flex-wrap gap-1 ${move} group-hover:-translate-y-0.5`}
-          style={delay(140)}
-        >
-          {["favicon.ico", "apple-touch-icon.png", "site.webmanifest"].map(
-            (file) => (
-              <span
-                key={file}
-                className="rounded-md px-1.5 py-0.5 font-mono text-[7.5px]"
-                style={{ background: soft(14), color: A }}
-              >
-                {file}
-              </span>
-            ),
-          )}
-        </div>
+      {/* The sizes it ships at. */}
+      <div className="absolute bottom-[14%] left-1/2 flex w-[78%] -translate-x-1/2 items-end justify-between px-[4%]">
+        {[
+          { px: 16, size: "size-3.5 rounded-[3px] text-[7px]" },
+          { px: 32, size: "size-6 rounded-[6px] text-[11px]" },
+          { px: 48, size: "size-9 rounded-[9px] text-base" },
+          { px: 180, size: "size-16 rounded-[16px] text-[28px]" },
+        ].map((s, i) => (
+          <div key={s.px} className="flex flex-col items-center gap-2">
+            <Mark className={`${s.size} ${move} group-hover:-translate-y-1.5`} style={delay(i * 70)} />
+            <span className="text-muted-foreground font-mono text-[8px] tracking-wide">{s.px}</span>
+          </div>
+        ))}
+        <span className="bg-border absolute right-0 bottom-[18px] left-0 h-px" />
       </div>
-    </Center>
+    </Fill>
   ),
 
   logo: () => (
