@@ -238,26 +238,79 @@ export const SCENES: Record<string, () => ReactNode> = {
   /* ============================================================ studio */
 
   poster: () => (
-    // A Swiss poster on the wall; on hover the grid shows and the shapes reshuffle.
+    // Three real prints from the generator, fanned on the table. On hover
+    // they spread apart, the way you'd shuffle through proofs.
     <Center>
-      <div className="relative aspect-[1/1.414] h-[82%] overflow-hidden bg-[#f1ede4] shadow-[0_18px_30px_-14px_rgb(0_0_0/0.55)] transition-transform duration-500 group-hover:-rotate-1">
-        <span className="absolute inset-y-[6%] left-[6%] right-[6%] flex gap-[3%] opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <span key={i} className="flex-1 bg-sky-400/15" />
-          ))}
-        </span>
-        <span
-          className="absolute size-[62%] rounded-full transition-all duration-700 ease-out group-hover:size-[44%] group-hover:translate-x-[30%] group-hover:translate-y-[18%]"
-          style={{ background: A, left: "26%", top: "8%" }}
-        />
-        <span className="absolute bottom-[22%] left-[6%] h-[3%] w-[30%] bg-[#141414] transition-all duration-700 group-hover:w-[60%]" />
-        <span className="absolute bottom-[7%] left-[6%] font-[Helvetica,Arial,sans-serif] text-[15px] leading-none font-bold tracking-tight text-[#141414]">
-          Neue
-          <br />
-          Form
-        </span>
-        <span className="absolute top-[6%] left-[6%] font-mono text-[5px] text-[#141414]">N° 27</span>
-      </div>
+      {[
+        {
+          // Albers squares.
+          base: "-translate-x-[62%] -rotate-[9deg] group-hover:-translate-x-[92%] group-hover:-rotate-[15deg]",
+          art: (
+            <>
+              <rect width="100" height="141" fill="#ece4d3" />
+              <rect x="10" y="12" width="80" height="80" fill="#1b1b1b" />
+              <rect x="20" y="27" width="60" height="60" fill="#1d4fa6" />
+              <rect x="30" y="42" width="40" height="40" fill="#f2bd1d" />
+              <text x="10" y="114" fontSize="15" fontWeight="700" fill="#1b1b1b" letterSpacing="-0.6">Neue Form</text>
+              <rect x="10" y="121" width="26" height="2" fill="#1b1b1b" />
+              <rect x="10" y="126" width="18" height="1.6" fill="#1b1b1b" opacity="0.6" />
+            </>
+          ),
+        },
+        {
+          // Halves: the headline changes colour as it crosses the border.
+          base: "translate-x-[62%] rotate-[8deg] group-hover:translate-x-[92%] group-hover:rotate-[14deg]",
+          art: (
+            <>
+              <rect width="100" height="141" fill="#e9b949" />
+              <rect y="66" width="100" height="75" fill="#1a1612" />
+              <clipPath id="scene-top">
+                <rect width="100" height="66" />
+              </clipPath>
+              <clipPath id="scene-bottom">
+                <rect y="66" width="100" height="75" />
+              </clipPath>
+              <g fontSize="30" fontWeight="700" letterSpacing="-1.4">
+                <text x="8" y="64" fill="#1a1612" clipPath="url(#scene-top)">Neue</text>
+                <text x="8" y="64" fill="#e9b949" clipPath="url(#scene-bottom)">Neue</text>
+                <text x="8" y="92" fill="#e9b949">Form</text>
+              </g>
+              <circle cx="84" cy="66" r="6" fill="#c8361c" />
+              <rect x="8" y="122" width="30" height="2" fill="#e9b949" />
+              <rect x="8" y="127" width="20" height="1.6" fill="#e9b949" opacity="0.6" />
+            </>
+          ),
+        },
+        {
+          // Circle, in front.
+          base: "z-10 group-hover:-translate-y-[4%]",
+          art: (
+            <>
+              <rect width="100" height="141" fill="#f1ede4" />
+              <circle cx="70" cy="48" r="31" fill="#e3241b" />
+              <circle cx="84" cy="68" r="10" fill="none" stroke="#141414" strokeWidth="1" />
+              <text x="9" y="16" fontSize="5" fontWeight="700" fill="#141414">Grafik und Raum</text>
+              <rect x="9" y="20" width="16" height="1.4" fill="#141414" />
+              <rect x="9" y="23.5" width="12" height="1.4" fill="#141414" opacity="0.6" />
+              <g fontSize="25" fontWeight="700" letterSpacing="-1.3" fill="#141414">
+                <text x="8" y="108">Neue</text>
+                <text x="8" y="131">Form</text>
+              </g>
+              <text x="91" y="131" fontSize="3.6" fill="#141414" textAnchor="end" fontFamily="ui-monospace, monospace">N° 27</text>
+            </>
+          ),
+        },
+      ].map((poster, i) => (
+        <svg
+          key={i}
+          viewBox="0 0 100 141"
+          aria-hidden
+          fontFamily={`"Helvetica Neue", Helvetica, Arial, sans-serif`}
+          className={`absolute h-[78%] w-auto shadow-[0_10px_24px_-10px_rgb(0_0_0/0.55)] transition-transform duration-500 ease-out ${poster.base}`}
+        >
+          {poster.art}
+        </svg>
+      ))}
     </Center>
   ),
 

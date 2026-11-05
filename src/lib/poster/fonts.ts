@@ -23,7 +23,9 @@ export type FontId =
   | "bebas"
   | "oswald"
   | "instrument"
-  | "mono";
+  | "mono"
+  /** Any family from Google Fonts, chosen by name (see loadGoogleFont). */
+  | "custom";
 
 export interface FontDef {
   id: FontId;
@@ -60,6 +62,8 @@ export const FONTS: FontDef[] = [
 ];
 
 export const FONT_BY_ID = Object.fromEntries(FONTS.map((f) => [f.id, f])) as Record<FontId, FontDef>;
+// Until someone picks a font by name, "custom" stands in as the system grotesk.
+FONT_BY_ID.custom = { ...FONT_BY_ID.system, id: "custom" };
 
 export const bodyFont = (id: FontId) => FONT_BY_ID[FONT_BY_ID[id].body ?? id];
 
@@ -156,4 +160,66 @@ export async function embeddedFontCss(ids: FontId[]): Promise<string> {
     })
   );
   return parts.join("");
+}
+
+/* ---------------------------------------------------------- custom fonts */
+
+const titleCase = (text: string) => text.replace(/\b([a-z])/g, (c) => c.toUpperCase());
+
+/**
+ * Loads any Google Fonts family by name and makes it the "custom" face.
+ * Tries the heavy weights a poster wants first, then whatever the family has.
+ */
+export async function loadGoogleFont(input: string): Promise<FontDef> {
+  const name = input.trim().replace(/\s+/g, " ");
+  if (!/^[A-Za-z0-9 ]{2,60}$/.test(name)) throw new Error("Type the font's name as it appears on Google Fonts.");
+  // Google matches names exactly, so also try the usual capitalisations,
+  // including short all-caps words (DM Sans, IBM Plex, PT Serif, EB Garamond).
+  const title = titleCase(name.toLowerCase());
+  const shortCaps = title.replace(/\b([A-Za-z]{2,3})\b/g, (w) => w.toUpperCase());
+  const firstCaps = title.replace(/^([A-Za-z]{2,3})\b/, (w) => w.toUpperCase());
+  const names = [...new Set([name, firstCaps, title, shortCaps, titleCase(name)])];
+  const axes = ["wght@400;700;900", "wght@400;700;800", "wght@400;700", "wght@400;600", "wght@400", ""];
+  for (const candidate of names)
+    for (const axis of axes) {
+      const url = `https://fonts.googleapis.com/css2?family=${candidate.replace(/ /g, "+")}${axis ? ":" + axis : ""}&display=swap`;
+      // Google answers an unknown family or weight with an error page the
+      // browser blocks outright, so a failed request just means "not this one".
+      let res: Response;
+      try {
+        res = await fetch(url);
+      } catch {
+        continue;
+      }
+      if (!res.ok) continue;
+      const css = await res.text();
+      const family = css.match(/font-family:\s*['"]([^'"]+)['"]/)?.[1] ?? candidate;
+      const weights = [...new Set([...css.matchAll(/font-weight:\s*(\d+)/g)].map((m) => Number(m[1])))].sort((a, b) => a - b);
+      const usable = weights.length ? weights : [400];
+      const def: FontDef = {
+        id: "custom",
+        label: family,
+        family: `"${family}", sans-serif`,
+        google: family,
+        weights: usable,
+        heavy: Math.max(...usable),
+        // A face with one weight is a display face: small print goes in Inter Tight.
+        body: usable.length > 1 && usable.includes(400) ? undefined : "inter",
+        note: "From Google Fonts",
+      };
+      FONT_BY_ID.custom = def;
+      embedded.delete("custom");
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = googleUrl([def]);
+      document.head.appendChild(link);
+      await document.fonts.load(`${def.heavy} 100px ${def.family}`);
+      return def;
+    }
+  // Nothing matched: tell a typo apart from being offline.
+  const online = await fetch("https://fonts.googleapis.com/css2?family=Inter&display=swap").then(
+    (r) => r.ok,
+    () => false
+  );
+  throw new Error(online ? `"${name}" isn't on Google Fonts. Check the spelling.` : "Couldn't reach Google Fonts. Check your connection.");
 }

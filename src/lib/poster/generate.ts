@@ -58,21 +58,27 @@ export interface Palette {
   bg: string;
   ink: string;
   accent: string;
+  /** A second colour for compositions that use three. */
+  accent2: string;
 }
 
 export const PALETTES: Palette[] = [
-  { name: "Zürich", bg: "#f1ede4", ink: "#141414", accent: "#e3241b" },
-  { name: "Basel", bg: "#e3241b", ink: "#141414", accent: "#f1ede4" },
-  { name: "Ulm", bg: "#141414", ink: "#f1ede4", accent: "#e3241b" },
-  { name: "Bauhaus", bg: "#ece4d3", ink: "#1b1b1b", accent: "#1d4fa6" },
-  { name: "Lausanne", bg: "#1d4fa6", ink: "#f1ede4", accent: "#f2bd1d" },
-  { name: "Signal", bg: "#f4f3ef", ink: "#111111", accent: "#ff4a1c" },
-  { name: "Forest", bg: "#0f3a30", ink: "#e9f3ec", accent: "#34d399" },
-  { name: "Ochre", bg: "#e9b949", ink: "#1a1612", accent: "#c8361c" },
-  { name: "Ice", bg: "#dfe8ec", ink: "#0e2a47", accent: "#ff5b3a" },
-  { name: "Rose", bg: "#f6d5d0", ink: "#2b1b1e", accent: "#1e5b3f" },
-  { name: "Night", bg: "#0b1020", ink: "#eef0f6", accent: "#7c5cff" },
-  { name: "Mono", bg: "#ffffff", ink: "#000000", accent: "#000000" },
+  { name: "Zürich", bg: "#f1ede4", ink: "#141414", accent: "#e3241b", accent2: "#1d4fa6" },
+  { name: "Basel", bg: "#e3241b", ink: "#141414", accent: "#f1ede4", accent2: "#f2bd1d" },
+  { name: "Ulm", bg: "#141414", ink: "#f1ede4", accent: "#e3241b", accent2: "#f2bd1d" },
+  { name: "Bauhaus", bg: "#ece4d3", ink: "#1b1b1b", accent: "#1d4fa6", accent2: "#f2bd1d" },
+  { name: "Lausanne", bg: "#1d4fa6", ink: "#f1ede4", accent: "#f2bd1d", accent2: "#e3241b" },
+  { name: "Signal", bg: "#f4f3ef", ink: "#111111", accent: "#ff4a1c", accent2: "#1d4fa6" },
+  { name: "Forest", bg: "#0f3a30", ink: "#e9f3ec", accent: "#34d399", accent2: "#f2bd1d" },
+  { name: "Ochre", bg: "#e9b949", ink: "#1a1612", accent: "#c8361c", accent2: "#1d4fa6" },
+  { name: "Ice", bg: "#dfe8ec", ink: "#0e2a47", accent: "#ff5b3a", accent2: "#f2bd1d" },
+  { name: "Rose", bg: "#f6d5d0", ink: "#2b1b1e", accent: "#1e5b3f", accent2: "#e3241b" },
+  { name: "Night", bg: "#0b1020", ink: "#eef0f6", accent: "#7c5cff", accent2: "#34d399" },
+  { name: "Pop", bg: "#ffffff", ink: "#111111", accent: "#ff2e93", accent2: "#00a6ff" },
+  { name: "Mint", bg: "#c9f0dc", ink: "#0b3d2c", accent: "#ff5a36", accent2: "#0b3d2c" },
+  { name: "Sand", bg: "#e8dcc5", ink: "#2a2420", accent: "#b5452b", accent2: "#3d6b5a" },
+  { name: "Tokyo", bg: "#f3efe6", ink: "#1c1c1c", accent: "#e60012", accent2: "#f3a200" },
+  { name: "Mono", bg: "#ffffff", ink: "#000000", accent: "#000000", accent2: "#8a8a8a" },
 ];
 
 /* --------------------------------------------------------------- content */
@@ -100,7 +106,19 @@ export type StyleId =
   | "giant"
   | "opart"
   | "strips"
-  | "split";
+  | "split"
+  | "blocks"
+  | "albers"
+  | "arcs"
+  | "overprint"
+  | "stack"
+  | "crop"
+  | "rules"
+  | "dots"
+  | "scatter"
+  | "halves"
+  | "triangles"
+  | "tile";
 
 export const STYLES: { id: StyleId; label: string; photo?: boolean }[] = [
   { id: "circle", label: "Circle" },
@@ -111,6 +129,18 @@ export const STYLES: { id: StyleId; label: string; photo?: boolean }[] = [
   { id: "giant", label: "Giant letter" },
   { id: "opart", label: "Op-art" },
   { id: "strips", label: "Photo strips", photo: true },
+  { id: "blocks", label: "Blocks" },
+  { id: "albers", label: "Albers squares" },
+  { id: "arcs", label: "Arcs" },
+  { id: "overprint", label: "Overprint" },
+  { id: "stack", label: "Letter stack" },
+  { id: "crop", label: "Cropped type" },
+  { id: "rules", label: "Rules" },
+  { id: "dots", label: "Dot field" },
+  { id: "scatter", label: "Scatter" },
+  { id: "halves", label: "Halves" },
+  { id: "triangles", label: "Triangles" },
+  { id: "tile", label: "Tile" },
   { id: "bars", label: "Bars" },
   { id: "type", label: "Typographic" },
   { id: "diagonal", label: "Diagonal" },
@@ -174,11 +204,15 @@ export function animTransform(a: Anim | undefined, t: number): string {
 interface Base {
   t?: string;
   anim?: Anim;
+  /** Opacity. */
+  o?: number;
+  /** Overprint: multiply on light paper, screen on dark. */
+  blend?: "multiply" | "screen";
 }
 
 export type El = Base &
   (
-    | { k: "rect"; x: number; y: number; w: number; h: number; fill: string }
+    | { k: "rect"; x: number; y: number; w: number; h: number; fill: string; stroke?: string; sw?: number }
     | { k: "circle"; cx: number; cy: number; r: number; fill?: string; stroke?: string; sw?: number }
     | { k: "path"; d: string; fill?: string; stroke?: string; sw?: number }
     | { k: "line"; x1: number; y1: number; x2: number; y2: number; stroke: string; sw: number }
@@ -249,6 +283,11 @@ export const helveticaMeasure: Measure = (text) => {
   let w = 0;
   for (const ch of text) w += HELV[ch] ?? (/\d/.test(ch) ? 556 : 600);
   return w / 1000;
+};
+
+export const luma = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
 
 /* --------------------------------------------------------------- builder */
@@ -620,6 +659,352 @@ const STYLE_FNS: Record<StyleId, (cx: Ctx) => void> = {
     meta(cx, PW - g.m, g.m + PW * 0.012, pal.ink, "end");
   },
 
+  blocks(cx) {
+    // De Stijl by way of Zürich: the grid split into fields, a few in colour.
+    const { r, g, pal, W: PW, H } = cx;
+    const fieldRows = Math.max(3, Math.floor(g.rows * r.range(0.5, 0.62)));
+    const colors = [pal.ink, pal.accent, pal.accent2, pal.bg, pal.bg];
+    const leaves: { c0: number; c1: number; r0: number; r1: number }[] = [];
+    const split = (c0: number, c1: number, r0: number, r1: number, depth: number) => {
+      const w = c1 - c0;
+      const h = r1 - r0;
+      if (depth === 0 || (w < 2 && h < 2) || (depth < 3 && r.chance(0.25))) {
+        leaves.push({ c0, c1, r0, r1 });
+        return;
+      }
+      if ((w >= h && w >= 2) || h < 2) {
+        const at = c0 + r.int(1, w - 1);
+        split(c0, at, r0, r1, depth - 1);
+        split(at, c1, r0, r1, depth - 1);
+      } else {
+        const at = r0 + r.int(1, h - 1);
+        split(c0, c1, r0, at, depth - 1);
+        split(c0, c1, at, r1, depth - 1);
+      }
+    };
+    split(0, g.cols, 0, fieldRows, r.int(3, 5));
+    let inked = 0;
+    leaves.forEach((leaf, i) => {
+      const fill = colors[(i * 7 + r.int(0, 4)) % colors.length];
+      if (fill !== pal.bg) inked++;
+      const x = cx.colX(leaf.c0);
+      const y = cx.rowY(leaf.r0);
+      cx.els.push({
+        k: "rect",
+        x,
+        y,
+        w: cx.span(leaf.c1 - leaf.c0),
+        h: cx.rows(leaf.r1 - leaf.r0),
+        fill: fill === pal.bg && inked === 0 && i === leaves.length - 1 ? pal.accent : fill,
+        anim: { type: "pulse", cx: x + cx.span(leaf.c1 - leaf.c0) / 2, cy: y + cx.rows(leaf.r1 - leaf.r0) / 2, s: 0.03, delay: i * 0.07 },
+      });
+      if (fill === pal.bg)
+        cx.els.push({ k: "rect", x, y, w: cx.span(leaf.c1 - leaf.c0), h: cx.rows(leaf.r1 - leaf.r0), fill: "none", stroke: pal.ink, sw: PW * 0.0015 } as El);
+    });
+    const top = cx.rowY(fieldRows) + PW * 0.03;
+    const bottom = stack(cx, lines(cx, cx.title, 2), g.m, top, cx.span(g.cols), H - g.m - infoHeight(cx) - top - PW * 0.04, pal.ink);
+    info(cx, g.m, Math.max(bottom + PW * 0.015, H - g.m - infoHeight(cx)), pal.ink);
+  },
+
+  albers(cx) {
+    // Homage to the square: nested squares, each settling lower than the last.
+    const { r, g, pal, W: PW, H } = cx;
+    const size = cx.span(g.cols);
+    const top = g.m + r.range(0, 1) * cx.rows(1);
+    const n = r.int(3, 4);
+    const colors = r.chance(0.5) ? [pal.accent2, pal.accent, pal.ink, pal.bg] : [pal.ink, pal.accent, pal.accent2, pal.bg];
+    for (let i = 0; i < n; i++) {
+      const s = size * (1 - i * (0.8 / n));
+      const x = g.m + (size - s) / 2;
+      const y = top + (size - s) * 0.72;
+      cx.els.push({ k: "rect", x, y, w: s, h: s, fill: colors[i % colors.length], anim: { type: "move", dx: 0, dy: (size - s) * 0.06, delay: i * 0.1 } });
+    }
+    const after = top + size + PW * 0.05;
+    const bottom = stack(cx, lines(cx, cx.title, 2), g.m, after, cx.span(g.cols), H - g.m - infoHeight(cx) - after - PW * 0.03, pal.ink);
+    info(cx, g.m, Math.max(bottom + PW * 0.015, H - g.m - infoHeight(cx)), pal.ink);
+  },
+
+  arcs(cx) {
+    const { r, g, pal, W: PW, H } = cx;
+    const words = lines(cx, cx.title, 2);
+    const titleBottom = stack(cx, words, g.m, g.m + PW * 0.02, cx.span(g.cols), H * 0.24, pal.ink);
+    const colors = [pal.accent, pal.ink, pal.accent2, pal.bg];
+    if (r.chance(0.5)) {
+      // Rainbow: half circles stacked on a baseline.
+      const R = cx.span(g.cols) / 2;
+      const base = H - g.m - infoHeight(cx) - PW * 0.06;
+      const step = R / r.int(4, 6);
+      for (let rad = R, i = 0; rad > step * 0.5; rad -= step, i++)
+        cx.els.push({ k: "path", d: `M${PW / 2 - rad} ${base} A${rad} ${rad} 0 0 1 ${PW / 2 + rad} ${base} Z`, fill: colors[i % colors.length], anim: { type: "pulse", cx: PW / 2, cy: base, s: 0.025, delay: i * 0.08 } });
+    } else {
+      // Quarter circles on a coarse grid, each turned its own way.
+      const cells = 3;
+      const cell = cx.span(g.cols) / cells;
+      const rowsN = Math.max(2, Math.floor((H - g.m - infoHeight(cx) - titleBottom - PW * 0.06) / cell));
+      const top = titleBottom + PW * 0.03;
+      for (let j = 0; j < rowsN; j++)
+        for (let i = 0; i < cells; i++) {
+          const x = g.m + i * cell;
+          const y = top + j * cell;
+          const corner = r.int(0, 3);
+          const ox = corner % 2 ? x + cell : x;
+          const oy = corner > 1 ? y + cell : y;
+          const sx = corner % 2 ? -1 : 1;
+          const sy = corner > 1 ? -1 : 1;
+          const fill = colors[(i + j * 2 + r.int(0, 1)) % 3];
+          cx.els.push({ k: "path", d: `M${ox} ${oy} L${ox + sx * cell} ${oy} A${cell} ${cell} 0 0 ${sx * sy > 0 ? 1 : 0} ${ox} ${oy + sy * cell} Z`, fill, anim: { type: "sway", cx: x + cell / 2, cy: y + cell / 2, deg: 90, delay: (i + j) * 0.07 } });
+        }
+    }
+    info(cx, g.m, H - g.m - infoHeight(cx), pal.ink);
+  },
+
+  overprint(cx) {
+    // Two inks printed over each other: where they overlap, a third colour.
+    const { r, g, pal, W: PW, H } = cx;
+    const dark = luma(pal.bg) < 110;
+    const blend = dark ? "screen" : "multiply";
+    const shapes = r.int(2, 4);
+    for (let i = 0; i < shapes; i++) {
+      const fill = i % 2 ? pal.accent2 : pal.accent;
+      const size = cx.span(g.cols) * r.range(0.45, 0.75);
+      const x = g.m + r.range(-0.1, 0.55) * cx.span(g.cols);
+      const y = g.m + r.range(0.05, 0.45) * (H - 2 * g.m - infoHeight(cx));
+      const anim: Anim = { type: "move", dx: PW * 0.03 * (i % 2 ? 1 : -1), dy: PW * 0.02, delay: i * 0.15 };
+      if (r.chance(0.55)) cx.els.push({ k: "circle", cx: x + size / 2, cy: y + size / 2, r: size / 2, fill, blend, anim });
+      else cx.els.push({ k: "rect", x, y, w: size, h: size * r.range(0.6, 1.2), fill, blend, anim });
+    }
+    const words = lines(cx, cx.title, r.int(1, 2));
+    const top = H - g.m - infoHeight(cx) - PW * 0.04 - Math.min(H * 0.24, words.length * H * 0.11);
+    stack(cx, words, g.m, top, cx.span(g.cols), H - g.m - infoHeight(cx) - PW * 0.04 - top, pal.ink);
+    info(cx, g.m, H - g.m - infoHeight(cx), pal.ink);
+  },
+
+  stack(cx) {
+    // The word set as a column of letters, one per line.
+    const { r, g, pal, W: PW, H } = cx;
+    const word = [...(cx.title.split(/\s+/).sort((a, b) => b.length - a.length)[0] ?? cx.title)].slice(0, 9);
+    const avail = H - 2 * g.m;
+    const size = Math.min(avail / (word.length * (cx.cap + 0.1)), cx.span(Math.ceil(g.cols / 2)) / 0.75);
+    word.forEach((ch, i) => {
+      cx.els.push({
+        k: "text",
+        x: g.m,
+        y: g.m + (i + 1) * size * cx.cap + i * size * 0.1,
+        text: ch,
+        size,
+        weight: cx.head.weight,
+        fill: i === word.length - 1 || (r.chance(0.12) && i > 0) ? pal.accent : pal.ink,
+        role: "head",
+        anim: { type: "move", dx: PW * 0.015, dy: 0, delay: i * 0.08 },
+      });
+    });
+    const col = Math.ceil(g.cols / 2);
+    cx.els.push({ k: "rect", x: cx.colX(col), y: g.m, w: PW * 0.006, h: H - 2 * g.m, fill: pal.accent });
+    info(cx, cx.colX(col) + PW * 0.03, g.m, pal.ink);
+    if (cx.title.includes(" ")) {
+      const rest = cx.title;
+      headline(cx, rest, cx.colX(col) + PW * 0.03, H - g.m, cx.span(g.cols - col) - PW * 0.03, H * 0.08 * cx.s.scale, pal.ink);
+    }
+  },
+
+  crop(cx) {
+    // Type far too big for the page, cropped by its edges.
+    const { r, g, pal, W: PW, H } = cx;
+    const words = cx.title.split(/\s+/).filter(Boolean);
+    const lineCount = Math.min(3, Math.max(1, words.length));
+    const rows = lines(cx, cx.title, lineCount);
+    const size = H * r.range(0.28, 0.4) * cx.s.scale;
+    const startY = H * r.range(0.18, 0.32);
+    rows.forEach((text, i) => {
+      const outline = i % 2 === 1;
+      cx.els.push({
+        k: "text",
+        x: -PW * r.range(0.05, 0.25),
+        y: startY + i * size * (cx.cap + 0.08),
+        text,
+        size,
+        weight: cx.head.weight,
+        fill: outline ? "none" : i === 0 ? pal.ink : pal.accent,
+        stroke: outline ? pal.ink : undefined,
+        sw: outline ? PW * 0.003 : undefined,
+        tracking: cx.head.tracking,
+        role: "head",
+        anim: { type: "move", dx: PW * 0.06 * (i % 2 ? -1 : 1), dy: 0 },
+      });
+    });
+    const box = infoHeight(cx) + PW * 0.06;
+    cx.els.push({ k: "rect", x: 0, y: H - g.m - box, w: PW, h: box + g.m, fill: pal.bg });
+    cx.els.push({ k: "line", x1: g.m, x2: PW - g.m, y1: H - g.m - box, y2: H - g.m - box, stroke: pal.ink, sw: PW * 0.002 });
+    info(cx, g.m, H - g.m - infoHeight(cx), pal.ink);
+  },
+
+  rules(cx) {
+    // Müller-Brockmann: fine rules on the grid, a few circles where they cross.
+    const { r, g, pal, W: PW, H } = cx;
+    const sw = PW * 0.0018;
+    const xs = Array.from({ length: g.cols + 1 }, (_, i) => (i === g.cols ? PW - g.m : cx.colX(i)));
+    const ys = Array.from({ length: g.rows + 1 }, (_, j) => (j === g.rows ? H - g.m : cx.rowY(j)));
+    const pickedX = xs.filter(() => r.chance(0.45));
+    const pickedY = ys.filter(() => r.chance(0.4));
+    pickedX.forEach((x, i) => cx.els.push({ k: "line", x1: x, x2: x, y1: r.chance(0.5) ? 0 : g.m, y2: r.chance(0.5) ? H : H - g.m, stroke: pal.ink, sw, anim: { type: "move", dx: 0, dy: PW * 0.01, delay: i * 0.05 } }));
+    pickedY.forEach((y) => cx.els.push({ k: "line", x1: 0, x2: PW, y1: y, y2: y, stroke: pal.ink, sw }));
+    const dots = r.int(2, 4);
+    for (let i = 0; i < dots && pickedX.length && pickedY.length; i++) {
+      const x = r.pick(pickedX);
+      const y = r.pick(pickedY);
+      const rad = cx.span(1) * r.range(0.3, i === 0 ? 1.6 : 0.6);
+      cx.els.push({ k: "circle", cx: x, cy: y, r: rad, fill: i === 0 ? pal.accent : i === 1 ? pal.accent2 : pal.ink, anim: { type: "pulse", cx: x, cy: y, s: 0.1, delay: i * 0.2 } });
+    }
+    const words = lines(cx, cx.title, 2);
+    const col = r.int(0, Math.floor(g.cols / 3));
+    const row = r.int(Math.floor(g.rows * 0.5), Math.floor(g.rows * 0.65));
+    const top = cx.rowY(row);
+    const boxH = words.length * H * 0.08 + infoHeight(cx) + PW * 0.06;
+    cx.els.push({ k: "rect", x: cx.colX(col) - PW * 0.015, y: top - PW * 0.015, w: cx.span(g.cols - col) + PW * 0.015, h: boxH, fill: pal.bg });
+    const bottom = stack(cx, words, cx.colX(col), top, cx.span(g.cols - col), words.length * H * 0.08, pal.ink);
+    info(cx, cx.colX(col), bottom + PW * 0.015, pal.ink);
+  },
+
+  dots(cx) {
+    // A dot screen: size follows distance from a focal point.
+    const { r, g, pal, W: PW, H } = cx;
+    const top = g.m;
+    const bottom = H - g.m - infoHeight(cx) - H * 0.2;
+    const step = PW * r.range(0.035, 0.055);
+    const focal = { x: g.m + r.range(0.2, 0.8) * cx.span(g.cols), y: top + r.range(0.2, 0.7) * (bottom - top) };
+    const reach = Math.hypot(PW, bottom - top) * r.range(0.5, 0.8);
+    const invert = r.chance(0.5);
+    for (let y = top + step / 2; y < bottom; y += step)
+      for (let x = g.m + step / 2; x < PW - g.m; x += step) {
+        const d = Math.min(1, Math.hypot(x - focal.x, y - focal.y) / reach);
+        const k = invert ? d : 1 - d;
+        const rad = (step / 2) * 0.95 * k;
+        if (rad < step * 0.04) continue;
+        cx.els.push({ k: "circle", cx: x, cy: y, r: rad, fill: pal.ink, anim: { type: "pulse", cx: x, cy: y, s: 0.25, delay: d * 0.8 } });
+      }
+    cx.els.push({ k: "circle", cx: focal.x, cy: focal.y, r: step * 1.6, fill: pal.accent });
+    const words = lines(cx, cx.title, 2);
+    const bottomText = stack(cx, words, g.m, bottom + PW * 0.04, cx.span(g.cols), H * 0.16, pal.ink);
+    info(cx, g.m, Math.max(bottomText + PW * 0.015, H - g.m - infoHeight(cx)), pal.ink);
+  },
+
+  scatter(cx) {
+    // The letters thrown onto the grid, each landing square to it.
+    const { r, g, pal, W: PW, H } = cx;
+    const letters = [...cx.title.replace(/\s+/g, "")].slice(0, 14);
+    const cells: [number, number][] = [];
+    const rowsAvail = Math.max(3, Math.floor(g.rows * 0.7));
+    for (let j = 0; j < rowsAvail; j += 2) for (let i = 0; i < g.cols; i += 2) cells.push([i, j]);
+    for (let i = cells.length - 1; i > 0; i--) {
+      const k = r.int(0, i);
+      [cells[i], cells[k]] = [cells[k], cells[i]];
+    }
+    letters.forEach((ch, n) => {
+      const [i, j] = cells[n % cells.length];
+      const size = cx.span(2) * r.range(0.9, 1.6);
+      const x = cx.colX(i) + cx.span(1);
+      const y = cx.rowY(j) + cx.rows(1) + size * cx.cap * 0.5;
+      const angle = r.pick([0, 0, 90, -90, 180, 45, -45]);
+      cx.els.push({
+        k: "text",
+        x,
+        y,
+        text: ch,
+        size,
+        weight: cx.head.weight,
+        fill: n % 4 === 1 ? pal.accent : n % 4 === 3 ? pal.accent2 : pal.ink,
+        anchor: "middle",
+        role: "head",
+        t: angle ? `rotate(${angle} ${x} ${y - size * cx.cap * 0.5})` : undefined,
+        anim: { type: "sway", cx: x, cy: y - size * cx.cap * 0.5, deg: 12, delay: n * 0.05 },
+      });
+    });
+    const bottom = H - g.m - infoHeight(cx);
+    headline(cx, cx.title, g.m, bottom - PW * 0.04, cx.span(g.cols), H * 0.07 * cx.s.scale, pal.ink);
+    info(cx, g.m, bottom, pal.ink);
+  },
+
+  halves(cx) {
+    // Two colour fields; the headline crosses the border and changes colour with it.
+    const { r, g, pal, W: PW, H } = cx;
+    const vertical = r.chance(0.5);
+    const at = vertical ? cx.colX(r.int(2, g.cols - 2)) - g.gutter / 2 : cx.rowY(r.int(Math.floor(g.rows * 0.35), Math.floor(g.rows * 0.6)));
+    const field: El = vertical ? { k: "rect", x: at, y: 0, w: PW - at, h: H, fill: pal.ink } : { k: "rect", x: 0, y: at, w: PW, h: H - at, fill: pal.ink };
+    cx.els.push(field);
+    cx.clips.push({ id: "light", shape: vertical ? { k: "rect", x: 0, y: 0, w: at, h: H, fill: "#000" } : { k: "rect", x: 0, y: 0, w: PW, h: at, fill: "#000" } });
+    cx.clips.push({ id: "dark", shape: { ...field, fill: "#000" } as El });
+    const words = lines(cx, cx.title, 2);
+    const width = cx.span(g.cols);
+    const sizes = words.map((w) => width / cx.em(w, cx.head.tracking));
+    const size = Math.min(...sizes, H * 0.22) * cx.s.scale;
+    const blockH = words.length * size * (cx.cap + 0.12);
+    const top = vertical ? H * r.range(0.3, 0.5) : at - blockH / 2;
+    const text = (fill: string): El[] =>
+      words.map((w, i) => ({ k: "text" as const, x: g.m, y: top + (i + 1) * size * cx.cap + i * size * 0.12, text: w, size, weight: cx.head.weight, fill, tracking: cx.head.tracking, role: "head" as const }));
+    const anim: Anim = { type: "move", dx: PW * 0.02, dy: 0 };
+    cx.els.push({ k: "group", clip: "light", children: [{ k: "group", anim, children: text(pal.ink) }] });
+    cx.els.push({ k: "group", clip: "dark", children: [{ k: "group", anim, children: text(pal.bg) }] });
+    const dot = cx.span(1);
+    cx.els.push({ k: "circle", cx: vertical ? at : PW - g.m - dot, cy: vertical ? g.m + dot : at, r: dot / 2, fill: pal.accent, anim: { type: "pulse", cx: vertical ? at : PW - g.m - dot, cy: vertical ? g.m + dot : at, s: 0.15 } });
+    const infoTop = H - g.m - infoHeight(cx);
+    if (vertical) info(cx, PW - g.m, infoTop, pal.bg, { anchor: "end" });
+    else info(cx, g.m, infoTop, pal.bg);
+  },
+
+  triangles(cx) {
+    const { r, g, pal, W: PW, H } = cx;
+    const words = lines(cx, cx.title, 2);
+    const bottom = stack(cx, words, g.m, g.m + PW * 0.02, cx.span(g.cols), H * 0.24, pal.ink);
+    const per = g.cols >= 8 ? 4 : 3;
+    const cell = cx.span(g.cols) / per;
+    const top = bottom + PW * 0.03;
+    const rowsN = Math.max(2, Math.floor((H - g.m - infoHeight(cx) - top - PW * 0.05) / cell));
+    const colors = [pal.ink, pal.accent, pal.accent2, pal.ink];
+    for (let j = 0; j < rowsN; j++)
+      for (let i = 0; i < per; i++) {
+        if (r.chance(0.18)) continue;
+        const x = g.m + i * cell;
+        const y = top + j * cell;
+        const o = r.int(0, 3);
+        const pts = [
+          [x, y],
+          [x + cell, y],
+          [x + cell, y + cell],
+          [x, y + cell],
+        ];
+        pts.splice(o, 1);
+        cx.els.push({ k: "path", d: `M${pts.map((p) => p.join(" ")).join(" L")} Z`, fill: colors[(i + j + r.int(0, 2)) % colors.length], anim: { type: "sway", cx: x + cell / 2, cy: y + cell / 2, deg: 90, delay: (i * 2 + j) * 0.05 } });
+      }
+    info(cx, g.m, H - g.m - infoHeight(cx), pal.ink);
+  },
+
+  tile(cx) {
+    // The headline as a pattern, one repeat picked out in colour.
+    const { r, g, pal, W: PW, H } = cx;
+    const unit = `${cx.title}  `;
+    const size = PW * r.range(0.045, 0.07);
+    const unitW = cx.em(unit, cx.head.tracking) * size;
+    const rowH = size * (cx.cap + 0.35);
+    const bottom = H - g.m - infoHeight(cx) - PW * 0.08;
+    const pick = [r.int(1, 3), r.int(2, Math.max(2, Math.floor((bottom - g.m) / rowH) - 2))];
+    let row = 0;
+    for (let y = g.m + size * cx.cap; y < bottom; y += rowH, row++) {
+      const offset = row % 2 ? -unitW / 2 : 0;
+      const reps = Math.ceil(PW / unitW) + 2;
+      const children: El[] = [];
+      for (let k = 0; k < reps; k++) {
+        const x = offset + k * unitW;
+        const hit = row === pick[1] && k === pick[0];
+        if (hit) children.push({ k: "rect", x: x - size * 0.15, y: y - size * cx.cap - size * 0.12, w: unitW - size * 0.4, h: size * cx.cap + size * 0.3, fill: pal.accent });
+        children.push({ k: "text", x, y, text: cx.title, size, weight: cx.head.weight, fill: hit ? pal.bg : pal.ink, tracking: cx.head.tracking, role: "head", o: hit ? 1 : 0.85 } as El);
+      }
+      cx.els.push({ k: "group", children, anim: { type: "move", dx: unitW * 0.25 * (row % 2 ? 1 : -1), dy: 0 } });
+    }
+    cx.els.push({ k: "rect", x: 0, y: bottom, w: PW, h: H - bottom, fill: pal.bg });
+    cx.els.push({ k: "line", x1: g.m, x2: PW - g.m, y1: bottom + PW * 0.02, y2: bottom + PW * 0.02, stroke: pal.ink, sw: PW * 0.002 });
+    info(cx, g.m, H - g.m - infoHeight(cx), pal.ink);
+  },
+
   bars(cx) {
     const { r, g, pal, H, W: PW } = cx;
     const avail = H - 2 * g.m;
@@ -810,7 +1195,131 @@ export function generate(content: PosterContent, s: PosterSettings, measure: Mea
     title: applyCase(content.title.trim() || "Poster", s.caseMode, !!font.caps),
   };
   STYLE_FNS[style](cx);
-  return { w: PW, h: H, bg: pal.bg, els: cx.els, clips: cx.clips, grid, style, font: s.font, palette: pal };
+
+  // Half the time, the whole composition is mirrored into a flush-right
+  // version (compositions with rotated type keep their reading direction).
+  let els = cx.els;
+  let clips = cx.clips;
+  if (!NO_MIRROR.has(style) && t.chance(0.45)) {
+    els = els.map((el) => mirror(el, PW));
+    clips = clips.map((c) => ({ ...c, shape: mirror(c.shape, PW) }));
+  }
+  els = [...els, ...marginDetails(cx, t)];
+  return { w: PW, h: H, bg: pal.bg, els, clips, grid, style, font: s.font, palette: pal };
 }
 
 export const fontsOf = (p: Poster) => ({ head: FONT_BY_ID[p.font], body: bodyFont(p.font) });
+
+/* --------------------------------------------------------------- variety */
+
+const NO_MIRROR = new Set<StyleId>(["bars", "diagonal", "scatter", "crop", "tile", "stack"]);
+
+const flipAnim = (a: Anim | undefined, W: number): Anim | undefined => {
+  if (!a) return a;
+  switch (a.type) {
+    case "move":
+      return { ...a, dx: -a.dx };
+    case "sway":
+      return { ...a, cx: W - a.cx, deg: -a.deg };
+    case "pulse":
+    case "spin":
+      return { ...a, cx: W - a.cx };
+    default:
+      return a;
+  }
+};
+
+/** The element mirrored across the vertical centre line, type kept readable. */
+function mirror(el: El, W: number): El {
+  const anim = flipAnim(el.anim, W);
+  switch (el.k) {
+    case "rect":
+      return { ...el, x: W - el.x - el.w, anim };
+    case "circle":
+      return { ...el, cx: W - el.cx, anim };
+    case "line":
+      return { ...el, x1: W - el.x1, x2: W - el.x2, anim };
+    case "ring":
+      return { ...el, cx: W - el.cx, anim };
+    case "image":
+      return { ...el, x: W - el.x - el.w, anim };
+    case "wave":
+      return { ...el, x0: W - el.x1, x1: W - el.x0, bulge: { ...el.bulge, x: W - el.bulge.x }, anim };
+    case "path":
+      // Shapes flip as a whole; their motion stays in their own coordinates.
+      return { ...el, t: `matrix(-1 0 0 1 ${W} 0)${el.t ? " " + el.t : ""}` };
+    case "text": {
+      const anchor = el.anchor === "end" ? "start" : el.anchor === "middle" ? "middle" : "end";
+      return { ...el, x: W - el.x, anchor, anim };
+    }
+    case "group":
+      return { ...el, children: el.children.map((c) => mirror(c, W)), anim };
+  }
+}
+
+/**
+ * Printer's details in the margins, where they can never collide with the
+ * composition: crop marks, a vertical caption, header and footer lines, a
+ * registration target. Each poster gets its own mix.
+ */
+function marginDetails(cx: Ctx, t: Rng): El[] {
+  const { W, H, g, pal, c } = cx;
+  if (g.m < W * 0.045) return [];
+  const out: El[] = [];
+  const ink = pal.ink;
+  const sw = W * 0.0012;
+  const small = W * 0.011;
+  const picks = t.int(0, 3);
+  const pool = ["crop", "caption", "footer", "header", "target"];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const k = t.int(0, i);
+    [pool[i], pool[k]] = [pool[k], pool[i]];
+  }
+  for (const kind of pool.slice(0, picks)) {
+    if (kind === "crop") {
+      const len = g.m * 0.35;
+      const o = g.m * 0.3;
+      for (const [x, y, dx, dy] of [
+        [o, o, 1, 1],
+        [W - o, o, -1, 1],
+        [o, H - o, 1, -1],
+        [W - o, H - o, -1, -1],
+      ])
+        out.push(
+          { k: "line", x1: x, y1: y, x2: x + dx * len, y2: y, stroke: ink, sw },
+          { k: "line", x1: x, y1: y, x2: x, y2: y + dy * len, stroke: ink, sw }
+        );
+    } else if (kind === "caption") {
+      const x = t.chance(0.5) ? g.m * 0.55 : W - g.m * 0.45;
+      out.push({ k: "text", x, y: H / 2, text: `${c.title.toUpperCase()} — N° ${c.number || "01"}`, size: small, weight: 400, fill: ink, anchor: "middle", role: "mono", tracking: 0.12, t: `rotate(-90 ${x} ${H / 2})` });
+    } else if (kind === "footer") {
+      const y = H - g.m * 0.38;
+      out.push(
+        { k: "text", x: g.m, y, text: c.title.toUpperCase(), size: small, weight: 400, fill: ink, role: "mono", tracking: 0.12 },
+        { k: "text", x: W - g.m, y, text: `${g.cols}/${g.rows} — ${c.number || "01"}`, size: small, weight: 400, fill: ink, anchor: "end", role: "mono", tracking: 0.12 }
+      );
+    } else if (kind === "header") {
+      const y = g.m * 0.62;
+      out.push(
+        { k: "line", x1: g.m, x2: W - g.m, y1: y - small * 1.2, y2: y - small * 1.2, stroke: ink, sw },
+        { k: "text", x: W / 2, y, text: (c.subtitle || c.title).toUpperCase(), size: small, weight: 400, fill: ink, anchor: "middle", role: "mono", tracking: 0.18 }
+      );
+    } else {
+      const x = t.chance(0.5) ? g.m * 0.5 : W - g.m * 0.5;
+      const y = t.chance(0.5) ? g.m * 0.5 : H - g.m * 0.5;
+      const r = g.m * 0.18;
+      out.push(
+        { k: "circle", cx: x, cy: y, r, stroke: ink, sw },
+        { k: "line", x1: x - r * 1.6, x2: x + r * 1.6, y1: y, y2: y, stroke: ink, sw },
+        { k: "line", x1: x, x2: x, y1: y - r * 1.6, y2: y + r * 1.6, stroke: ink, sw }
+      );
+    }
+  }
+  return out;
+}
+
+/** The composition a layout seed lands on, without building the poster. */
+export function styleFor(seed: number, hasPhoto: boolean): StyleId {
+  const allowed = STYLES.filter((st) => !st.photo || hasPhoto);
+  return rng(seed).pick(allowed).id;
+}

@@ -72,10 +72,13 @@ export function posterToSvg(poster: Poster, opts: RenderOptions = {}): string {
   };
 
   const draw = (el: El): string => {
-    const tr = transform(el);
+    const tr =
+      transform(el) +
+      (el.o !== undefined && el.o < 1 ? ` opacity="${el.o}"` : "") +
+      (el.blend ? ` style="mix-blend-mode:${el.blend}"` : "");
     switch (el.k) {
       case "rect":
-        return `<rect x="${n(el.x)}" y="${n(el.y)}" width="${n(el.w)}" height="${n(el.h)}" fill="${el.fill}"${tr}/>`;
+        return `<rect x="${n(el.x)}" y="${n(el.y)}" width="${n(el.w)}" height="${n(el.h)}" fill="${el.fill}"${el.stroke ? ` stroke="${el.stroke}" stroke-width="${n(el.sw ?? 0.3)}"` : ""}${tr}/>`;
       case "circle":
         return `<circle cx="${n(el.cx)}" cy="${n(el.cy)}" r="${n(el.r)}" fill="${el.fill ?? "none"}"${el.stroke ? ` stroke="${el.stroke}" stroke-width="${n(el.sw ?? 0.3)}"` : ""}${tr}/>`;
       case "path":

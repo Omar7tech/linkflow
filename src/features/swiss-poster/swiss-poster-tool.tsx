@@ -7,6 +7,7 @@ import {
   FilmIcon,
   Grid3x3Icon,
   ImageIcon,
+  LoaderCircleIcon,
   LayoutGridIcon,
   LockIcon,
   LockOpenIcon,
@@ -27,7 +28,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { TOOL_BY_ID } from "@/constants/tools";
-import { FONTS, FONT_BY_ID, bodyFont, embeddedFontCss, ensureFont, linkAllFonts, measureEm, type FontId } from "@/lib/poster/fonts";
+import { FONTS, FONT_BY_ID, bodyFont, embeddedFontCss, ensureFont, linkAllFonts, loadGoogleFont, measureEm, type FontId } from "@/lib/poster/fonts";
 import {
   PALETTES,
   SIZES,
@@ -36,6 +37,7 @@ import {
   helveticaMeasure,
   paletteOf,
   randomSeed,
+  styleFor,
   type Measure,
   type Palette,
   type PosterContent,
@@ -162,6 +164,27 @@ export function SwissPosterTool() {
   const [treatment, setTreatment] = React.useState<Treatment>("duotone");
   const [fontVersion, setFontVersion] = React.useState(0);
   const [busy, setBusy] = React.useState<{ kind: string; progress: number } | null>(null);
+  const [fontQuery, setFontQuery] = React.useState("");
+  const [customLabel, setCustomLabel] = React.useState<string | null>(null);
+  const [fontState, setFontState] = React.useState<{ loading: boolean; error?: string }>({ loading: false });
+
+  const applyGoogleFont = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!fontQuery.trim()) return;
+    setFontState({ loading: true });
+    try {
+      const def = await loadGoogleFont(fontQuery);
+      setCustomLabel(def.label);
+      setSettings((s) => ({ ...s, font: "custom" }));
+      // Same id, new face: re-measure explicitly.
+      setFontVersion((v) => v + 1);
+      setFontState({ loading: false });
+      setFontQuery("");
+      toast.success(`${def.label} is ready`);
+    } catch (error) {
+      setFontState({ loading: false, error: (error as Error).message });
+    }
+  };
 
   React.useEffect(() => linkAllFonts(), []);
 
@@ -218,13 +241,24 @@ export function SwissPosterTool() {
 
   const set = <K extends keyof PosterSettings>(key: K, value: PosterSettings[K]) => setSettings((s) => ({ ...s, [key]: value }));
 
+  // Compositions shown recently, so a shuffle always lands somewhere new.
+  const recent = React.useRef<string[]>([]);
+  const freshSeed = React.useCallback(
+    (avoid: string[]) => {
+      let seed = randomSeed();
+      for (let i = 0; i < 40 && avoid.includes(styleFor(seed, !!photo)); i++) seed = randomSeed();
+      return seed;
+    },
+    [photo]
+  );
+
   const shuffled = React.useCallback(
-    (s: PosterSettings): PosterSettings => {
+    (s: PosterSettings, avoid: string[] = recent.current): PosterSettings => {
       let palette = s.palette;
       if (!locks.colours) while (palette === s.palette) palette = Math.floor(Math.random() * PALETTES.length);
       return {
         ...s,
-        layoutSeed: locks.layout ? s.layoutSeed : randomSeed(),
+        layoutSeed: locks.layout ? s.layoutSeed : s.style === "auto" ? freshSeed(avoid) : randomSeed(),
         palette,
         custom: locks.colours ? s.custom : null,
         typeSeed: locks.type ? s.typeSeed : randomSeed(),
@@ -232,8 +266,12 @@ export function SwissPosterTool() {
         caseMode: locks.type ? s.caseMode : pick(["upper", "asis", "asis", "lower"] as const),
       };
     },
-    [locks]
+    [locks, freshSeed]
   );
+
+  React.useEffect(() => {
+    recent.current = [poster.style, ...recent.current.filter((x) => x !== poster.style)].slice(0, 8);
+  }, [poster.style]);
 
   const apply = (next: PosterSettings) => {
     setHistory((h) => [settings, ...h.filter((x) => x !== settings)].slice(0, 14));
@@ -243,8 +281,17 @@ export function SwissPosterTool() {
   const shuffle = () => apply(shuffled({ ...settings, style: settings.style }));
 
   // Explore always explores compositions too, unless the layout is locked.
-  const explore = () =>
-    setVariants(Array.from({ length: 9 }, () => shuffled({ ...settings, style: locks.layout ? settings.style : "auto" })));
+  const explore = () => {
+    // Nine directions, nine different compositions.
+    const seen = [poster.style as string];
+    setVariants(
+      Array.from({ length: 9 }, () => {
+        const next = shuffled({ ...settings, style: locks.layout ? settings.style : "auto" }, seen);
+        seen.push(styleFor(next.layoutSeed, !!photo));
+        return next;
+      })
+    );
+  };
 
   React.useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -506,8 +553,37 @@ export function SwissPosterTool() {
             <CardTitle className="text-base">Typeface</CardTitle>
             <CardDescription>Each one measured exactly, so headlines fill their columns.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
+            <form onSubmit={(e) => void applyGoogleFont(e)} className="flex gap-2">
+              <Input
+                value={fontQuery}
+                onChange={(e) => setFontQuery(e.target.value)}
+                placeholder="Any Google Font, e.g. DM Serif Display"
+                aria-label="Google Fonts family name"
+                maxLength={60}
+              />
+              <Button type="submit" variant="outline" disabled={fontState.loading || !fontQuery.trim()}>
+                {fontState.loading ? <LoaderCircleIcon className="animate-spin" /> : "Use"}
+              </Button>
+            </form>
+            {fontState.error && <p className="text-destructive text-xs">{fontState.error}</p>}
             <div className="grid max-h-80 grid-cols-2 gap-1.5 overflow-y-auto pr-1">
+              {customLabel && (
+                <button
+                  type="button"
+                  aria-pressed={settings.font === "custom"}
+                  onClick={() => set("font", "custom")}
+                  className={cn(
+                    "col-span-2 rounded-lg border px-2.5 py-2 text-left transition-colors",
+                    settings.font === "custom" ? "border-primary bg-primary/5" : "border-border/60 hover:border-foreground/25"
+                  )}
+                >
+                  <span className="block truncate text-[22px] leading-tight" style={{ fontFamily: FONT_BY_ID.custom.family, fontWeight: FONT_BY_ID.custom.heavy }}>
+                    Aa {customLabel}
+                  </span>
+                  <span className="text-muted-foreground block truncate text-[10px]">Your font, from Google Fonts</span>
+                </button>
+              )}
               {FONTS.map((f) => (
                 <button
                   key={f.id}
@@ -614,7 +690,7 @@ export function SwissPosterTool() {
 
             <div className="space-y-2">
               <Label>Colours</Label>
-              <div className="grid grid-cols-6 gap-1.5">
+              <div className="grid grid-cols-8 gap-1.5">
                 {PALETTES.map((p, i) => (
                   <button
                     key={p.name}
@@ -634,11 +710,11 @@ export function SwissPosterTool() {
                   </button>
                 ))}
               </div>
-              <div className="flex items-center gap-2 pt-1">
-                {(["bg", "ink", "accent"] as const).map((key) => (
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                {(["bg", "ink", "accent", "accent2"] as const).map((key) => (
                   <label key={key} className="border-border/60 flex flex-1 cursor-pointer items-center gap-2 rounded-lg border px-2 py-1.5 text-[11px]">
                     <span className="size-4 rounded" style={{ background: pal[key] }} />
-                    {key === "bg" ? "Paper" : key === "ink" ? "Ink" : "Accent"}
+                    {key === "bg" ? "Paper" : key === "ink" ? "Ink" : key === "accent" ? "Accent" : "Accent 2"}
                     <input
                       type="color"
                       className="sr-only"

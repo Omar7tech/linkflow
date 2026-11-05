@@ -150,7 +150,9 @@ export function paletteFromPhoto(photo: Photo) {
     centers = sums.map((s, i) => (s[3] ? [s[0] / s[3], s[1] / s[3], s[2] / s[3]] : centers[i]));
   }
   const byLum = [...centers].sort((a, b) => lum(a) - lum(b));
-  const accent = [...centers].sort((a, b) => sat(b) * (1 - Math.abs(lum(b) - 128) / 255) - sat(a) * (1 - Math.abs(lum(a) - 128) / 255))[0];
+  const vividOrder = [...centers].sort((a, b) => sat(b) * (1 - Math.abs(lum(b) - 128) / 255) - sat(a) * (1 - Math.abs(lum(a) - 128) / 255));
+  const accent = vividOrder[0];
+  const second = vividOrder[1] ?? vividOrder[0];
   const dark = byLum[0];
   const light = byLum[byLum.length - 1];
   // Paper: very light and slightly warm; ink: very dark.
@@ -159,5 +161,12 @@ export function paletteFromPhoto(photo: Photo) {
   // Accent: push saturation so it reads like a spot ink.
   const mean = (accent[0] + accent[1] + accent[2]) / 3;
   const vivid = accent.map((v) => mean + (v - mean) * 1.6);
-  return { bg: hex(paper[0], paper[1], paper[2]), ink: hex(ink[0], ink[1], ink[2]), accent: hex(vivid[0], vivid[1], vivid[2]) };
+  const mean2 = (second[0] + second[1] + second[2]) / 3;
+  const vivid2 = second.map((v) => mean2 + (v - mean2) * 1.5);
+  return {
+    bg: hex(paper[0], paper[1], paper[2]),
+    ink: hex(ink[0], ink[1], ink[2]),
+    accent: hex(vivid[0], vivid[1], vivid[2]),
+    accent2: hex(vivid2[0], vivid2[1], vivid2[2]),
+  };
 }
